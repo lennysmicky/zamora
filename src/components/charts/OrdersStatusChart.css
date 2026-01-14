@@ -1,0 +1,246 @@
+.status-chart {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-chart-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+
+.status-chart-donut {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.status-chart-total {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.dark .status-chart-total {
+  color: var(--color-text-white);
+}
+
+.status-chart-label {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+.status-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-legend-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-legend-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-legend-name {
+  font-size: 0.6875rem;
+  color: var(--color-text-secondary);
+}
+
+.dark .status-legend-name {
+  color: var(--color-text-muted);
+}
+
+.status-legend-value {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dark .status-legend-value {
+  color: var(--color-text-white);
+}
+
+/* ================================
+   Loading State (Skeleton)
+   ================================ */
+.status-chart-skeleton-donut {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 20px solid transparent;
+  position: relative;
+  margin: 5px auto;
+  background: 
+    linear-gradient(var(--color-card-light), var(--color-card-light)) padding-box,
+    linear-gradient(
+      90deg,
+      var(--color-surface-light) 25%,
+      var(--color-border-light) 50%,
+      var(--color-surface-light) 75%
+    ) border-box;
+  background-size: 100% 100%, 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .status-chart-skeleton-donut {
+  background: 
+    linear-gradient(var(--color-card-dark), var(--color-card-dark)) padding-box,
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 255, 255, 0.06) 50%,
+      rgba(255, 255, 255, 0.03) 75%
+    ) border-box;
+  background-size: 100% 100%, 200% 100%;
+}
+
+.skeleton-legend-item {
+  pointer-events: none;
+}
+
+.skeleton-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton-dot {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-name {
+  width: 80px;
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton-name {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-value {
+  width: 30px;
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton-value {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ================================
+   Empty State
+   ================================ */
+.status-chart-empty {
+  width: 100%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+}
+
+.status-chart-empty p {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* Icône pour empty state */
+.status-chart-empty::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  margin-bottom: 0.625rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z'/%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.5;
+}
+
+.dark .status-chart-empty::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z'/%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z'/%3E%3C/svg%3E");
+}

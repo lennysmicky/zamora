@@ -1,0 +1,209 @@
+/* ========================================
+   ORDERS LOADING SKELETON
+   ======================================== */
+
+.orders-skeleton {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ========================================
+   HEADER SKELETON
+   ======================================== */
+.orders-skeleton-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface-light);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .orders-skeleton-header {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: var(--color-border-dark);
+}
+
+.skeleton-th {
+  height: 10px;
+  width: 80px;
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.dark .skeleton-th {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ========================================
+   ROW SKELETON
+   ======================================== */
+.orders-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .orders-skeleton-row {
+  border-color: var(--color-border-dark);
+}
+
+.orders-skeleton-row:last-child {
+  border-bottom: none;
+}
+
+/* ========================================
+   SKELETON CELLS
+   ======================================== */
+.skeleton-checkbox {
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.dark .skeleton-checkbox {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-cell {
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-light) 25%,
+    var(--color-border-light) 50%,
+    var(--color-surface-light) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .skeleton-cell {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 25%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Cell sizes */
+.skeleton-id {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.skeleton-customer {
+  width: 120px;
+  flex: 1;
+  max-width: 150px;
+}
+
+.skeleton-restaurant {
+  width: 100px;
+  flex: 1;
+  max-width: 130px;
+}
+
+.skeleton-amount {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.skeleton-badge {
+  width: 80px;
+  height: 22px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.skeleton-method {
+  width: 90px;
+  flex-shrink: 0;
+}
+
+.skeleton-date {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.skeleton-actions {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   ANIMATION
+   ======================================== */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1023px) {
+  .skeleton-restaurant,
+  .skeleton-method {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .orders-skeleton-header {
+    display: none;
+  }
+
+  .orders-skeleton-row {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .skeleton-customer {
+    width: 100%;
+    max-width: none;
+  }
+
+  .skeleton-date,
+  .skeleton-actions {
+    display: none;
+  }
+}

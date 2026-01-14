@@ -1,0 +1,182 @@
+/* ========================================
+   ORDER STATUS SELECT
+   ======================================== */
+
+.status-select-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 250px;
+}
+
+/* ========================================
+   TRIGGER
+   ======================================== */
+.status-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.status-select-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-select-trigger .select-arrow {
+  font-size: 1rem;
+  transition: transform var(--transition-fast);
+}
+
+.status-select-trigger .select-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Trigger colors */
+.status-select-trigger.status-warning {
+  background-color: var(--color-warning-light);
+  color: #b45309;
+}
+
+.dark .status-select-trigger.status-warning {
+  background-color: var(--color-warning-dark);
+  color: var(--color-warning);
+}
+
+.status-select-trigger.status-info {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.dark .status-select-trigger.status-info {
+  background-color: var(--color-info-dark);
+}
+
+.status-select-trigger.status-purple {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.dark .status-select-trigger.status-purple {
+  background-color: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+}
+
+.status-select-trigger.status-success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .status-select-trigger.status-success {
+  background-color: var(--color-success-dark);
+}
+
+.status-select-trigger.status-error {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .status-select-trigger.status-error {
+  background-color: var(--color-error-dark);
+}
+
+/* ========================================
+   DROPDOWN
+   ======================================== */
+.status-select-dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dark .status-select-dropdown {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* ========================================
+   OPTIONS
+   ======================================== */
+.status-select-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.dark .status-select-option {
+  color: var(--color-text-muted);
+}
+
+.status-select-option:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .status-select-option:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-white);
+}
+
+.status-select-option.active {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+/* Status dot */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.status-dot.status-warning {
+  background-color: var(--color-warning);
+}
+
+.status-dot.status-info {
+  background-color: var(--color-info);
+}
+
+.status-dot.status-purple {
+  background-color: #7c3aed;
+}
+
+.status-dot.status-success {
+  background-color: var(--color-success);
+}
+
+.status-dot.status-error {
+  background-color: var(--color-error);
+}
+
+/* Check icon */
+.status-select-option .check-icon {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}

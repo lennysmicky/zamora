@@ -1,0 +1,80 @@
+/* ========================================
+   ORDERS EMPTY STATE
+   ======================================== */
+
+.orders-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+/* ========================================
+   ICON
+   ======================================== */
+.orders-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1.25rem;
+  background-color: var(--color-surface-light);
+  border-radius: var(--radius-full);
+}
+
+.dark .orders-empty-icon {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.orders-empty-icon svg {
+  font-size: 1.75rem;
+  color: var(--color-text-muted);
+}
+
+/* ========================================
+   TEXT
+   ======================================== */
+.orders-empty h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.dark .orders-empty h3 {
+  color: var(--color-text-white);
+}
+
+.orders-empty p {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  max-width: 320px;
+  margin-bottom: 1.25rem;
+}
+
+/* ========================================
+   BUTTON
+   ======================================== */
+.orders-empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  background-color: var(--color-primary-lighter);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.orders-empty-btn:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}

@@ -1,0 +1,457 @@
+/* src/pages/Notifications/NotificationsPage.css */
+
+/* ========================================
+   NOTIFICATIONS PAGE
+   ======================================== */
+.notifications-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ========================================
+   Messages
+   ======================================== */
+.notifications-message {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notifications-message.error {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.notifications-message.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.dark .notifications-message.error {
+  background-color: var(--color-error-dark);
+}
+
+.dark .notifications-message.success {
+  background-color: var(--color-success-dark);
+}
+
+/* ========================================
+   Tabs
+   ======================================== */
+.notifications-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 0;
+}
+
+.dark .notifications-tabs {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.notifications-tab {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  position: relative;
+  transition: color var(--transition-fast);
+  font-family: 'Inter', sans-serif;
+}
+
+.notifications-tab:hover {
+  color: var(--color-primary);
+}
+
+.notifications-tab.active {
+  color: var(--color-primary);
+}
+
+.notifications-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+  border-radius: 2px 2px 0 0;
+}
+
+.dark .notifications-tab {
+  color: var(--color-text-muted);
+}
+
+.dark .notifications-tab:hover,
+.dark .notifications-tab.active {
+  color: var(--color-primary-light);
+}
+
+.dark .notifications-tab.active::after {
+  background-color: var(--color-primary-light);
+}
+
+/* ========================================
+   Grid (comme dashboard)
+   ======================================== */
+.notifications-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .notifications-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ========================================
+   Cards
+   ======================================== */
+.notifications-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.notifications-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .notifications-card-header {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.notifications-card-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dark .notifications-card-header h2 {
+  color: var(--color-text-white);
+}
+
+.notifications-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ========================================
+   Toggle Switch
+   ======================================== */
+.notifications-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.notifications-toggle input[type="checkbox"] {
+  display: none;
+}
+
+.notifications-toggle-slider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background-color: var(--color-border-light);
+  border-radius: var(--radius-full);
+  transition: background-color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.dark .notifications-toggle-slider {
+  background-color: var(--color-border-dark);
+}
+
+.notifications-toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background-color: var(--color-bg-white);
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.notifications-toggle input:checked + .notifications-toggle-slider {
+  background-color: var(--color-primary);
+}
+
+.notifications-toggle input:checked + .notifications-toggle-slider::before {
+  transform: translateX(20px);
+}
+
+.notifications-toggle-text {
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  line-height: 1.4;
+}
+
+.dark .notifications-toggle-text {
+  color: var(--color-text-white);
+}
+
+/* ========================================
+   Actions
+   ======================================== */
+.notifications-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ========================================
+   Log Card (full width)
+   ======================================== */
+.notifications-log-card {
+  grid-column: 1 / -1;
+}
+
+/* ========================================
+   Empty State
+   ======================================== */
+.notifications-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  color: var(--color-text-secondary);
+}
+
+.notifications-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.notifications-empty p {
+  font-size: 0.9375rem;
+  margin: 0;
+}
+
+/* ========================================
+   Log List
+   ======================================== */
+.notifications-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notifications-log-item {
+  background-color: var(--color-surface-light);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  border-left: 3px solid var(--color-border-light);
+  transition: box-shadow var(--transition-fast);
+}
+
+.dark .notifications-log-item {
+  background-color: var(--color-surface-dark);
+  border-left-color: var(--color-border-dark);
+}
+
+.notifications-log-item:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.notifications-log-item.sent {
+  border-left-color: var(--color-success);
+}
+
+.notifications-log-item.pending {
+  border-left-color: var(--color-warning);
+}
+
+.notifications-log-item.failed {
+  border-left-color: var(--color-error);
+}
+
+/* Log Item Header */
+.notifications-log-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.notifications-log-type {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.notifications-log-type.new_order {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.notifications-log-type.status_change {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.notifications-log-type.promotion {
+  background-color: var(--color-secondary-light);
+  color: var(--color-secondary);
+}
+
+.dark .notifications-log-type.new_order {
+  background-color: var(--color-info-dark);
+}
+
+.dark .notifications-log-type.status_change {
+  background-color: var(--color-warning-dark);
+}
+
+.dark .notifications-log-type.promotion {
+  background-color: var(--color-secondary-light);
+}
+
+.notifications-log-date {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+/* Log Item Body */
+.notifications-log-item-body {
+  margin-bottom: 0.75rem;
+}
+
+.notifications-log-item-body h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.dark .notifications-log-item-body h4 {
+  color: var(--color-text-white);
+}
+
+.notifications-log-item-body p {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Log Item Footer */
+.notifications-log-item-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.notifications-log-channel {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.notifications-log-status {
+  display: inline-block;
+  padding: 0.25rem 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.notifications-log-status.sent {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.notifications-log-status.pending {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.notifications-log-status.failed {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .notifications-log-status.sent {
+  background-color: var(--color-success-dark);
+}
+
+.dark .notifications-log-status.pending {
+  background-color: var(--color-warning-dark);
+}
+
+.dark .notifications-log-status.failed {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-log-delete {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+}
+
+.notifications-log-delete:hover {
+  background-color: var(--color-error-light);
+}
+
+.dark .notifications-log-delete:hover {
+  background-color: var(--color-error-dark);
+}
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 640px) {
+  .notifications-tabs {
+    width: 100%;
+  }
+
+  .notifications-tab {
+    flex: 1;
+    text-align: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .notifications-actions {
+    justify-content: stretch;
+  }
+
+  .notifications-actions .btn {
+    width: 100%;
+  }
+
+  .notifications-log-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .notifications-log-item-footer {
+    flex-wrap: wrap;
+  }
+}

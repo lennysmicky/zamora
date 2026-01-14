@@ -1,0 +1,754 @@
+{
+  "header": {
+    "toggleMenu": "Ouvrir le menu",
+    "notifications": "Notifications",
+    "messages": "Messages",
+    "filters": {
+      "allRestaurants": "Tous les restaurants",
+      "thisMonth": "Ce Mois"
+    },
+    "pages": {
+      "menu": {
+        "title": "Mon Menu"
+      },
+      "messages": {
+        "title": "Messages",
+        "subtitle": "Gérez vos communications"
+      },
+      "restaurant": {
+        "dashboardSubtitle": "Vue d'ensemble de votre restaurant",
+        "ordersSubtitle": "Gérez vos commandes",
+        "menuSubtitle": "Gérez vos plats et catégories",
+        "promotionsSubtitle": "Vos promotions actives",
+        "specialOffersSubtitle": "Vos offres spéciales",
+        "paymentsSubtitle": "Historique de vos paiements",
+        "notificationsSubtitle": "Vos notifications",
+        "messagesSubtitle": "Vos messages et communications",
+        "settingsSubtitle": "Paramètres de votre restaurant"
+      },
+      "default": {
+        "title": "Tableau de bord",
+        "subtitle": "Bienvenue"
+      },
+      "dashboard": {
+        "title": "Tableau de bord",
+        "subtitle": "Bienvenue, propriétaire"
+      },
+      "restaurants": {
+        "title": "Restaurants",
+        "subtitle": "Gérez vos restaurants"
+      },
+      "menus": {
+        "title": "Menus",
+        "subtitle": "Gérez vos plats"
+      },
+      "orders": {
+        "title": "Commandes",
+        "subtitle": "Gérez et suivez toutes les commandes"
+      },
+      "customers": {
+        "title": "Clients",
+        "subtitle": "Consultez les informations clients"
+      },
+      "users": {
+        "title": "Utilisateurs",
+        "subtitle": "Gérez les membres de l'équipe"
+      },
+      "promotions": {
+        "title": "Promotions",
+        "subtitle": "Gérez réductions et offres"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Consultez toutes les notifications"
+      },
+      "payments": {
+        "title": "Paiements",
+        "subtitle": "Suivez les transactions"
+      },
+      "settings": {
+        "title": "Paramètres",
+        "subtitle": "Configurez vos préférences"
+      },
+      "specialOffers": {
+        "title": "Offres spéciales",
+        "subtitle": "Gérez les offres spéciales"
+      }
+    }
+  },
+  "sidebar": {
+    "dashboard": "Tableau de bord",
+    "orders": "Commandes",
+    "menu": "Mon Menu",
+    "menus": "Menus",
+    "restaurants": "Restaurants",
+    "customers": "Clients",
+    "users": "Utilisateurs",
+    "promotions": "Promotions",
+    "specialOffers": "Offres Spéciales",
+    "payments": "Paiements",
+    "messages": "Messages",
+    "notifications": "Notifications",
+    "settings": "Paramètres",
+    "brandSubtitle": "Tableau de bord administratif",
+    "restaurantDashboard": "Dashboard Restaurant"
+  },
+  "theme": {
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English"
+  },
+  "user": {
+    "notConnected": "Non connecté",
+    "logout": "Déconnexion"
+  },
+  "auth": {
+    "email": "Email",
+    "emailPlaceholder": "admin@zamora.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "rememberMe": "Se souvenir",
+    "forgotPassword": "Mot de passe oublié ?",
+    "loading": "Connexion...",
+    "backToLogin": "Retour à la connexion",
+    "copyright": "© 2025 Zamora. Tous droits réservés.",
+    "choice": {
+      "title": "Bienvenue sur Zamora",
+      "subtitle": "La plateforme de livraison qui connecte les restaurants et les gourmands",
+      "restaurant": {
+        "title": "Je suis un Restaurant",
+        "description": "Gérez vos commandes, menus et développez votre activité",
+        "button": "Accéder",
+        "features": {
+          "dashboard": "📊 Dashboard",
+          "menus": "🍽️ Menus",
+          "orders": "📦 Commandes"
+        }
+      },
+      "client": {
+        "title": "Je suis un Client",
+        "description": "Découvrez les meilleurs restaurants et commandez en quelques clics",
+        "button": "Commander",
+        "features": {
+          "order": "🍔 Commander",
+          "favorites": "⭐ Favoris",
+          "delivery": "🚀 Livraison"
+        }
+      },
+      "adminAccess": "Accès Administrateur",
+      "copyright": "© 2025 Zamora. Tous droits réservés."
+    },
+    "login": {
+      "title": "Connexion",
+      "welcomeBack": "Bon retour parmi nous !",
+      "email": "Adresse email",
+      "emailPlaceholder": "votre@email.com",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Entrez votre mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "button": "Se connecter",
+      "noAccount": "Pas encore de compte ?",
+      "register": "S'inscrire",
+      "or": "ou",
+      "continueWith": "Continuer avec"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez la communauté Zamora",
+      "restaurantName": "Nom du restaurant",
+      "restaurantNamePlaceholder": "Nom de votre restaurant",
+      "fullName": "Nom complet",
+      "fullNamePlaceholder": "Jean Dupont",
+      "email": "Adresse email",
+      "emailPlaceholder": "votre@email.com",
+      "phone": "Numéro de téléphone",
+      "phonePlaceholder": "+33 6 12 34 56 78",
+      "password": "Mot de passe",
+      "passwordPlaceholder": "Créez un mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+      "address": "Adresse du restaurant",
+      "addressPlaceholder": "EX: Lomé,Agoè, Rue 123",
+      "cuisineType": "Type de cuisine",
+      "cuisineTypePlaceholder": "Sélectionnez le type de cuisine",
+      "terms": "J'accepte les",
+      "termsLink": "Conditions d'utilisation",
+      "and": "et la",
+      "privacyLink": "Politique de confidentialité",
+      "button": "Créer mon compte",
+      "hasAccount": "Vous avez déjà un compte ?",
+      "login": "Se connecter"
+    },
+    "admin": {
+      "badge": "Administration",
+      "title": "Connexion Admin",
+      "subtitle": "Accédez au tableau de bord administrateur",
+      "restricted": "Accès restreint",
+      "loginBtn": "Se connecter"
+    },
+    "restaurant": {
+      "loginTitle": "Espace Restaurant",
+      "loginSubtitle": "Gérez votre restaurant facilement",
+      "registerTitle": "Inscrivez votre Restaurant",
+      "registerSubtitle": "Rejoignez Zamora et développez votre activité"
+    },
+    "client": {
+      "loginTitle": "Connexion Client",
+      "loginSubtitle": "Commandez vos plats préférés",
+      "registerTitle": "Créez votre compte",
+      "registerSubtitle": "Rejoignez Zamora et découvrez les meilleurs restaurants"
+    },
+    "social": {
+      "google": "Google",
+      "facebook": "Facebook",
+      "apple": "Apple"
+    },
+    "errors": {
+      "required": "Ce champ est requis",
+      "requiredFields": "Veuillez remplir tous les champs",
+      "invalidEmail": "Veuillez entrer une adresse email valide",
+      "invalidPassword": "Le mot de passe doit contenir au moins 8 caractères",
+      "passwordMismatch": "Les mots de passe ne correspondent pas",
+      "invalidPhone": "Veuillez entrer un numéro de téléphone valide",
+      "termsRequired": "Vous devez accepter les conditions d'utilisation",
+      "loginFailed": "Échec de la connexion. Veuillez vérifier vos identifiants.",
+      "registerFailed": "Échec de l'inscription. Veuillez réessayer.",
+      "invalidRestaurantName": "Le nom doit contenir au moins 2 caractères",
+      "invalidCredentials": "Email ou mot de passe incorrect",
+      "accountDisabled": "Votre compte a été désactivé",
+      "accountNotFound": "Aucun compte trouvé avec cet email",
+      "serverError": "Erreur serveur, veuillez réessayer",
+      "networkError": "Erreur de connexion, vérifiez votre internet",
+      "emailAlreadyExists": "Cet email est déjà utilisé",
+      "phoneAlreadyExists": "Ce numéro de téléphone est déjà utilisé",
+      "restaurantNameAlreadyExists": "Ce nom de restaurant est déjà pris",
+      "tokenExpired": "Votre session a expiré, veuillez vous reconnecter",
+      "unauthorized": "Vous n'êtes pas autorisé à accéder à cette ressource",
+      "tooShort": "Minimum 2 caractères",
+      "invalid": "Valeur invalide",
+      "invalidType": "Type de fichier invalide",
+      "tooLarge": "Fichier trop volumineux (max 5MB)",
+      "emailExists": "Cet email est déjà utilisé",
+      "invalidToken": "Token invalide",
+      "invalidRefreshToken": "Session expirée",
+      "registrationFailed": "Échec de l'inscription",
+      "forgotPasswordFailed": "Échec de l'envoi",
+      "resetPasswordFailed": "Échec de la réinitialisation",
+      "sessionExpired": "Votre session a expiré",
+      "addressRequired": "L’adresse est obligatoire",
+      "invalidResponse": "Réponse invalide du serveur",
+      "invalidData": "Données invalides",
+      "accessDenied": "Accès refusé. Vous n'êtes pas administrateur.",
+      "userNotFound": "Compte administrateur non trouvé",
+      "network": "Impossible de contacter le serveur",
+      "tooManyAttempts": "Trop de tentatives. Réessayez plus tard.",
+      "unknown": "Une erreur est survenue"
+    },
+    "success": {
+      "loginSuccess": "Connexion réussie !",
+      "registerSuccess": "Compte créé avec succès !",
+      "welcomeBack": "Bon retour !",
+      "logoutSuccess": "Déconnexion réussie",
+      "passwordResetSent": "Email de réinitialisation envoyé",
+      "passwordChanged": "Mot de passe modifié avec succès",
+      "profileUpdated": "Profil mis à jour avec succès"
+    },
+    "passwordStrength": {
+      "weak": "Faible",
+      "medium": "Moyen",
+      "strong": "Fort"
+    },
+    "backToChoice": "Retour à la sélection",
+    "forgotPasswordPage": {
+      "title": "Mot de passe oublié",
+      "subtitle": "Entrez votre email pour réinitialiser votre mot de passe",
+      "button": "Envoyer le lien",
+      "backToLogin": "Retour à la connexion"
+    },
+    "resetPasswordPage": {
+      "title": "Réinitialiser le mot de passe",
+      "subtitle": "Créez un nouveau mot de passe",
+      "newPassword": "Nouveau mot de passe",
+      "confirmNewPassword": "Confirmer le nouveau mot de passe",
+      "button": "Réinitialiser"
+    },
+    "testMode": {
+      "message": "Mode test:"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Bienvenue sur votre espace",
+    "revenueOverview": "Aperçu des Revenus",
+    "revenueDescription": "Revenus journaliers des 7 derniers jours",
+    "ordersStatus": "Statut des Commandes",
+    "statusDistribution": "Répartition par statut",
+    "topSelling": "Meilleures Ventes",
+    "recentOrders": "Commandes Récentes",
+    "viewAll": "Voir tout",
+    "noData": "Aucune donnée disponible",
+    "noOrders": "Aucune commande récente",
+    "noSales": "Aucune vente enregistrée",
+    "loading": "Chargement...",
+    "kpi": {
+      "totalOrders": "Total Commandes",
+      "totalRevenue": "Chiffre d'Affaires",
+      "averageBasket": "Panier Moyen",
+      "uniqueCustomers": "Clients Uniques",
+      "pendingOrders": "Commandes en attente",
+      "completedOrders": "Commandes livrées",
+      "rating": "Note moyenne"
+    },
+    "errors": {
+      "fetchFailed": "Erreur lors du chargement du dashboard"
+    }
+  },
+  "orders": {
+    "title": "Commandes",
+    "subtitle": "Gérez et suivez toutes les commandes",
+    "searchPlaceholder": "Rechercher par n° commande ou client...",
+    "orderId": "ID Commande",
+    "customer": "Client",
+    "items": "Articles",
+    "total": "Total",
+    "item": "article",
+    "itemPlural": "articles",
+    "newOrder": "Nouvelle commande",
+    "export": "Exporter",
+    "exportCSV": "Exporter en CSV",
+    "exportPDF": "Exporter en PDF",
+    "selected": "sélectionnée(s)",
+    "bulkActions": "Actions groupées",
+    "bulkMarkDelivered": "Marquer comme livrées",
+    "bulkMarkCancelled": "Marquer comme annulées",
+    "bulkDelete": "Supprimer",
+    "stats": {
+      "total": "Total",
+      "pending": "En attente",
+      "delivered": "Livrées",
+      "cancelled": "Annulées"
+    },
+    "filters": {
+      "allStatus": "Tous les statuts",
+      "allPaymentStatus": "Tous les paiements",
+      "searchRestaurant": "Rechercher un restaurant...",
+      "noResults": "Aucun résultat",
+      "allMethods": "Toutes les méthodes",
+      "allSources": "Toutes les sources",
+      "allRestaurants": "Tous les restaurants",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "thisMonth": "Ce mois",
+      "thisYear": "Cette année",
+      "last7Days": "7 derniers jours",
+      "last30Days": "30 derniers jours",
+      "custom": "Personnalisé",
+      "advanced": "Filtres avancés",
+      "reset": "Réinitialiser"
+    },
+    "table": {
+      "orderId": "N° Commande",
+      "customer": "Client",
+      "restaurant": "Restaurant",
+      "amount": "Montant",
+      "orderStatus": "Statut",
+      "paymentStatus": "Paiement",
+      "paymentMethod": "Méthode",
+      "source": "Source",
+      "date": "Date",
+      "actions": "Actions"
+    },
+    "status": {
+      "pending": "En attente",
+      "inPreparation": "En préparation",
+      "outForDelivery": "En livraison",
+      "delivered": "Livrée",
+      "cancelled": "Annulée"
+    },
+    "paymentStatus": {
+      "pending": "En attente",
+      "paid": "Payé",
+      "failed": "Échoué",
+      "refunded": "Remboursé"
+    },
+    "paymentMethod": {
+      "card": "Carte bancaire",
+      "cashOnDelivery": "À la livraison",
+      "mobileMoney": "Mobile Money",
+      "other": "Autre"
+    },
+    "source": {
+      "mobile": "Mobile",
+      "web": "Web",
+      "other": "Autre"
+    },
+    "details": {
+      "title": "Détails de la commande",
+      "customer": "Client",
+      "items": "Articles commandés",
+      "item": "Article",
+      "qty": "Qté",
+      "unitPrice": "Prix unit.",
+      "itemTotal": "Total",
+      "subtotal": "Sous-total",
+      "delivery": "Livraison",
+      "total": "Total",
+      "statusUpdate": "Modifier le statut",
+      "payment": "Paiement",
+      "reference": "Référence",
+      "paidAt": "Payé le",
+      "history": "Historique",
+      "print": "Imprimer"
+    },
+    "empty": {
+      "noOrders": "Aucune commande",
+      "noOrdersDesc": "Les commandes apparaîtront ici une fois passées.",
+      "noResults": "Aucun résultat",
+      "noResultsDesc": "Aucune commande ne correspond à vos critères de recherche."
+    },
+    "pagination": {
+      "showing": "Affichage",
+      "of": "sur",
+      "page": "page",
+      "first": "Première page",
+      "previous": "Page précédente",
+      "next": "Page suivante",
+      "last": "Dernière page"
+    },
+    "loading": "Chargement des commandes..."
+  },
+  "status": {
+    "delivered": "Livré",
+    "preparing": "En préparation",
+    "pending": "En attente",
+    "cancelled": "Annulé",
+    "total": "Total"
+  },
+  "common": {
+    "sold": "vendus",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "export": "Exporter",
+    "add": "Ajouter",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "loading": "Chargement...",
+    "back": "Retour",
+    "next": "Suivant",
+    "submit": "Envoyer",
+    "close": "Fermer",
+    "actions": "Actions",
+    "view": "Voir",
+    "refresh": "Actualiser",
+    "noData": "Aucune donnée",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Attention",
+    "info": "Information"
+  },
+  "confirm": {
+    "title": "Êtes-vous sûr ?",
+    "message": "Cette action ne peut pas être annulée.",
+    "deleteTitle": "Supprimer cet élément ?",
+    "deleteMessage": "Cette suppression est définitive.",
+    "logoutTitle": "Déconnexion",
+    "logoutMessage": "Êtes-vous sûr de vouloir vous déconnecter ?",
+    "cancelOrderTitle": "Annuler cette commande ?",
+    "cancelOrderMessage": "Cette action ne peut pas être annulée."
+  },
+  "payments": {
+    "title": "Paiements",
+    "revenue": "Revenus du mois",
+    "commission": "Commission Zamora",
+    "net": "Net à recevoir",
+    "history": "Historique des virements",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "paid": "Payé",
+    "pending": "En attente",
+    "processing": "En cours"
+  },
+  "menu": {
+    "title": "Menus & Repas",
+    "subtitle": "Gérez vos catégories et plats",
+    "categories": {
+      "title": "Catégories",
+      "add": "Ajouter une catégorie",
+      "edit": "Modifier la catégorie",
+      "delete": "Supprimer la catégorie",
+      "empty": "Aucune catégorie",
+      "emptyDesc": "Créez votre première catégorie pour commencer.",
+      "name": "Nom de la catégorie",
+      "namePlaceholder": "Ex: Desserts",
+      "description": "Description",
+      "descriptionPlaceholder": "Description de la catégorie",
+      "order": "Ordre d'affichage",
+      "active": "Active",
+      "inactive": "Inactive",
+      "status": "Statut",
+      "meals": "plats",
+      "confirmDelete": "Supprimer cette catégorie ?",
+      "confirmDeleteMessage": "Tous les plats de cette catégorie seront également supprimés."
+    },
+    "meals": {
+      "title": "Plats",
+      "add": "Ajouter un plat",
+      "edit": "Modifier le plat",
+      "delete": "Supprimer le plat",
+      "empty": "Aucun plat",
+      "emptyDesc": "Ajoutez des plats à cette catégorie.",
+      "selectCategory": "Sélectionnez une catégorie",
+      "selectCategoryDesc": "Choisissez une catégorie à gauche pour voir ses plats.",
+      "name": "Nom du plat",
+      "namePlaceholder": "Ex: Tiramisu",
+      "description": "Description",
+      "descriptionPlaceholder": "Description du plat",
+      "category": "Catégorie",
+      "price": "Prix",
+      "pricePlaceholder": "0.00",
+      "currency": "F CFA",
+      "image": "Image",
+      "imageUpload": "Télécharger une image",
+      "imageUrl": "URL de l'image",
+      "available": "Disponible",
+      "unavailable": "Indisponible",
+      "availability": "Disponibilité",
+      "confirmDelete": "Supprimer ce plat ?",
+      "confirmDeleteMessage": "Cette action est irréversible."
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "toggleAvailability": "Changer disponibilité"
+    },
+    "messages": {
+      "categoryAdded": "Catégorie ajoutée avec succès",
+      "categoryUpdated": "Catégorie modifiée avec succès",
+      "categoryDeleted": "Catégorie supprimée avec succès",
+      "mealAdded": "Plat ajouté avec succès",
+      "mealUpdated": "Plat modifié avec succès",
+      "mealDeleted": "Plat supprimé avec succès",
+      "availabilityChanged": "Disponibilité modifiée",
+      "error": "Une erreur est survenue"
+    }
+  },
+  "promotions": {
+    "title": "Promotions",
+    "addPromotion": "Ajouter une promotion",
+    "editPromotion": "Modifier la promotion",
+    "deletePromotion": "Supprimer la promotion",
+    "name": "Nom",
+    "discount": "Réduction",
+    "startDate": "Date de début",
+    "endDate": "Date de fin",
+    "active": "Active",
+    "inactive": "Inactive",
+    "code": "Code promo",
+    "usageLimit": "Limite d'utilisation",
+    "usageCount": "Utilisations"
+  },
+  "specialOffers": {
+    "title": "Offres Spéciales",
+    "addOffer": "Ajouter une offre",
+    "editOffer": "Modifier l'offre",
+    "deleteOffer": "Supprimer l'offre",
+    "offerName": "Nom de l'offre",
+    "description": "Description",
+    "discount": "Réduction",
+    "validUntil": "Valable jusqu'au"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Tout marquer comme lu",
+    "noNotifications": "Aucune notification",
+    "newOrder": "Nouvelle commande",
+    "orderUpdate": "Mise à jour commande",
+    "newReview": "Nouvel avis",
+    "systemAlert": "Alerte système",
+    "settings": "Paramètres",
+    "save": "Enregistrer",
+    "ownerNewOrder": "Notifier le restaurateur à chaque nouvelle commande",
+    "clientOrderCreated": "Notifier le client à la création de commande",
+    "clientStatusChange": "Notifier le client au changement de statut",
+    "clientNewPromotion": "Notifier les clients des nouvelles promotions",
+    "channelEmail": "Email",
+    "channelPush": "Push",
+    "channels": "Canaux de notification",
+    "events": "Événements",
+    "log": "Journal des notifications",
+    "deleteConfirm": "Supprimer cette notification ?",
+    "saveSuccess": "Paramètres enregistrés",
+    "saveError": "Erreur lors de la sauvegarde",
+    "saving": "Enregistrement...",
+    "selectRestaurant": "Restaurant",
+    "globalSettings": "Paramètres globaux",
+    "restaurantSubtitle": "Configurez vos préférences de notifications",
+    "noLogs": "Aucune notification envoyée",
+    "logDate": "Date",
+    "logType": "Type",
+    "logRecipient": "Destinataire",
+    "logChannel": "Canal",
+    "logStatus": "Statut",
+    "logActions": "Actions",
+    "deleteTitle": "Supprimer la notification",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "eventType": {
+      "new_order": "Nouvelle commande",
+      "status_change": "Changement de statut",
+      "promotion": "Promotion"
+    },
+    "status": {
+      "sent": "Envoyé",
+      "pending": "En attente",
+      "failed": "Échec"
+    }
+  },
+  "messages": {
+    "title": "Messages",
+    "conversations": "Conversations",
+    "announcements": "Annonces",
+    "refresh": "Actualiser",
+    "newConversation": "Nouvelle conversation",
+    "newAnnouncement": "Nouvelle annonce",
+    "contactSupport": "Contacter le support",
+    "noConversations": "Aucune conversation",
+    "noAnnouncements": "Aucune annonce",
+    "noMessages": "Aucun message dans cette conversation",
+    "selectConversation": "Sélectionnez une conversation",
+    "selectConversationDesc": "Choisissez une conversation dans la liste pour afficher les messages",
+    "announcementsTitle": "Annonces",
+    "announcementsDesc": "Créez des annonces pour informer tous les restaurants",
+    "announcementsRestaurantDesc": "Consultez les annonces importantes de l'administration",
+    "typeMessage": "Écrire un message...",
+    "send": "Envoyer",
+    "sending": "Envoi...",
+    "conversationClosed": "Cette conversation est fermée",
+    "attachFile": "Joindre un fichier",
+    "emoji": "Emoji",
+    "yesterday": "Hier",
+    "time": {
+      "now": "À l'instant",
+      "minutes": "Il y a {{count}} min",
+      "hours": "Il y a {{count}}h",
+      "days": "Il y a {{count}}j"
+    },
+    "selectRestaurant": "Restaurant",
+    "selectRestaurantPlaceholder": "Sélectionner un restaurant",
+    "conversationType": "Type de message",
+    "typeSupport": "Support",
+    "typeInfo": "Information",
+    "typeWarning": "Avertissement",
+    "subject": "Sujet",
+    "subjectPlaceholder": "Entrez le sujet de la conversation",
+    "message": "Message",
+    "messagePlaceholder": "Écrivez votre message...",
+    "startConversation": "Démarrer la conversation",
+    "cancel": "Annuler",
+    "announcementTitle": "Titre",
+    "announcementTitlePlaceholder": "Titre de l'annonce",
+    "announcementContent": "Contenu",
+    "announcementContentPlaceholder": "Contenu de l'annonce...",
+    "announcementTypeLabel": "Type d'annonce",
+    "announcementType": {
+      "info": "Information",
+      "warning": "Attention",
+      "urgent": "Urgent"
+    },
+    "announcementTarget": "Destinataires",
+    "targetAll": "Tous les restaurants",
+    "targetSpecific": "Restaurants spécifiques",
+    "expiresAt": "Date d'expiration",
+    "optional": "optionnel",
+    "publish": "Publier",
+    "markAsRead": "Marquer comme lu",
+    "deleteAnnouncement": "Supprimer l'annonce",
+    "deleteMessage": "Supprimer le message",
+    "moreOptions": "Plus d'options",
+    "close": "Fermer",
+    "deleteTitle": "Confirmer la suppression",
+    "deleteConversationConfirm": "Êtes-vous sûr de vouloir supprimer cette conversation ? Cette action est irréversible.",
+    "deleteAnnouncementConfirm": "Êtes-vous sûr de vouloir supprimer cette annonce ?",
+    "deleteMessageConfirm": "Êtes-vous sûr de vouloir supprimer ce message ?",
+    "delete": "Supprimer",
+    "errors": {
+      "restaurantRequired": "Veuillez sélectionner un restaurant",
+      "subjectRequired": "Le sujet est requis",
+      "messageRequired": "Le message est requis",
+      "titleRequired": "Le titre est requis",
+      "contentRequired": "Le contenu est requis"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "restaurant": "Restaurant",
+    "notifications": "Notifications",
+    "security": "Sécurité",
+    "language": "Langue",
+    "theme": "Thème",
+    "updateProfile": "Mettre à jour le profil",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmNewPassword": "Confirmer le nouveau mot de passe"
+  },
+  "filters": {
+    "allRestaurants": "Tous les restaurants",
+    "searchRestaurant": "Rechercher...",
+    "noResults": "Aucun résultat",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "last7Days": "7 derniers jours",
+    "last30Days": "30 derniers jours",
+    "thisMonth": "Ce mois",
+    "lastMonth": "Mois dernier",
+    "thisYear": "Cette année",
+    "custom": "Personnalisé"
+  },
+  "menus": {
+    "errors": {
+      "categoryNotFound": "Catégorie introuvable",
+      "categoryNameRequired": "Le nom de la catégorie est requis",
+      "categoryHasMeals": "Impossible de supprimer: cette catégorie contient des plats",
+      "mealNotFound": "Plat introuvable",
+      "mealRequiredFields": "Nom, prix et catégorie sont requis",
+      "optionNotFound": "Option introuvable"
+    },
+    "messages": {
+      "categoryCreated": "Catégorie créée avec succès",
+      "categoryUpdated": "Catégorie mise à jour",
+      "categoryDeleted": "Catégorie supprimée",
+      "categoriesReordered": "Ordre des catégories mis à jour",
+      "mealCreated": "Plat créé avec succès",
+      "mealUpdated": "Plat mis à jour",
+      "mealDeleted": "Plat supprimé",
+      "mealEnabled": "Plat activé",
+      "mealDisabled": "Plat désactivé",
+      "mealMarkedPopular": "Plat marqué comme populaire",
+      "mealUnmarkedPopular": "Plat retiré des populaires",
+      "mealsDeleted": "Plats supprimés",
+      "mealsEnabled": "Plats activés",
+      "mealsDisabled": "Plats désactivés",
+      "optionAdded": "Option ajoutée",
+      "optionRemoved": "Option supprimée"
+    }
+  },
+  "logout": {
+    "title": "Déconnexion",
+    "confirmMessage": "Voulez-vous vraiment vous déconnecter?"
+  }
+}

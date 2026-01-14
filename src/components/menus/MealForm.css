@@ -1,0 +1,421 @@
+/* src/components/menus/MealForm.css */
+
+.meal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 20px;
+}
+
+.meal-form-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.meal-form-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Form Group */
+.meal-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meal-form .form-group label {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.meal-form .form-group label .required {
+  color: var(--text-danger, #ef4444);
+}
+
+.meal-form .form-group input[type="text"],
+.meal-form .form-group input[type="number"],
+.meal-form .form-group textarea,
+.meal-form .form-group select {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111827);
+  background: var(--bg-primary, #ffffff);
+  transition: all 0.2s;
+}
+
+.meal-form .form-group input:focus,
+.meal-form .form-group textarea:focus,
+.meal-form .form-group select:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.meal-form .form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* SELECT FIX - Supprimer la double flèche */
+.meal-form .form-group select {
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+  padding-right: 32px;
+}
+
+/* Fix pour IE/Edge */
+.meal-form .form-group select::-ms-expand {
+  display: none;
+}
+
+.meal-form .form-group.error input,
+.meal-form .form-group.error textarea,
+.meal-form .form-group.error select {
+  border-color: var(--text-danger, #ef4444);
+}
+
+.meal-form .form-error {
+  font-size: 0.75rem;
+  color: var(--text-danger, #ef4444);
+}
+
+/* Price Input */
+.price-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.price-input-wrapper input {
+  flex: 1;
+  padding-right: 40px !important;
+}
+
+.price-currency {
+  position: absolute;
+  right: 10px;
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6b7280);
+}
+
+/* Checkbox Group */
+.meal-form .checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.meal-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111827);
+}
+
+.meal-form .checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.meal-form .checkbox-label .checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color, #d1d5db);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.meal-form .checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: var(--primary-color, #6366f1);
+  border-color: var(--primary-color, #6366f1);
+}
+
+.meal-form .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '';
+  width: 5px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Image Upload */
+.image-upload-container {
+  width: 100%;
+  height: 160px;
+}
+
+.image-upload-area {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed var(--border-color, #d1d5db);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-secondary, #f9fafb);
+}
+
+.image-upload-area:hover {
+  border-color: var(--primary-color, #6366f1);
+  background: var(--primary-light, #eef2ff);
+}
+
+.image-upload-area .upload-icon {
+  width: 32px;
+  height: 32px;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.image-upload-area span {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.image-upload-area .upload-hint {
+  font-size: 0.688rem;
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.image-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.image-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.9);
+}
+
+.image-remove-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Form Actions */
+.meal-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.meal-form .btn-cancel,
+.meal-form .btn-submit {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100px;
+}
+
+.meal-form .btn-cancel {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #374151);
+}
+
+.meal-form .btn-cancel:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.meal-form .btn-submit {
+  background: var(--primary-color, #6366f1);
+  color: #ffffff;
+}
+
+.meal-form .btn-submit:hover:not(:disabled) {
+  background: var(--primary-hover, #4f46e5);
+}
+
+.meal-form .btn-cancel:disabled,
+.meal-form .btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.meal-form .btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark Mode */
+.dark .meal-form .form-group label {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-form .form-group input,
+.dark .meal-form .form-group textarea,
+.dark .meal-form .form-group select {
+  background: var(--bg-secondary, #374151);
+  border-color: var(--border-color, #4b5563);
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-form .form-group input:focus,
+.dark .meal-form .form-group textarea:focus,
+.dark .meal-form .form-group select:focus {
+  border-color: var(--primary-color, #818cf8);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+.dark .meal-form .form-group input::placeholder,
+.dark .meal-form .form-group textarea::placeholder {
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.dark .meal-form .form-group select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.dark .price-currency {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dark .meal-form .checkbox-label {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-form .checkbox-label .checkmark {
+  border-color: var(--border-color, #4b5563);
+}
+
+.dark .image-upload-area {
+  background: var(--bg-secondary, #374151);
+  border-color: var(--border-color, #4b5563);
+}
+
+.dark .image-upload-area:hover {
+  border-color: var(--primary-color, #818cf8);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.dark .image-upload-area .upload-icon {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dark .meal-form .form-actions {
+  border-top-color: var(--border-color, #374151);
+}
+
+.dark .meal-form .btn-cancel {
+  background: var(--bg-secondary, #374151);
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-form .btn-cancel:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .meal-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .meal-form-right {
+    order: -1;
+  }
+  
+  .image-upload-container {
+    height: 120px;
+  }
+  
+  .meal-form .form-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .meal-form .btn-cancel,
+  .meal-form .btn-submit {
+    width: 100%;
+  }
+}
+/* Ajoute en haut de MealForm.css après les styles select existants */
+
+/* Custom Select - Fix double flèche */
+.meal-form .form-group select.custom-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: var(--bg-primary, #ffffff);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 36px;
+}
+
+.meal-form .form-group select.custom-select::-ms-expand {
+  display: none;
+}
+
+.dark .meal-form .form-group select.custom-select {
+  background-color: var(--bg-secondary, #374151);
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+}

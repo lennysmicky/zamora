@@ -1,0 +1,408 @@
+/* src/pages/Restaurant/Notifications/RestaurantNotificationsPage.css */
+
+/* ========== Container principal ========== */
+.restaurant-notifications-page {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* ========== Header ========== */
+.restaurant-notifications-page .notifications-header {
+  margin-bottom: 24px;
+}
+
+.restaurant-notifications-page .notifications-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 8px 0;
+}
+
+.notifications-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========== Messages ========== */
+.restaurant-notifications-page .notification-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.restaurant-notifications-page .notification-message.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.restaurant-notifications-page .notification-message.success {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* ========== Tabs ========== */
+.restaurant-notifications-page .notifications-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.restaurant-notifications-page .tab-btn {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.restaurant-notifications-page .tab-btn:hover {
+  color: #f97316;
+}
+
+.restaurant-notifications-page .tab-btn.active {
+  color: #f97316;
+}
+
+.restaurant-notifications-page .tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #f97316;
+  border-radius: 2px 2px 0 0;
+}
+
+/* ========== Contenu ========== */
+.restaurant-notifications-page .notifications-content {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+}
+
+/* ========== Section Paramètres ========== */
+.restaurant-notifications-page .settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.restaurant-notifications-page .settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.restaurant-notifications-page .settings-group h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+/* ========== Toggle Switch ========== */
+.restaurant-notifications-page .setting-item {
+  display: flex;
+  align-items: center;
+}
+
+.restaurant-notifications-page .toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.restaurant-notifications-page .toggle-label input[type="checkbox"] {
+  display: none;
+}
+
+.restaurant-notifications-page .toggle-slider {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background-color: #e2e8f0;
+  border-radius: 13px;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.restaurant-notifications-page .toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.restaurant-notifications-page .toggle-label input:checked + .toggle-slider {
+  background-color: #f97316;
+}
+
+.restaurant-notifications-page .toggle-label input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.restaurant-notifications-page .toggle-text {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+}
+
+/* Canaux */
+.restaurant-notifications-page .channels-container {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+/* ========== Actions ========== */
+.restaurant-notifications-page .settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.restaurant-notifications-page .btn-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 32px;
+  background-color: #f97316;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.restaurant-notifications-page .btn-save:hover:not(:disabled) {
+  background-color: #ea580c;
+}
+
+.restaurant-notifications-page .btn-save:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ========== Section Journal (Cards) ========== */
+.restaurant-notifications-page .log-section {
+  min-height: 300px;
+}
+
+.restaurant-notifications-page .empty-log {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  color: #64748b;
+}
+
+.restaurant-notifications-page .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.restaurant-notifications-page .empty-log p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* ========== Log Cards ========== */
+.log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.log-card {
+  background-color: #f8fafc;
+  border-radius: 10px;
+  padding: 16px;
+  border-left: 4px solid #e2e8f0;
+  transition: box-shadow 0.2s ease;
+}
+
+.log-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.log-card.sent {
+  border-left-color: #16a34a;
+}
+
+.log-card.pending {
+  border-left-color: #f59e0b;
+}
+
+.log-card.failed {
+  border-left-color: #dc2626;
+}
+
+.log-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.log-card .log-type {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.log-card .log-type.new_order {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.log-card .log-type.status_change {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.log-card .log-type.promotion {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.log-card .log-date {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.log-card-body {
+  margin-bottom: 12px;
+}
+
+.log-card-body h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 4px 0;
+}
+
+.log-card-body p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.log-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.log-channel {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.log-card .log-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.log-card .log-status.sent {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.log-card .log-status.pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.log-card .log-status.failed {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.log-card .btn-delete-log {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.log-card .btn-delete-log:hover {
+  background-color: #fef2f2;
+}
+
+/* ========== Responsive ========== */
+@media (max-width: 768px) {
+  .restaurant-notifications-page {
+    padding: 16px;
+  }
+
+  .restaurant-notifications-page .notifications-tabs {
+    width: 100%;
+  }
+
+  .restaurant-notifications-page .tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 12px 16px;
+  }
+
+  .restaurant-notifications-page .channels-container {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .restaurant-notifications-page .settings-actions {
+    justify-content: stretch;
+  }
+
+  .restaurant-notifications-page .btn-save {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .log-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .log-card-footer {
+    flex-wrap: wrap;
+  }
+}

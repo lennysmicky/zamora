@@ -1,0 +1,169 @@
+/* ========================================
+   ORDERS BADGES - All badge styles
+   ======================================== */
+
+/* ========================================
+   BASE BADGE
+   ======================================== */
+.order-badge,
+.payment-badge,
+.method-badge,
+.source-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.badge-icon {
+  font-size: 0.75rem;
+}
+
+/* ========================================
+   ORDER STATUS BADGES
+   ======================================== */
+.status-pending {
+  background-color: var(--color-warning-light);
+  color: #b45309;
+}
+
+.dark .status-pending {
+  background-color: var(--color-warning-dark);
+  color: var(--color-warning);
+}
+
+.status-preparation {
+  background-color: var(--color-info-light);
+  color: var(--color-info);
+}
+
+.dark .status-preparation {
+  background-color: var(--color-info-dark);
+}
+
+.status-delivery {
+  background-color: #ede9fe;
+  color: #7c3aed;
+}
+
+.dark .status-delivery {
+  background-color: rgba(124, 58, 237, 0.15);
+  color: #a78bfa;
+}
+
+.status-delivered {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .status-delivered {
+  background-color: var(--color-success-dark);
+}
+
+.status-cancelled {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .status-cancelled {
+  background-color: var(--color-error-dark);
+}
+
+/* ========================================
+   PAYMENT STATUS BADGES
+   ======================================== */
+.payment-pending {
+  background-color: var(--color-warning-light);
+  color: #b45309;
+}
+
+.dark .payment-pending {
+  background-color: var(--color-warning-dark);
+  color: var(--color-warning);
+}
+
+.payment-paid {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .payment-paid {
+  background-color: var(--color-success-dark);
+}
+
+.payment-failed {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .payment-failed {
+  background-color: var(--color-error-dark);
+}
+
+.payment-refunded {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.dark .payment-refunded {
+  background-color: rgba(217, 119, 6, 0.15);
+  color: #fbbf24;
+}
+
+/* ========================================
+   PAYMENT METHOD BADGES
+   ======================================== */
+.method-badge {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-secondary);
+}
+
+.dark .method-badge {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-muted);
+}
+
+.method-card .badge-icon {
+  color: var(--color-primary);
+}
+
+.method-cash .badge-icon {
+  color: var(--color-success);
+}
+
+.method-mobile .badge-icon {
+  color: #8b5cf6;
+}
+
+.method-other .badge-icon {
+  color: var(--color-text-muted);
+}
+
+/* ========================================
+   SOURCE BADGES
+   ======================================== */
+.source-badge {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-secondary);
+}
+
+.dark .source-badge {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-muted);
+}
+
+.source-mobile .badge-icon {
+  color: var(--color-success);
+}
+
+.source-web .badge-icon {
+  color: var(--color-primary);
+}
+
+.source-other .badge-icon {
+  color: var(--color-text-muted);
+}

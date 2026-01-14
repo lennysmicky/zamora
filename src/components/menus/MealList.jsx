@@ -1,0 +1,244 @@
+// src/components/menus/MealList.jsx
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { 
+  RiAddLine, 
+  RiEditLine, 
+  RiDeleteBinLine,
+  RiCheckLine,
+  RiCloseLine,
+  RiRestaurantLine,
+  RiToggleLine,
+  RiToggleFill
+} from 'react-icons/ri';
+import ConfirmDialog from '../common/ConfirmDialog';
+import './MealList.css';
+
+const MealList = ({ 
+  meals,
+  selectedCategory,
+  onAddMeal,
+  onEditMeal,
+  onDeleteMeal,
+  onToggleAvailability,
+  isLoading 
+}) => {
+  const { t } = useTranslation();
+  
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [mealToDelete, setMealToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [togglingId, setTogglingId] = useState(null);
+
+  const handleDeleteClick = (meal) => {
+    setMealToDelete(meal);
+    setShowConfirmDelete(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!mealToDelete) return;
+    
+    setIsDeleting(true);
+    await onDeleteMeal(mealToDelete.id);
+    setIsDeleting(false);
+    setShowConfirmDelete(false);
+    setMealToDelete(null);
+  };
+
+  const handleToggleAvailability = async (meal) => {
+    setTogglingId(meal.id);
+    await onToggleAvailability(meal.id);
+    setTogglingId(null);
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('fr-MA', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(price);
+  };
+
+  // Pas de catégorie sélectionnée
+  if (!selectedCategory) {
+    return (
+      <div className="meal-list">
+        <div className="meal-list-header">
+          <h3>{t('menu.meals.title')}</h3>
+        </div>
+        <div className="meal-list-content">
+          <div className="meal-list-empty select-category">
+            <RiRestaurantLine className="empty-icon" />
+            <p>{t('menu.meals.selectCategory')}</p>
+            <span>{t('menu.meals.selectCategoryDesc')}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="meal-list">
+        <div className="meal-list-header">
+          <h3>{t('menu.meals.title')}</h3>
+        </div>
+        <div className="meal-list-content">
+          <div className="meal-table-container">
+            <table className="meal-table">
+              <thead>
+                <tr>
+                  <th>{t('menu.meals.name')}</th>
+                  <th>{t('menu.meals.price')}</th>
+                  <th>{t('menu.meals.availability')}</th>
+                  <th>{t('common.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[1, 2, 3, 4].map(i => (
+                  <tr key={i} className="skeleton-row">
+                    <td>
+                      <div className="skeleton-text" style={{ width: '150px' }}></div>
+                      <div className="skeleton-text small" style={{ width: '200px' }}></div>
+                    </td>
+                    <td><div className="skeleton-text" style={{ width: '60px' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '80px' }}></div></td>
+                    <td><div className="skeleton-text" style={{ width: '100px' }}></div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="meal-list">
+      {/* Header */}
+      <div className="meal-list-header">
+        <div className="meal-list-title">
+          <h3>{t('menu.meals.title')}</h3>
+          <span className="meal-category-badge">{selectedCategory.name}</span>
+        </div>
+        <button 
+          className="meal-add-btn"
+          onClick={onAddMeal}
+          title={t('menu.meals.add')}
+        >
+          <RiAddLine />
+          <span>{t('menu.meals.add')}</span>
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="meal-list-content">
+        {meals.length === 0 ? (
+          <div className="meal-list-empty">
+            <RiRestaurantLine className="empty-icon" />
+            <p>{t('menu.meals.empty')}</p>
+            <span>{t('menu.meals.emptyDesc')}</span>
+          </div>
+        ) : (
+          <div className="meal-table-container">
+            <table className="meal-table">
+              <thead>
+                <tr>
+                  <th>{t('menu.meals.name')}</th>
+                  <th>{t('menu.meals.price')}</th>
+                  <th>{t('menu.meals.availability')}</th>
+                  <th>{t('common.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {meals.map(meal => (
+                  <tr key={meal.id} className={!meal.isAvailable ? 'unavailable' : ''}>
+                    <td className="meal-info-cell">
+                      <div className="meal-info">
+                        {meal.image && (
+                          <img 
+                            src={meal.image} 
+                            alt={meal.name} 
+                            className="meal-image"
+                          />
+                        )}
+                        <div className="meal-details">
+                          <span className="meal-name">{meal.name}</span>
+                          {meal.description && (
+                            <span className="meal-description">{meal.description}</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="meal-price-cell">
+                      <span className="meal-price">
+                        {formatPrice(meal.price)} {t('menu.meals.currency')}
+                      </span>
+                    </td>
+                    <td className="meal-availability-cell">
+                      <button
+                        className={`availability-toggle ${meal.isAvailable ? 'available' : 'unavailable'}`}
+                        onClick={() => handleToggleAvailability(meal)}
+                        disabled={togglingId === meal.id}
+                        title={t('menu.actions.toggleAvailability')}
+                      >
+                        {togglingId === meal.id ? (
+                          <span className="toggle-spinner"></span>
+                        ) : meal.isAvailable ? (
+                          <>
+                            <RiToggleFill />
+                            <span>{t('menu.meals.available')}</span>
+                          </>
+                        ) : (
+                          <>
+                            <RiToggleLine />
+                            <span>{t('menu.meals.unavailable')}</span>
+                          </>
+                        )}
+                      </button>
+                    </td>
+                    <td className="meal-actions-cell">
+                      <div className="meal-actions">
+                        <button
+                          className="meal-action-btn edit"
+                          onClick={() => onEditMeal(meal)}
+                          title={t('menu.actions.edit')}
+                        >
+                          <RiEditLine />
+                        </button>
+                        <button
+                          className="meal-action-btn delete"
+                          onClick={() => handleDeleteClick(meal)}
+                          title={t('menu.actions.delete')}
+                        >
+                          <RiDeleteBinLine />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        onConfirm={handleConfirmDelete}
+        title={t('menu.meals.confirmDelete')}
+        message={t('menu.meals.confirmDeleteMessage')}
+        type="danger"
+        confirmText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        isLoading={isDeleting}
+      />
+    </div>
+  );
+};
+
+export default MealList;

@@ -1,0 +1,441 @@
+/* src/components/menus/MealList.css */
+
+.meal-list {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Header */
+.meal-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.meal-list-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meal-list-title h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+  margin: 0;
+}
+
+.meal-category-badge {
+  font-size: 0.688rem;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: var(--primary-light, #eef2ff);
+  color: var(--primary-color, #6366f1);
+}
+
+.meal-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--primary-color, #6366f1);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.meal-add-btn:hover {
+  background: var(--primary-hover, #4f46e5);
+}
+
+.meal-add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Content */
+.meal-list-content {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Empty State */
+.meal-list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.meal-list-empty.select-category {
+  background: var(--bg-secondary, #f9fafb);
+  height: 100%;
+}
+
+.meal-list-empty .empty-icon {
+  width: 40px;
+  height: 40px;
+  color: var(--text-tertiary, #9ca3af);
+  margin-bottom: 12px;
+}
+
+.meal-list-empty p {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+  margin: 0 0 4px 0;
+}
+
+.meal-list-empty span {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+/* Table */
+.meal-table-container {
+  overflow-x: auto;
+}
+
+.meal-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.meal-table th,
+.meal-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.meal-table th {
+  font-size: 0.688rem;
+  font-weight: 600;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--bg-secondary, #f9fafb);
+  white-space: nowrap;
+}
+
+.meal-table tbody tr {
+  transition: background 0.2s;
+}
+
+.meal-table tbody tr:hover {
+  background: var(--bg-secondary, #f9fafb);
+}
+
+.meal-table tbody tr.unavailable {
+  opacity: 0.6;
+}
+
+/* Meal Info Cell */
+.meal-info-cell {
+  min-width: 180px;
+}
+
+.meal-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.meal-image {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.meal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.meal-name {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.meal-description {
+  font-size: 0.688rem;
+  color: var(--text-secondary, #6b7280);
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Price Cell */
+.meal-price-cell {
+  white-space: nowrap;
+}
+
+.meal-price {
+  font-size: 0.813rem;
+  font-weight: 600;
+  color: var(--text-primary, #111827);
+}
+
+/* Availability Cell */
+.meal-availability-cell {
+  white-space: nowrap;
+}
+
+.availability-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.688rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.availability-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.availability-toggle.available {
+  background: var(--bg-success, #d1fae5);
+  color: var(--text-success, #059669);
+}
+
+.availability-toggle.available:hover {
+  background: #a7f3d0;
+}
+
+.availability-toggle.unavailable {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-secondary, #6b7280);
+}
+
+.availability-toggle.unavailable:hover {
+  background: #e5e7eb;
+}
+
+.availability-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.toggle-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+/* Actions Cell */
+.meal-actions-cell {
+  width: 80px;
+}
+
+.meal-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.meal-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.meal-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.meal-action-btn.edit {
+  color: var(--text-secondary, #6b7280);
+}
+
+.meal-action-btn.edit:hover {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--primary-color, #6366f1);
+}
+
+.meal-action-btn.delete {
+  color: var(--text-secondary, #6b7280);
+}
+
+.meal-action-btn.delete:hover {
+  background: var(--bg-danger, #fee2e2);
+  color: var(--text-danger, #dc2626);
+}
+
+/* Skeleton */
+.skeleton-row td {
+  padding: 12px;
+}
+
+.skeleton-text {
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-text.small {
+  height: 8px;
+  margin-top: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark Mode */
+.dark .meal-list {
+  background: var(--bg-primary, #1f2937);
+  border-color: var(--border-color, #374151);
+}
+
+.dark .meal-list-header {
+  border-bottom-color: var(--border-color, #374151);
+}
+
+.dark .meal-list-title h3 {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-category-badge {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--primary-color, #818cf8);
+}
+
+.dark .meal-list-empty.select-category {
+  background: var(--bg-secondary, #111827);
+}
+
+.dark .meal-list-empty p {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-table th {
+  background: var(--bg-secondary, #111827);
+  color: var(--text-secondary, #9ca3af);
+  border-bottom-color: var(--border-color, #374151);
+}
+
+.dark .meal-table td {
+  border-bottom-color: var(--border-color, #374151);
+}
+
+.dark .meal-table tbody tr:hover {
+  background: var(--bg-secondary, #374151);
+}
+
+.dark .meal-name {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .meal-description {
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dark .meal-price {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .availability-toggle.available {
+  background: rgba(5, 150, 105, 0.2);
+  color: #34d399;
+}
+
+.dark .availability-toggle.unavailable {
+  background: var(--bg-secondary, #374151);
+  color: var(--text-secondary, #9ca3af);
+}
+
+.dark .meal-action-btn.edit:hover {
+  background: var(--bg-secondary, #374151);
+}
+
+.dark .meal-action-btn.delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+.dark .skeleton-text {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .meal-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .meal-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .meal-table th:nth-child(2),
+  .meal-table td:nth-child(2) {
+    display: none;
+  }
+  
+  .meal-description {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .meal-table th:nth-child(3),
+  .meal-table td:nth-child(3) {
+    display: none;
+  }
+  
+  .availability-toggle span {
+    display: none;
+  }
+}

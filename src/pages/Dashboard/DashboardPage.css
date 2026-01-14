@@ -1,0 +1,31 @@
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Charts Grid */
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-charts {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Lists Grid */
+.dashboard-lists {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-lists {
+    grid-template-columns: 1fr 2fr;
+  }
+}

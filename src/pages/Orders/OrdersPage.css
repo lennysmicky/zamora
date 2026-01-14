@@ -1,0 +1,352 @@
+/* ========================================
+   ORDERS PAGE - Main Styles
+   ======================================== */
+
+.orders-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* ========================================
+   SECTION 1 : ACTIONS BAR
+   ======================================== */
+.orders-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+
+.dark .orders-actions-bar {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* Actions normales */
+.orders-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ========================================
+   BOUTONS
+   ======================================== */
+.orders-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.orders-btn svg {
+  font-size: 1rem;
+}
+
+.orders-btn-icon {
+  padding: 0.5rem;
+  background-color: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.dark .orders-btn-icon {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-muted);
+}
+
+.orders-btn-icon:hover {
+  background-color: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.dark .orders-btn-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-white);
+}
+
+.orders-btn-secondary {
+  background-color: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-secondary);
+}
+
+.dark .orders-btn-secondary {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-muted);
+}
+
+.orders-btn-secondary:hover {
+  background-color: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+.dark .orders-btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-white);
+}
+
+.orders-btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+  box-shadow: var(--shadow-sm);
+}
+
+.orders-btn-primary:hover {
+  background-color: var(--color-primary-dark);
+  box-shadow: var(--shadow-primary);
+}
+
+/* Rotation flèche dropdown */
+.orders-btn svg.rotate {
+  transform: rotate(180deg);
+}
+
+/* ========================================
+   EXPORT DROPDOWN
+   ======================================== */
+.orders-export-wrapper {
+  position: relative;
+}
+
+.orders-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  min-width: 160px;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dark .orders-dropdown-menu {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.orders-dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.dark .orders-dropdown-menu button {
+  color: var(--color-text-muted);
+}
+
+.orders-dropdown-menu button:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .orders-dropdown-menu button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-white);
+}
+
+.orders-dropdown-menu button svg {
+  font-size: 1rem;
+}
+
+.orders-dropdown-menu button.danger {
+  color: var(--color-error);
+}
+
+.orders-dropdown-menu button.danger:hover {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .orders-dropdown-menu button.danger:hover {
+  background-color: var(--color-error-dark);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border-light);
+  margin: 0.25rem 0;
+}
+
+.dark .dropdown-divider {
+  background-color: var(--color-border-dark);
+}
+
+/* ========================================
+   BULK MODE (Sélection multiple)
+   ======================================== */
+.orders-bulk-mode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.orders-bulk-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.orders-bulk-info svg {
+  font-size: 1rem;
+}
+
+.orders-bulk-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: var(--color-primary-lighter);
+  border: none;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.orders-bulk-clear:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+
+.orders-bulk-clear svg {
+  font-size: 0.875rem;
+}
+
+.orders-bulk-actions {
+  position: relative;
+}
+
+/* ========================================
+   CONTENU PRINCIPAL
+   ======================================== */
+.orders-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.dark .orders-content {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* ========================================
+   ERREUR
+   ======================================== */
+.orders-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.orders-error p {
+  font-size: 0.875rem;
+  color: var(--color-error);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+
+/* Mobile */
+@media (max-width: 639px) {
+  .orders-actions-bar {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .orders-btn span {
+    display: none;
+  }
+
+  .orders-btn-primary span {
+    display: inline;
+  }
+
+  .orders-btn {
+    padding: 0.5rem;
+  }
+
+  .orders-btn-primary {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .orders-bulk-mode {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .orders-bulk-actions {
+    width: 100%;
+  }
+
+  .orders-bulk-actions .orders-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .orders-bulk-actions .orders-btn span {
+    display: inline;
+  }
+}
+
+/* Tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .orders-actions-bar {
+    padding: 0.75rem;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .orders-page {
+    gap: 1.25rem;
+  }
+
+  .orders-actions-bar {
+    padding: 0.875rem 1.25rem;
+  }
+}

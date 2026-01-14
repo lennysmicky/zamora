@@ -1,0 +1,222 @@
+/* src/components/menus/CategoryForm.css */
+
+.category-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Form Group */
+.category-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-form .form-group label {
+  font-size: 0.813rem;
+  font-weight: 500;
+  color: var(--text-primary, #111827);
+}
+
+.category-form .form-group label .required {
+  color: var(--text-danger, #ef4444);
+}
+
+.category-form .form-group input[type="text"],
+.category-form .form-group input[type="number"],
+.category-form .form-group textarea {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111827);
+  background: var(--bg-primary, #ffffff);
+  transition: all 0.2s;
+}
+
+.category-form .form-group input:focus,
+.category-form .form-group textarea:focus {
+  outline: none;
+  border-color: var(--primary-color, #6366f1);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.category-form .form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.category-form .form-group.error input,
+.category-form .form-group.error textarea {
+  border-color: var(--text-danger, #ef4444);
+}
+
+.category-form .form-error {
+  font-size: 0.75rem;
+  color: var(--text-danger, #ef4444);
+}
+
+/* Checkbox Group */
+.category-form .checkbox-group {
+  flex-direction: row;
+  align-items: center;
+}
+
+.category-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-primary, #111827);
+}
+
+.category-form .checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.category-form .checkbox-label .checkmark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border-color, #d1d5db);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.category-form .checkbox-label input[type="checkbox"]:checked + .checkmark {
+  background: var(--primary-color, #6366f1);
+  border-color: var(--primary-color, #6366f1);
+}
+
+.category-form .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+  content: '';
+  width: 5px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Form Actions */
+.category-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.category-form .btn-cancel,
+.category-form .btn-submit {
+  padding: 8px 18px;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+}
+
+.category-form .btn-cancel {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #374151);
+}
+
+.category-form .btn-cancel:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.category-form .btn-submit {
+  background: var(--primary-color, #6366f1);
+  color: #ffffff;
+}
+
+.category-form .btn-submit:hover:not(:disabled) {
+  background: var(--primary-hover, #4f46e5);
+}
+
+.category-form .btn-cancel:disabled,
+.category-form .btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.category-form .btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Dark Mode */
+.dark .category-form .form-group label {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .category-form .form-group input,
+.dark .category-form .form-group textarea {
+  background: var(--bg-secondary, #374151);
+  border-color: var(--border-color, #4b5563);
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .category-form .form-group input:focus,
+.dark .category-form .form-group textarea:focus {
+  border-color: var(--primary-color, #818cf8);
+  box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+.dark .category-form .form-group input::placeholder,
+.dark .category-form .form-group textarea::placeholder {
+  color: var(--text-tertiary, #9ca3af);
+}
+
+.dark .category-form .checkbox-label {
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .category-form .checkbox-label .checkmark {
+  border-color: var(--border-color, #4b5563);
+}
+
+.dark .category-form .form-actions {
+  border-top-color: var(--border-color, #374151);
+}
+
+.dark .category-form .btn-cancel {
+  background: var(--bg-secondary, #374151);
+  color: var(--text-primary, #f9fafb);
+}
+
+.dark .category-form .btn-cancel:hover:not(:disabled) {
+  background: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .category-form .form-actions {
+    flex-direction: column-reverse;
+  }
+  
+  .category-form .btn-cancel,
+  .category-form .btn-submit {
+    width: 100%;
+  }
+}

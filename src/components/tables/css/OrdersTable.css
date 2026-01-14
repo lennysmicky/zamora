@@ -1,0 +1,163 @@
+/* ========================================
+   ORDERS TABLE
+   ======================================== */
+
+.orders-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+/* ========================================
+   TABLE HEADER
+   ======================================== */
+.orders-table thead {
+  background-color: var(--color-surface-light);
+}
+
+.dark .orders-table thead {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.orders-table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  white-space: nowrap;
+}
+
+.orders-table-th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--transition-fast);
+}
+
+.orders-table-th.sortable:hover {
+  color: var(--color-text-primary);
+}
+
+.dark .orders-table-th.sortable:hover {
+  color: var(--color-text-white);
+}
+
+.orders-table-th-content {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.orders-table-th-content .sort-icon {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+}
+
+/* ========================================
+   CHECKBOX COLUMN
+   ======================================== */
+.orders-table-checkbox {
+  width: 40px;
+  text-align: center;
+}
+
+.orders-checkbox-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.orders-checkbox-btn:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .orders-checkbox-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-white);
+}
+
+.orders-checkbox-btn svg {
+  font-size: 1.125rem;
+}
+
+.orders-checkbox-btn svg.checked {
+  color: var(--color-primary);
+}
+
+.orders-checkbox-btn svg.indeterminate {
+  color: var(--color-primary);
+  opacity: 0.6;
+}
+
+/* ========================================
+   TABLE BODY
+   ======================================== */
+.orders-table tbody tr {
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background-color var(--transition-fast);
+}
+
+.dark .orders-table tbody tr {
+  border-color: var(--color-border-dark);
+}
+
+.orders-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.orders-table tbody tr:hover {
+  background-color: var(--color-surface-light);
+}
+
+.dark .orders-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.orders-table tbody tr.selected {
+  background-color: var(--color-primary-lighter);
+}
+
+.dark .orders-table tbody tr.selected {
+  background-color: rgba(37, 99, 235, 0.1);
+}
+
+.orders-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  vertical-align: middle;
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1279px) {
+  .orders-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 1023px) {
+  .orders-table {
+    min-width: 700px;
+  }
+  
+  .orders-table-restaurant {
+    display: none;
+  }
+}

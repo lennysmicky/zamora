@@ -1,0 +1,40 @@
+/* Page container */
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Charts Section */
+.dashboard-charts {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Desktop charts layout */
+@media (min-width: 1024px) {
+  .dashboard-charts {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* Bottom Section (Lists / Tables) */
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+/* Desktop bottom layout */
+@media (min-width: 1024px) {
+  .dashboard-bottom {
+    grid-template-columns: 1fr 2fr;
+  }
+}
+
+/* Prevent overflow issues with charts/tables */
+.dashboard-charts > *,
+.dashboard-bottom > * {
+  min-width: 0;
+}

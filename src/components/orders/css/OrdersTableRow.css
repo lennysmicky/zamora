@@ -1,0 +1,185 @@
+/* ========================================
+   ORDERS TABLE ROW
+   ======================================== */
+
+.orders-table-row {
+  cursor: pointer;
+}
+
+/* ========================================
+   CELL STYLES
+   ======================================== */
+.orders-table-id .order-id {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.orders-table-customer .customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.orders-table-customer .customer-name {
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.dark .orders-table-customer .customer-name {
+  color: var(--color-text-white);
+}
+
+.orders-table-customer .customer-phone {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+}
+
+.orders-table-restaurant span {
+  color: var(--color-text-secondary);
+}
+
+.dark .orders-table-restaurant span {
+  color: var(--color-text-muted);
+}
+
+.orders-table-amount .amount {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dark .orders-table-amount .amount {
+  color: var(--color-text-white);
+}
+
+.orders-table-date span {
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.dark .orders-table-date span {
+  color: var(--color-text-muted);
+}
+
+/* ========================================
+   ACTIONS
+   ======================================== */
+.orders-table-actions .actions-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.action-btn:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-white);
+}
+
+.action-btn svg {
+  font-size: 1rem;
+}
+
+.action-btn-view:hover {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+/* ========================================
+   ACTIONS DROPDOWN
+   ======================================== */
+.actions-dropdown-wrapper {
+  position: relative;
+}
+
+.actions-dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  right: 0;
+  min-width: 140px;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.dark .actions-dropdown {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.actions-dropdown button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-align: left;
+}
+
+.dark .actions-dropdown button {
+  color: var(--color-text-muted);
+}
+
+.actions-dropdown button:hover {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .actions-dropdown button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-white);
+}
+
+.actions-dropdown button svg {
+  font-size: 0.875rem;
+}
+
+.actions-dropdown button.danger {
+  color: var(--color-error);
+}
+
+.actions-dropdown button.danger:hover {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .actions-dropdown button.danger:hover {
+  background-color: var(--color-error-dark);
+}
+
+.actions-dropdown .dropdown-divider {
+  height: 1px;
+  background-color: var(--color-border-light);
+  margin: 0.25rem 0;
+}
+
+.dark .actions-dropdown .dropdown-divider {
+  background-color: var(--color-border-dark);
+}
