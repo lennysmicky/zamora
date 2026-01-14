@@ -1,4 +1,3 @@
-// src/routes/AppRouter.jsx
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
@@ -34,7 +33,7 @@ const UsersPage = lazy(() => import('../pages/Users/UsersPage'));
 const CustomersPage = lazy(() => import('../pages/Customers/CustomersPage'));
 const PromotionsPage = lazy(() => import('../pages/Promotions/PromotionsPage'));
 const NotificationsPage = lazy(() => import('../pages/Notifications/NotificationsPage'));
-const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage')); // ✅ AJOUTÉ
+const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage'));
 const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
 const PaymentsPage = lazy(() => import('../pages/Payments/PaymentsPage'));
 const SpecialOffersPage = lazy(() => import('../pages/SpecialOffers/SpecialOffersPage'));
@@ -49,7 +48,7 @@ const RestaurantPromotionsPage = lazy(() => import('../pages/Restaurant/Promotio
 const RestaurantSpecialOffersPage = lazy(() => import('../pages/Restaurant/SpecialOffers/RestaurantSpecialOffersPage'));
 const RestaurantPaymentsPage = lazy(() => import('../pages/Restaurant/Payments/RestaurantPaymentsPage'));
 const RestaurantNotificationsPage = lazy(() => import('../pages/Restaurant/Notifications/RestaurantNotificationsPage'));
-const RestaurantMessagesPage = lazy(() => import('../pages/Restaurant/Messages/RestaurantMessagesPage')); // ✅ AJOUTÉ
+const RestaurantMessagesPage = lazy(() => import('../pages/Restaurant/Messages/RestaurantMessagesPage'));
 const RestaurantSettingsPage = lazy(() => import('../pages/Restaurant/Settings/RestaurantSettingsPage'));
 
 // ========================================
@@ -61,7 +60,7 @@ const NotFoundPage = () => (
       <h1>404</h1>
       <h2>Page non trouvée</h2>
       <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
-      <a href="/auth" className="not-found-link">
+      <a href="/login" className="not-found-link">
         Retour à l'accueil
       </a>
     </div>
@@ -74,12 +73,10 @@ const NotFoundPage = () => (
 const ProtectedRoute = ({ children, allowedTypes }) => {
   const { isAuthenticated, userType } = useAuthStore();
   
-  // Pas connecté → auth
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
   
-  // Mauvais type → rediriger vers son dashboard
   if (allowedTypes && !allowedTypes.includes(userType)) {
     if (userType === 'admin') {
       return <Navigate to="/dashboard" replace />;
@@ -87,7 +84,7 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
     if (userType === 'restaurant') {
       return <Navigate to="/restaurant/dashboard" replace />;
     }
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   return children;
@@ -99,7 +96,6 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, userType } = useAuthStore();
   
-  // Déjà connecté → rediriger vers dashboard
   if (isAuthenticated) {
     if (userType === 'admin') {
       return <Navigate to="/dashboard" replace />;
@@ -113,13 +109,13 @@ const PublicRoute = ({ children }) => {
 };
 
 // ========================================
-// Auth Redirect - Redirige selon userType
+// Root Redirect
 // ========================================
-const AuthRedirect = () => {
+const RootRedirect = () => {
   const { isAuthenticated, userType } = useAuthStore();
   
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   if (userType === 'admin') {
@@ -130,7 +126,7 @@ const AuthRedirect = () => {
     return <Navigate to="/restaurant/dashboard" replace />;
   }
   
-  return <Navigate to="/auth" replace />;
+  return <Navigate to="/login" replace />;
 };
 
 // ========================================
@@ -146,7 +142,7 @@ const adminRoutesConfig = [
   { path: 'promotions', element: <PromotionsPage /> },
   { path: 'special-offers', element: <SpecialOffersPage /> },
   { path: 'payments', element: <PaymentsPage /> },
-  { path: 'messages', element: <MessagesPage /> },           // ✅ AJOUTÉ
+  { path: 'messages', element: <MessagesPage /> },
   { path: 'notifications', element: <NotificationsPage /> },
   { path: 'settings', element: <SettingsPage /> }
 ];
@@ -161,7 +157,7 @@ const restaurantRoutesConfig = [
   { path: 'promotions', element: <RestaurantPromotionsPage /> },
   { path: 'special-offers', element: <RestaurantSpecialOffersPage /> },
   { path: 'payments', element: <RestaurantPaymentsPage /> },
-  { path: 'messages', element: <RestaurantMessagesPage /> }, // AJOUTÉ
+  { path: 'messages', element: <RestaurantMessagesPage /> },
   { path: 'notifications', element: <RestaurantNotificationsPage /> },
   { path: 'settings', element: <RestaurantSettingsPage /> }
 ];
@@ -174,17 +170,17 @@ const AppRouter = () => {
     <Routes>
       
       {/* ========================================
-          ROUTE RACINE - Redirection automatique
+          ROUTE RACINE
           ======================================== */}
-      <Route path="/" element={<AuthRedirect />} />
+      <Route path="/" element={<RootRedirect />} />
 
       {/* ========================================
-          ROUTES AUTH (Publiques)
+          ROUTES AUTH - Restaurant
           ======================================== */}
       <Route element={<AuthLayout />}>
-        {/* Login Restaurant - Page principale */}
+        {/* /login - Login Restaurant */}
         <Route
-          path="/auth"
+          path="/login"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -194,9 +190,9 @@ const AppRouter = () => {
           }
         />
 
-        {/* Register Restaurant */}
+        {/* /register - Register Restaurant */}
         <Route
-          path="/auth/register"
+          path="/register"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -206,9 +202,9 @@ const AppRouter = () => {
           }
         />
 
-        {/* Admin Login - Accès secret via URL */}
+        {/* /admin/login - Login Admin */}
         <Route
-          path="/auth/admin/login"
+          path="/admin/login"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -223,15 +219,12 @@ const AppRouter = () => {
           ROUTES ADMIN DASHBOARD
           ======================================== */}
       <Route
-        path="/"
         element={
           <ProtectedRoute allowedTypes={['admin']}>
             <MainLayout />
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="dashboard" replace />} />
-
         {adminRoutesConfig.map((route) => (
           <Route
             key={route.path}

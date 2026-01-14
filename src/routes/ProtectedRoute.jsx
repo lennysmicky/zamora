@@ -49,7 +49,7 @@ export const AuthRedirect = () => {
   const { isAuthenticated, userType } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   const redirectPath = getRedirectPath(userType);
@@ -66,7 +66,7 @@ const getRedirectPath = (userType) => {
     case 'restaurant':
       return '/restaurant/dashboard';
     default:
-      return '/auth';
+      return '/login';
   }
 };
 
