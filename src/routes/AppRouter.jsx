@@ -34,7 +34,7 @@ const UsersPage = lazy(() => import('../pages/Users/UsersPage'));
 const CustomersPage = lazy(() => import('../pages/Customers/CustomersPage'));
 const PromotionsPage = lazy(() => import('../pages/Promotions/PromotionsPage'));
 const NotificationsPage = lazy(() => import('../pages/Notifications/NotificationsPage'));
-const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage')); // AJOUTÉ
+const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage')); // ✅ AJOUTÉ
 const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
 const PaymentsPage = lazy(() => import('../pages/Payments/PaymentsPage'));
 const SpecialOffersPage = lazy(() => import('../pages/SpecialOffers/SpecialOffersPage'));
@@ -61,7 +61,7 @@ const NotFoundPage = () => (
       <h1>404</h1>
       <h2>Page non trouvée</h2>
       <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
-      <a href="/" className="not-found-link">
+      <a href="/auth" className="not-found-link">
         Retour à l'accueil
       </a>
     </div>
@@ -76,7 +76,7 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
   
   // Pas connecté → auth
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   // Mauvais type → rediriger vers son dashboard
@@ -87,7 +87,7 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
     if (userType === 'restaurant') {
       return <Navigate to="/restaurant/dashboard" replace />;
     }
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   return children;
@@ -119,7 +119,7 @@ const AuthRedirect = () => {
   const { isAuthenticated, userType } = useAuthStore();
   
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
   
   if (userType === 'admin') {
@@ -130,7 +130,7 @@ const AuthRedirect = () => {
     return <Navigate to="/restaurant/dashboard" replace />;
   }
   
-  return <Navigate to="/" replace />;
+  return <Navigate to="/auth" replace />;
 };
 
 // ========================================
@@ -146,7 +146,7 @@ const adminRoutesConfig = [
   { path: 'promotions', element: <PromotionsPage /> },
   { path: 'special-offers', element: <SpecialOffersPage /> },
   { path: 'payments', element: <PaymentsPage /> },
-  { path: 'messages', element: <MessagesPage /> },           // AJOUTÉ
+  { path: 'messages', element: <MessagesPage /> },           // ✅ AJOUTÉ
   { path: 'notifications', element: <NotificationsPage /> },
   { path: 'settings', element: <SettingsPage /> }
 ];
@@ -184,7 +184,7 @@ const AppRouter = () => {
       <Route element={<AuthLayout />}>
         {/* Login Restaurant - Page principale */}
         <Route
-          path="/"
+          path="/auth"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -196,7 +196,7 @@ const AppRouter = () => {
 
         {/* Register Restaurant */}
         <Route
-          path="/register"
+          path="/auth/register"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -208,7 +208,7 @@ const AppRouter = () => {
 
         {/* Admin Login - Accès secret via URL */}
         <Route
-          path="/admin/login"
+          path="/auth/admin/login"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>

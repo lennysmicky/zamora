@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedTypes = [] }) => {
 
   // Pas connecté → rediriger vers auth
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location }} replace />;
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   // Connecté mais pas le bon type → rediriger vers son dashboard
@@ -49,7 +49,7 @@ export const AuthRedirect = () => {
   const { isAuthenticated, userType } = useAuthStore();
 
   if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/auth" replace />;
   }
 
   const redirectPath = getRedirectPath(userType);
@@ -66,7 +66,7 @@ const getRedirectPath = (userType) => {
     case 'restaurant':
       return '/restaurant/dashboard';
     default:
-      return '/';
+      return '/auth';
   }
 };
 
