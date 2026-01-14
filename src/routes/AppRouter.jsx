@@ -34,7 +34,7 @@ const UsersPage = lazy(() => import('../pages/Users/UsersPage'));
 const CustomersPage = lazy(() => import('../pages/Customers/CustomersPage'));
 const PromotionsPage = lazy(() => import('../pages/Promotions/PromotionsPage'));
 const NotificationsPage = lazy(() => import('../pages/Notifications/NotificationsPage'));
-const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage')); // ✅ AJOUTÉ
+const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage')); // AJOUTÉ
 const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
 const PaymentsPage = lazy(() => import('../pages/Payments/PaymentsPage'));
 const SpecialOffersPage = lazy(() => import('../pages/SpecialOffers/SpecialOffersPage'));
@@ -119,7 +119,7 @@ const AuthRedirect = () => {
   const { isAuthenticated, userType } = useAuthStore();
   
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
   
   if (userType === 'admin') {
@@ -130,7 +130,7 @@ const AuthRedirect = () => {
     return <Navigate to="/restaurant/dashboard" replace />;
   }
   
-  return <Navigate to="/auth" replace />;
+  return <Navigate to="/" replace />;
 };
 
 // ========================================
@@ -146,7 +146,7 @@ const adminRoutesConfig = [
   { path: 'promotions', element: <PromotionsPage /> },
   { path: 'special-offers', element: <SpecialOffersPage /> },
   { path: 'payments', element: <PaymentsPage /> },
-  { path: 'messages', element: <MessagesPage /> },           // ✅ AJOUTÉ
+  { path: 'messages', element: <MessagesPage /> },           // AJOUTÉ
   { path: 'notifications', element: <NotificationsPage /> },
   { path: 'settings', element: <SettingsPage /> }
 ];
@@ -184,7 +184,7 @@ const AppRouter = () => {
       <Route element={<AuthLayout />}>
         {/* Login Restaurant - Page principale */}
         <Route
-          path="/auth"
+          path="/"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -196,7 +196,7 @@ const AppRouter = () => {
 
         {/* Register Restaurant */}
         <Route
-          path="/auth/register"
+          path="/register"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
@@ -208,7 +208,7 @@ const AppRouter = () => {
 
         {/* Admin Login - Accès secret via URL */}
         <Route
-          path="/auth/admin/login"
+          path="/admin/login"
           element={
             <Suspense fallback={<PageLoader />}>
               <PublicRoute>
