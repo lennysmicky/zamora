@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedTypes = [] }) => {
 
   // Pas connecté → rediriger vers auth
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Connecté mais pas le bon type → rediriger vers son dashboard

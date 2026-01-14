@@ -249,7 +249,7 @@ const RestaurantLoginPage = () => {
 
           <p className="auth-switch">
             {t('auth.login.noAccount', "Pas encore de compte ?")}{' '}
-            <Link to="/auth/register">
+            <Link to="/register">
               {t('auth.login.register', "S'inscrire")}
             </Link>
           </p>

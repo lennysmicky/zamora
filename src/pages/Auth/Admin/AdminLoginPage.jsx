@@ -88,7 +88,7 @@ const AdminLoginPage = () => {
       
       const localUser = {
         id: 'admin-local-001',
-        Name: 'amad',
+        name: 'amad',
         email: env.ADMIN_EMAIL,
         role: 'admin',
         isVerified: true,
