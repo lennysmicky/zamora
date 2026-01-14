@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiStoreLine, RiArrowDownSLine, RiCheckLine, RiSearchLine } from 'react-icons/ri';
-
+import './Filters.css'
 
 const RestaurantSelector = ({ 
   selectedRestaurant, 
