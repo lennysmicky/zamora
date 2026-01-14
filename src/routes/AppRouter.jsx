@@ -61,7 +61,7 @@ const NotFoundPage = () => (
       <h1>404</h1>
       <h2>Page non trouvée</h2>
       <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
-      <a href="/auth" className="not-found-link">
+      <a href="/" className="not-found-link">
         Retour à l'accueil
       </a>
     </div>
@@ -76,7 +76,7 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
   
   // Pas connecté → auth
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
   
   // Mauvais type → rediriger vers son dashboard
@@ -87,7 +87,7 @@ const ProtectedRoute = ({ children, allowedTypes }) => {
     if (userType === 'restaurant') {
       return <Navigate to="/restaurant/dashboard" replace />;
     }
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
   
   return children;
