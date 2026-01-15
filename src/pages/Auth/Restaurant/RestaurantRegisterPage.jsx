@@ -73,13 +73,15 @@ const RestaurantRegisterPage = () => {
       const { user, token } = response.data;
 
       if (token && user) {
-        // Connecter directement le restaurant après registration
-        loginRestaurant({ user, token });
-        navigate('/dashboard', { replace: true });
-      } else {
-        setErrors({ general: 'registerFailed' });
-      }
+        // Login automatique avec rôle restaurant
+        loginRestaurant({ user: { ...user, role: 'restaurant' }, token });
+        localStorage.setItem('user_role', 'restaurant');
 
+        // Redirection vers dashboard restaurant
+        navigate('/restaurant/dashboard', { replace: true });
+      } else {
+        setErrors({ general: t('auth.errors.registerFailed', 'Inscription échouée') });
+      }
     } catch (err) {
       let message = t('auth.errors.unknown', 'Une erreur est survenue');
       if (err.response?.data?.message) message = err.response.data.message;
@@ -88,6 +90,8 @@ const RestaurantRegisterPage = () => {
       setIsLoading(false);
     }
   };
+
+  const getPasswordInputType = (show) => (show ? 'text' : 'password');
 
   return (
     <div className="auth-container">
@@ -131,6 +135,7 @@ const RestaurantRegisterPage = () => {
                   value={formData.restaurantName}
                   onChange={handleChange}
                   placeholder={t('auth.register.restaurantNamePlaceholder')}
+                  autoComplete="organization"
                 />
               </div>
               {errors.restaurantName && (
@@ -149,6 +154,7 @@ const RestaurantRegisterPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder={t('auth.register.emailPlaceholder')}
+                  autoComplete="email"
                 />
               </div>
               {errors.email && (
@@ -167,6 +173,7 @@ const RestaurantRegisterPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder={t('auth.register.phonePlaceholder')}
+                  autoComplete="tel"
                 />
               </div>
               {errors.phone && (
@@ -185,6 +192,7 @@ const RestaurantRegisterPage = () => {
                   value={formData.address}
                   onChange={handleChange}
                   placeholder={t('auth.register.addressPlaceholder')}
+                  autoComplete="street-address"
                 />
               </div>
               {errors.address && (
@@ -198,11 +206,12 @@ const RestaurantRegisterPage = () => {
               <div className="auth-input-wrapper">
                 <FiLock className="auth-input-icon" />
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={getPasswordInputType(showPassword)}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   placeholder={t('auth.register.passwordPlaceholder')}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -233,11 +242,12 @@ const RestaurantRegisterPage = () => {
               <div className="auth-input-wrapper">
                 <FiLock className="auth-input-icon" />
                 <input
-                  type={showConfirmPassword ? 'text' : 'password'}
+                  type={getPasswordInputType(showConfirmPassword)}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder={t('auth.register.confirmPasswordPlaceholder')}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

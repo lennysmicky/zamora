@@ -1,197 +1,23 @@
-// hooks/useAuth.js
+// src/hooks/useAuth.js
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { authStore } from '../stores/authStore';
-import * as authAPI from '../api/auth';
+import useAuthStore from '../stores/authStore';
+import authAPI from '../api/auth';
 
-// ⚡ SWITCH ICI - mettre false pour utiliser le vrai backend
-const USE_MOCK = true;
-
-// ============================================
-// 🎭 MOCK DATA
-// ============================================
-const MOCK_USERS = {
-  admin: {
-    id: 1,
-    email: 'admin@foodie.com',
-    password: 'admin123',
-    role: 'admin',
-    name: 'Admin Principal',
-    avatar: null,
-    permissions: ['all']
-  },
-  restaurant: {
-    id: 2,
-    email: 'resto@foodie.com',
-    password: 'resto123',
-    role: 'restaurant',
-    name: 'Restaurant Le Gourmet',
-    restaurantId: 101,
-    avatar: null,
-    permissions: ['menu', 'orders', 'promotions', 'settings']
-  }
-};
-
-const MOCK_TOKENS = {
-  admin: 'mock-admin-token-xyz123',
-  restaurant: 'mock-restaurant-token-abc456'
-};
-
-// Simuler un délai réseau
-const mockDelay = (ms = 800) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ============================================
-// 🎭 MOCK API FUNCTIONS
-// ============================================
-const mockAuthAPI = {
-  login: async (email, password) => {
-    await mockDelay();
-    
-    if (email === MOCK_USERS.admin.email && password === MOCK_USERS.admin.password) {
-      const { password: _, ...user } = MOCK_USERS.admin;
-      return {
-        success: true,
-        data: {
-          user,
-          token: MOCK_TOKENS.admin,
-          refreshToken: 'mock-refresh-admin'
-        }
-      };
-    }
-    
-    if (email === MOCK_USERS.restaurant.email && password === MOCK_USERS.restaurant.password) {
-      const { password: _, ...user } = MOCK_USERS.restaurant;
-      return {
-        success: true,
-        data: {
-          user,
-          token: MOCK_TOKENS.restaurant,
-          refreshToken: 'mock-refresh-resto'
-        }
-      };
-    }
-    
-    // Retourne une clé i18n pour l'erreur
-    throw new Error('auth.errors.invalidCredentials');
-  },
-
-  registerRestaurant: async (data) => {
-    await mockDelay(1000);
-    
-    if (!data.email || !data.password || !data.restaurantName) {
-      throw new Error('auth.errors.requiredFields');
-    }
-    
-    if (data.email === MOCK_USERS.restaurant.email) {
-      throw new Error('auth.errors.emailExists');
-    }
-    
-    return {
-      success: true,
-      data: {
-        user: {
-          id: Date.now(),
-          email: data.email,
-          role: 'restaurant',
-          name: data.restaurantName,
-          restaurantId: Date.now() + 1,
-          status: 'pending_approval'
-        },
-        messageKey: 'auth.messages.registrationSuccess'
-      }
-    };
-  },
-
-  logout: async () => {
-    await mockDelay(300);
-    return { success: true };
-  },
-
-  getCurrentUser: async (token) => {
-    await mockDelay(500);
-    
-    if (token === MOCK_TOKENS.admin) {
-      const { password: _, ...user } = MOCK_USERS.admin;
-      return { success: true, data: { user } };
-    }
-    
-    if (token === MOCK_TOKENS.restaurant) {
-      const { password: _, ...user } = MOCK_USERS.restaurant;
-      return { success: true, data: { user } };
-    }
-    
-    throw new Error('auth.errors.invalidToken');
-  },
-
-  refreshToken: async (refreshToken) => {
-    await mockDelay(300);
-    
-    if (refreshToken.includes('admin')) {
-      return { success: true, data: { token: MOCK_TOKENS.admin } };
-    }
-    if (refreshToken.includes('resto')) {
-      return { success: true, data: { token: MOCK_TOKENS.restaurant } };
-    }
-    
-    throw new Error('auth.errors.invalidRefreshToken');
-  },
-
-  forgotPassword: async (email) => {
-    await mockDelay(1000);
-    return {
-      success: true,
-      messageKey: 'auth.messages.resetEmailSent'
-    };
-  },
-
-  resetPassword: async (token, newPassword) => {
-    await mockDelay(800);
-    return {
-      success: true,
-      messageKey: 'auth.messages.passwordResetSuccess'
-    };
-  }
-};
-
-// ============================================
-// 🔀 API SELECTOR
-// ============================================
-const api = USE_MOCK ? mockAuthAPI : authAPI;
-
-// ============================================
-// 🪝 HOOK PRINCIPAL
-// ============================================
 export const useAuth = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  
-  // States
+
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState(null);
-  
-  // Modal/Dialog states
-  const [modal, setModal] = useState({
-    isOpen: false,
-    type: 'info', // 'success' | 'error' | 'warning' | 'info'
-    title: '',
-    message: '',
-    onConfirm: null
-  });
 
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: '',
-    message: '',
-    onConfirm: null,
-    onCancel: null
-  });
+  // Modal / Confirm Dialog
+  const [modal, setModal] = useState({ isOpen: false, type: 'info', title: '', message: '', onConfirm: null });
+  const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, title: '', message: '', onConfirm: null, onCancel: null });
 
-  // ============================================
-  // 🔔 MODAL HELPERS
-  // ============================================
   const showModal = useCallback((type, titleKey, messageKey, onConfirm = null) => {
     setModal({
       isOpen: true,
@@ -202,109 +28,83 @@ export const useAuth = () => {
     });
   }, [t]);
 
-  const closeModal = useCallback(() => {
-    setModal(prev => ({ ...prev, isOpen: false }));
-  }, []);
+  const closeModal = useCallback(() => setModal(prev => ({ ...prev, isOpen: false })), []);
+  const showSuccess = useCallback((msg) => showModal('success', 'common.success', msg), [showModal]);
+  const showError = useCallback((msg) => showModal('error', 'common.error', msg), [showModal]);
 
-  const showSuccess = useCallback((messageKey) => {
-    showModal('success', 'common.success', messageKey);
-  }, [showModal]);
-
-  const showError = useCallback((messageKey) => {
-    showModal('error', 'common.error', messageKey);
-  }, [showModal]);
-
-  // ============================================
-  // 🔔 CONFIRM DIALOG HELPERS
-  // ============================================
   const showConfirmDialog = useCallback((titleKey, messageKey) => {
     return new Promise((resolve) => {
       setConfirmDialog({
         isOpen: true,
         title: t(titleKey),
         message: t(messageKey),
-        onConfirm: () => {
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-          resolve(true);
-        },
-        onCancel: () => {
-          setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-          resolve(false);
-        }
+        onConfirm: () => { setConfirmDialog(prev => ({ ...prev, isOpen: false })); resolve(true); },
+        onCancel: () => { setConfirmDialog(prev => ({ ...prev, isOpen: false })); resolve(false); }
       });
     });
   }, [t]);
 
-  const closeConfirmDialog = useCallback(() => {
-    setConfirmDialog(prev => ({ ...prev, isOpen: false }));
-  }, []);
+  const closeConfirmDialog = useCallback(() => setConfirmDialog(prev => ({ ...prev, isOpen: false })), []);
 
-  // ============================================
-  // 🔄 INITIALISATION
-  // ============================================
+  // Initialize Auth
   useEffect(() => {
     const initAuth = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        
-        if (!token) {
+        const userRole = localStorage.getItem('user_role');
+
+        if (!token || !userRole) {
           setIsLoading(false);
           return;
         }
 
-        const response = await api.getCurrentUser(token);
-        
-        if (response.success) {
-          setUser(response.data.user);
-          authStore.setUser(response.data.user);
+        const response = await authAPI.getProfile();
+        if (response.data?.user) {
+          const loggedUser = response.data.user;
+          setUser(loggedUser);
+          useAuthStore.getState().setUser(loggedUser);
+
+          if (['/', '/login', '/admin/login'].includes(window.location.pathname)) {
+            if (userRole === 'admin') navigate('/dashboard', { replace: true });
+            else if (userRole === 'restaurant') navigate('/restaurant/dashboard', { replace: true });
+          }
         }
       } catch (err) {
         console.error('Init auth error:', err);
         localStorage.removeItem('auth_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user_role');
+        useAuthStore.getState().clear();
       } finally {
         setIsLoading(false);
       }
     };
-
     initAuth();
-  }, []);
+  }, [navigate]);
 
-  // ============================================
-  // 🔐 LOGIN
-  // ============================================
+  // Login
   const login = useCallback(async (email, password, rememberMe = false) => {
     setIsAuthenticating(true);
     setError(null);
-
     try {
-      const response = await api.login(email, password);
-
-      if (response.success) {
-        const { user, token, refreshToken } = response.data;
+      const response = await authAPI.login({ email, password });
+      if (response.data?.user) {
+        const { user: loggedUser, token, refreshToken } = response.data;
 
         localStorage.setItem('auth_token', token);
-        if (rememberMe && refreshToken) {
-          localStorage.setItem('refresh_token', refreshToken);
-        }
+        localStorage.setItem('user_role', loggedUser.role);
+        if (rememberMe && refreshToken) localStorage.setItem('refresh_token', refreshToken);
 
-        setUser(user);
-        authStore.setUser(user);
-        authStore.setToken(token);
-
-        // Message de bienvenue
+        setUser(loggedUser);
+        useAuthStore.getState().setUser(loggedUser);
         showSuccess('auth.messages.loginSuccess');
 
-        // Redirection selon rôle
         setTimeout(() => {
-          if (user.role === 'admin') {
-            navigate('/dashboard');
-          } else if (user.role === 'restaurant') {
-            navigate('/restaurant/dashboard');
-          }
-        }, 1000);
+          if (loggedUser.role === 'admin') navigate('/dashboard', { replace: true });
+          else if (loggedUser.role === 'restaurant') navigate('/restaurant/dashboard', { replace: true });
+        }, 200);
 
-        return { success: true, user };
+        return { success: true, user: loggedUser };
       }
     } catch (err) {
       const errorKey = err.message || 'auth.errors.loginFailed';
@@ -316,26 +116,51 @@ export const useAuth = () => {
     }
   }, [navigate, t, showSuccess, showError]);
 
-  // ============================================
-  // 📝 REGISTER RESTAURANT
-  // ============================================
+  // Logout
+  const logout = useCallback(async (showConfirm = true) => {
+    const currentRole = user?.role || localStorage.getItem('user_role');
+
+    if (showConfirm) {
+      const confirmed = await showConfirmDialog('auth.logout.title', 'auth.logout.confirmMessage');
+      if (!confirmed) return;
+    }
+
+    try {
+      await authAPI.logout();
+      showSuccess('auth.messages.logoutSuccess');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('zamora-auth');
+      useAuthStore.getState().clear();
+      setUser(null);
+
+      if (currentRole === 'admin') navigate('/admin/login', { replace: true });
+      else navigate('/login', { replace: true });
+    }
+  }, [user, navigate, showConfirmDialog, showSuccess]);
+
+  // Register Restaurant
   const registerRestaurant = useCallback(async (data) => {
     setIsAuthenticating(true);
     setError(null);
-
     try {
-      const response = await api.registerRestaurant(data);
+      const response = await authAPI.registerRestaurant(data);
+      if (response.data?.user && response.data?.token) {
+        const { user: newUser, token } = response.data;
 
-      if (response.success) {
-        showSuccess(response.data.messageKey);
-        
-        setTimeout(() => {
-          navigate('/restaurant/login', { 
-            state: { message: t(response.data.messageKey) } 
-          });
-        }, 1500);
-        
-        return { success: true };
+        // Met à jour Zustand et localStorage directement
+        useAuthStore.getState().loginRestaurant({ user: newUser, token });
+        setUser(newUser);
+        localStorage.setItem('auth_token', token);
+        localStorage.setItem('user_role', 'restaurant');
+
+        // Redirection
+        navigate('/restaurant/dashboard', { replace: true });
+        return { success: true, user: newUser };
       }
     } catch (err) {
       const errorKey = err.message || 'auth.errors.registrationFailed';
@@ -347,155 +172,21 @@ export const useAuth = () => {
     }
   }, [navigate, t, showSuccess, showError]);
 
-  // ============================================
-  // 🚪 LOGOUT
-  // ============================================
-  const logout = useCallback(async (showConfirm = true) => {
-    // Demander confirmation si nécessaire
-    if (showConfirm) {
-      const confirmed = await showConfirmDialog(
-        'auth.logout.title',
-        'auth.logout.confirmMessage'
-      );
-      
-      if (!confirmed) return;
-    }
-
-    try {
-      await api.logout();
-      showSuccess('auth.messages.logoutSuccess');
-    } catch (err) {
-      console.error('Logout error:', err);
-    } finally {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('refresh_token');
-      setUser(null);
-      authStore.clear();
-      
-      setTimeout(() => {
-        navigate('/admin/login');
-      }, 500);
-    }
-  }, [navigate, showConfirmDialog, showSuccess]);
-
-  // ============================================
-  // 🔄 REFRESH TOKEN
-  // ============================================
-  const refreshAuthToken = useCallback(async () => {
-    try {
-      const refreshToken = localStorage.getItem('refresh_token');
-      
-      if (!refreshToken) {
-        throw new Error('No refresh token');
-      }
-
-      const response = await api.refreshToken(refreshToken);
-
-      if (response.success) {
-        localStorage.setItem('auth_token', response.data.token);
-        authStore.setToken(response.data.token);
-        return true;
-      }
-    } catch (err) {
-      console.error('Refresh token error:', err);
-      showError('auth.errors.sessionExpired');
-      await logout(false);
-      return false;
-    }
-  }, [logout, showError]);
-
-  // ============================================
-  // 📧 FORGOT PASSWORD
-  // ============================================
-  const forgotPassword = useCallback(async (email) => {
-    setIsAuthenticating(true);
-    setError(null);
-
-    try {
-      const response = await api.forgotPassword(email);
-      showSuccess(response.messageKey);
-      return { success: true, message: t(response.messageKey) };
-    } catch (err) {
-      const errorKey = err.message || 'auth.errors.forgotPasswordFailed';
-      setError(t(errorKey));
-      showError(errorKey);
-      return { success: false, error: t(errorKey) };
-    } finally {
-      setIsAuthenticating(false);
-    }
-  }, [t, showSuccess, showError]);
-
-  // ============================================
-  // 🔑 RESET PASSWORD
-  // ============================================
-  const resetPassword = useCallback(async (token, newPassword) => {
-    setIsAuthenticating(true);
-    setError(null);
-
-    try {
-      const response = await api.resetPassword(token, newPassword);
-      showSuccess(response.messageKey);
-      
-      setTimeout(() => {
-        navigate('/login');
-      }, 1500);
-      
-      return { success: true, message: t(response.messageKey) };
-    } catch (err) {
-      const errorKey = err.message || 'auth.errors.resetPasswordFailed';
-      setError(t(errorKey));
-      showError(errorKey);
-      return { success: false, error: t(errorKey) };
-    } finally {
-      setIsAuthenticating(false);
-    }
-  }, [navigate, t, showSuccess, showError]);
-
-  // ============================================
-  // 🛡️ HELPERS
-  // ============================================
   const isAdmin = user?.role === 'admin';
   const isRestaurant = user?.role === 'restaurant';
   const isAuthenticated = !!user;
 
-  const hasPermission = useCallback((permission) => {
-    if (!user) return false;
-    if (user.role === 'admin') return true;
-    return user.permissions?.includes(permission) || false;
-  }, [user]);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
-
-  // ============================================
-  // 📤 RETURN
-  // ============================================
   return {
-    // State
     user,
     isLoading,
     isAuthenticating,
     error,
-    
-    // Computed
     isAuthenticated,
     isAdmin,
     isRestaurant,
-    
-    // Actions
     login,
     logout,
     registerRestaurant,
-    refreshAuthToken,
-    forgotPassword,
-    resetPassword,
-    
-    // Helpers
-    hasPermission,
-    clearError,
-    
-    // Modal & Dialog
     modal,
     closeModal,
     showModal,
@@ -503,10 +194,7 @@ export const useAuth = () => {
     showError,
     confirmDialog,
     closeConfirmDialog,
-    showConfirmDialog,
-    
-    // Debug
-    _isMockMode: USE_MOCK
+    showConfirmDialog
   };
 };
 

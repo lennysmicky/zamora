@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
+import { Link } from 'react-router-dom';
 
 // Layouts
 import MainLayout from '../layout/MainLayout';
@@ -52,16 +53,23 @@ const RestaurantMessagesPage = lazy(() => import('../pages/Restaurant/Messages/R
 const RestaurantSettingsPage = lazy(() => import('../pages/Restaurant/Settings/RestaurantSettingsPage'));
 
 // 404
+
+
 const NotFoundPage = () => (
   <div className="not-found-page">
-    <h1>404</h1>
-    <p>Page non trouvée</p>
-    <a href="/login">Retour à l'accueil</a>
+    <div className="not-found-content">
+      <h1>404</h1>
+      <h2>Page non trouvée</h2>
+      <p>La page que vous recherchez n'existe pas ou a été déplacée.</p>
+      <Link to="/login" className="not-found-link">
+        Retour à l'accueil
+      </Link>
+    </div>
   </div>
 );
 
 // ============================
-// Config des routes
+// Admin & Restaurant route config
 // ============================
 const adminRoutes = [
   { path: 'dashboard', element: <DashboardPage /> },
@@ -96,15 +104,6 @@ const restaurantRoutes = [
 const AppRouter = () => {
   const { isAuthenticated, userType } = useAuthStore();
 
-  // redirection si déjà connecté
-  const redirectIfLoggedIn = (children) => {
-    if (isAuthenticated) {
-      if (userType === 'admin') return <Navigate to="/dashboard" replace />;
-      if (userType === 'restaurant') return <Navigate to="/restaurant/dashboard" replace />;
-    }
-    return children;
-  };
-
   return (
     <Routes>
       {/* root */}
@@ -112,17 +111,32 @@ const AppRouter = () => {
 
       {/* AUTH */}
       <Route element={<AuthLayout />}>
+        {/* Restaurant login */}
         <Route
           path="/login"
-          element={<Suspense fallback={<PageLoader />}>{redirectIfLoggedIn(<RestaurantLoginPage />)}</Suspense>}
+          element={
+            <Suspense fallback={<PageLoader />}>
+              {!isAuthenticated || userType === 'restaurant' ? <RestaurantLoginPage /> : <Navigate to="/dashboard" replace />}
+            </Suspense>
+          }
         />
+        {/* Restaurant register */}
         <Route
           path="/register"
-          element={<Suspense fallback={<PageLoader />}>{redirectIfLoggedIn(<RestaurantRegisterPage />)}</Suspense>}
+          element={
+            <Suspense fallback={<PageLoader />}>
+              {!isAuthenticated || userType === 'restaurant' ? <RestaurantRegisterPage /> : <Navigate to="/dashboard" replace />}
+            </Suspense>
+          }
         />
+        {/* Admin login */}
         <Route
           path="/admin/login"
-          element={<Suspense fallback={<PageLoader />}>{redirectIfLoggedIn(<AdminLoginPage />)}</Suspense>}
+          element={
+            <Suspense fallback={<PageLoader />}>
+              {!isAuthenticated || userType === 'admin' ? <AdminLoginPage /> : <Navigate to="/restaurant/dashboard" replace />}
+            </Suspense>
+          }
         />
       </Route>
 
@@ -150,7 +164,9 @@ const AppRouter = () => {
       </Route>
 
       {/* 404 */}
-      <Route path="*" element={<NotFoundPage />} />
+      <Route element={<AuthLayout />}>
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
     </Routes>
   );
 };

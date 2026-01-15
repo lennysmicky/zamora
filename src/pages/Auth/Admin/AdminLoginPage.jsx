@@ -69,7 +69,7 @@ const AdminLoginPage = () => {
       // Connexion locale fallback
       const localUser = {
         id: 'admin-local-001',
-        name: 'Admin Local',
+        name: 'Admin ',
         email: env.ADMIN_EMAIL,
         role: 'admin',
         isVerified: true,

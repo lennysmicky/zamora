@@ -12,10 +12,10 @@ import {
   RiGiftLine, RiGiftFill, RiMessage3Line, RiMessage3Fill
 } from 'react-icons/ri';
 
-// Logo
+// Logo & avatar
 import Logo from '../assets/images/logo.png';
-// avatar default
 import defaultavatar from '../assets/images/defaultavatar.png';
+
 // Auth Store
 import useAuthStore from '../stores/authStore';
 
@@ -138,9 +138,25 @@ const Sidebar = ({ isOpen, onClose }) => {
     setLanguageDropdownOpen(false);
   };
 
-  const handleLogout = () => {
-    authLogout();
-    navigate('/login'); // corrigé pour la bonne route
+  // ======================
+  // HANDLE LOGOUT
+  // ======================
+  const handleLogout = async () => {
+    const currentRole = userType || localStorage.getItem('user_role');
+
+    try {
+      await authLogout(); // nettoie le store et localStorage persist
+    } catch (err) {
+      console.error('Erreur logout:', err);
+    } finally {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user_role');
+      localStorage.removeItem('zamora-auth'); // persist
+
+      if (currentRole === 'admin') navigate('/admin/login', { replace: true });
+      else navigate('/login', { replace: true });
+    }
   };
 
   const CurrentIcon = themeOptionsConfig.find(opt => opt.id === theme)?.icon || RiSunLine;
@@ -176,56 +192,73 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         <div className="sidebar-bottom">
           <div className="sidebar-dropdowns-row">
-            <div className="sidebar-theme-dropdown" ref={dropdownRef}>
-              <button className="sidebar-theme-trigger" onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}>
-                <CurrentIcon />
-                <span>{t(themeOptionsConfig.find(opt => opt.id === theme)?.labelKey)}</span>
-                <RiArrowDownSLine className={themeDropdownOpen ? 'open' : ''} />
-              </button>
-              {themeDropdownOpen && (
-                <div className="sidebar-theme-menu">
-                  {themeOptionsConfig.map(opt => {
-                    const Icon = opt.icon;
-                    return (
-                      <button key={opt.id} className={theme === opt.id ? 'active' : ''} onClick={() => handleThemeChange(opt.id)}>
-                        <Icon /><span>{t(opt.labelKey)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+  {/* THEME */}
+  <div className="sidebar-theme-dropdown" ref={dropdownRef}>
+    <button
+      className="sidebar-theme-trigger"
+      onClick={() => setThemeDropdownOpen(!themeDropdownOpen)}
+    >
+      <CurrentIcon />
+      <span>{t(themeOptionsConfig.find(opt => opt.id === theme)?.labelKey)}</span>
+      <RiArrowDownSLine className={themeDropdownOpen ? 'open' : ''} />
+    </button>
 
-            <div className="sidebar-theme-dropdown" ref={languageDropdownRef}>
-              <button className="sidebar-theme-trigger" onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}>
-                <span className="sidebar-lang-flag">{languageOptions.find(opt => opt.id === language)?.flag}</span>
-                <span>{t(languageOptions.find(opt => opt.id === language)?.labelKey)}</span>
-                <RiArrowDownSLine className={languageDropdownOpen ? 'open' : ''} />
-              </button>
-              {languageDropdownOpen && (
-                <div className="sidebar-theme-menu">
-                  {languageOptions.map(opt => (
-                    <button key={opt.id} className={language === opt.id ? 'active' : ''} onClick={() => handleLanguageChange(opt.id)}>
-                      <span className="sidebar-lang-flag">{opt.flag}</span>
-                      <span>{t(opt.labelKey)}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+    {themeDropdownOpen && (
+      <div className="sidebar-theme-menu">
+        {themeOptionsConfig.map(opt => {
+          const Icon = opt.icon;
+          return (
+            <button
+              key={opt.id}
+              className={theme === opt.id ? 'active' : ''}
+              onClick={() => handleThemeChange(opt.id)}
+            >
+              <Icon />
+              <span>{t(opt.labelKey)}</span>
+            </button>
+          );
+        })}
+      </div>
+    )}
+  </div>
+
+  {/* LANGUAGE */}
+  <div className="sidebar-theme-dropdown" ref={languageDropdownRef}>
+    <button
+      className="sidebar-theme-trigger"
+      onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
+    >
+      <span className="sidebar-lang-flag">
+        {languageOptions.find(opt => opt.id === language)?.flag}
+      </span>
+      <span>{t(languageOptions.find(opt => opt.id === language)?.labelKey)}</span>
+      <RiArrowDownSLine className={languageDropdownOpen ? 'open' : ''} />
+    </button>
+
+    {languageDropdownOpen && (
+      <div className="sidebar-theme-menu">
+        {languageOptions.map(opt => (
+          <button
+            key={opt.id}
+            className={language === opt.id ? 'active' : ''}
+            onClick={() => handleLanguageChange(opt.id)}
+          >
+            <span className="sidebar-lang-flag">{opt.flag}</span>
+            <span>{t(opt.labelKey)}</span>
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
 
           <div className="sidebar-user">
             {isAuthenticated ? (
               <>
                 <div className="sidebar-user-avatar">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt="Avatar" onError={(e) => {e.currentTarget.src = defaultavatar;
-                      }}
-                    />
-                  ) : (
-                    <img src={defaultavatar} alt="Avatar" />
-                  )}
+                  {user.avatar ? <img src={user.avatar} alt="Avatar" onError={(e) => e.currentTarget.src = defaultavatar} /> 
+                               : <img src={defaultavatar} alt="Avatar" />}
                 </div>
                 <div className="sidebar-user-info">
                   <h4>{user.name}</h4>

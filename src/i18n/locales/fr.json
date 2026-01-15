@@ -247,7 +247,8 @@
       "userNotFound": "Compte administrateur non trouvé",
       "network": "Impossible de contacter le serveur",
       "tooManyAttempts": "Trop de tentatives. Réessayez plus tard.",
-      "unknown": "Une erreur est survenue"
+      "unknown": "Une erreur est survenue",
+      "invalidAddress": "Adresse invalide"
     },
     "success": {
       "loginSuccess": "Connexion réussie !",

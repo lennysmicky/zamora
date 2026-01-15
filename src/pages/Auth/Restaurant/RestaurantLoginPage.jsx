@@ -62,7 +62,7 @@ const RestaurantLoginPage = () => {
       // ========================================
       //  MODE TEST - Données mock
       // ========================================
-      const useMockData = false; // ← Mettre à false quand backend prêt
+      const useMockData = true; // ← Mettre à false quand backend prêt
       
       if (useMockData) {
         await new Promise(resolve => setTimeout(resolve, 1000));
