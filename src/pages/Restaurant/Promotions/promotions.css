@@ -1,0 +1,405 @@
+/* ============================= */
+/* PAGE PROMOTIONS – MODE CLAIR */
+/* ============================= */
+
+.promotions-page {
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ================= Header ================= */
+
+.promotions-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--color-card-light);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.page-header h1 {
+  color: var(--color-text-primary);
+}
+
+.page-header .create-btn {
+  background-color: var(--color-secondary);
+  color: var(--color-text-white);
+  border: none;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.page-header .create-btn span {
+  margin-left: 5px;
+}
+
+.page-header .create-btn:hover {
+  background-color: var(--color-secondary-dark);
+}
+/* table */
+.promotions-page .promotions-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.promotions-page .promotions-table thead {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.promotions-page .promotions-table tbody tr:hover {
+  background-color: var(--color-surface-light);
+}
+
+.promotions-page .promotions-table th,
+.promotions-page .promotions-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--color-border-light);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  vertical-align: middle;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.promotions-page .promotions-table th:nth-child(1),
+.promotions-page .promotions-table td:nth-child(1) {
+  width: 30%;
+}
+
+.promotions-page .promotions-table th:nth-child(5),
+.promotions-page .promotions-table td:nth-child(5) {
+  width: 20%;
+}
+
+/* Actions */
+
+.promotions-table .actions button {
+  margin-right: 6px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  color: var(--color-text-secondary);
+  transition: var(--transition-fast);
+}
+
+.promotions-table .actions button:hover {
+  color: var(--color-primary);
+}
+
+.promotions-table .actions .danger:hover {
+  background: var(--color-error-light);
+  color: var(--color-error);
+}
+
+/* Status Button*/
+
+.status-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: var(--transition-fast);
+}
+
+.status-btn.active {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.status-btn.inactive {
+  background-color: var(--color-pending-light);
+  color: var(--color-pending);
+}
+
+.status-btn:hover {
+  opacity: 0.85;
+}
+/* PAGE PROMOTIONS – MODE SOMBRE */
+.dark .promotions-page {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+  box-shadow: none;
+}
+
+/*Header */
+.dark .promotions-page .page-header {
+  background-color: #1f2937;
+  border-bottom-color: var(--color-border-dark);
+}
+
+.dark .page-header h1 {
+  color: var(--color-text-white);
+}
+
+.dark .page-header .create-btn {
+  background-color: var(--color-secondary);
+}
+
+.dark .page-header .create-btn:hover {
+  background-color: var(--color-secondary-dark);
+}
+
+/*Table*/
+
+.dark .promotions-page .promotions-table thead {
+  background-color: #111827;
+  color: var(--color-text-muted);
+}
+
+.dark .promotions-page .promotions-table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.dark .promotions-page .promotions-table th,
+.dark .promotions-page .promotions-table td {
+  border-bottom-color: var(--color-border-dark);
+  color: var(--color-text-white);
+}
+
+/*Actions*/
+
+.dark .promotions-table .actions button {
+  color: var(--color-text-muted);
+}
+
+.dark .promotions-table .actions button:hover {
+  color: var(--color-primary-light);
+}
+
+.dark .promotions-table .actions .danger:hover {
+  color: var(--color-error);
+}
+
+/*Status Button */
+
+.dark .status-btn.active {
+  background-color: var(--color-success-dark);
+  color: var(--color-success);
+}
+
+.dark .status-btn.inactive {
+  background-color: var(--color-pending-dark);
+  color: var(--color-text-muted);
+}
+
+/* Responsive */
+
+@media (max-width: 768px) {
+  .promotions-page .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .page-header h1 {
+    font-size: 16px;
+  }
+
+  .page-header .create-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .promotions-page .promotions-table th,
+  .promotions-page .promotions-table td {
+    font-size: 12px;
+    padding: 8px;
+  }
+
+  .promotions-page .promotions-table th:nth-child(1),
+  .promotions-page .promotions-table td:nth-child(1),
+  .promotions-page .promotions-table th:nth-child(5),
+  .promotions-page .promotions-table td:nth-child(5) {
+    width: auto;
+  }
+
+  .promotions-table .actions {
+    display: flex;
+    gap: 4px;
+  }
+}
+.promotion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.promotion-form input .required {
+  color: var(--text-danger, #ef4444);
+}
+
+.promotion-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-content {
+  width: 90%;
+  max-width: 600px;
+  background-color: var(--color-card-light);
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Modal header */
+.modal-content .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.modal-content .modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.modal-content .modal-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.modal-content .modal-header .close-btn:hover {
+  color: var(--color-error);
+}
+
+/* Inputs & Textareas */
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 8px 12px;
+  margin: 10px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  color: #111827;
+}
+.modal-content input,
+.modal-content textarea:focus {
+  border:  1px solid #6366f1;
+  outline: none;
+}
+
+.modal-content .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-content button {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  font-size: 14px;
+}
+
+.modal-content button.secondary {
+  background-color: #6366f1;
+  color: var(--color-text-white);
+}
+.modal-content button.cancel {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+.modal-content button.cancel:hover {
+  background-color: #e5e7eb;
+}
+
+.modal-content button:hover {
+  opacity: 0.9;
+}
+
+.dark .modal-content {
+  background-color: var(--color-card-dark);
+  color: var(--color-text-white);
+  box-shadow: var(--shadow-xl);
+}
+
+.dark .modal-content .modal-header {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.dark .modal-content .modal-header h2 {
+  color: var(--color-text-white);
+}
+
+.dark .modal-content .modal-header .close-btn {
+  color: var(--color-text-muted);
+}
+
+.dark .modal-content .modal-header .close-btn:hover {
+  color: var(--color-error);
+}
+
+.dark .modal-content input,
+.dark .modal-content textarea {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-white);
+}
+
+.dark .modal-content input::placeholder,
+.dark .modal-content textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.dark .modal-content button.secondary {
+  background-color: #6366f1;
+}
+.dark .modal-content button.cancel {
+  background-color: #4b5563;
+  color: #fff;
+}
+.dark .modal-content button.cancel:hover {
+  background-color: #4b5563;
+}
+
+.form-group label {
+  text-transform: capitalize;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+}
+.form-group label .required {
+  color: red;
+}
+.dark .form-group label {
+  color: #fff;
+}
