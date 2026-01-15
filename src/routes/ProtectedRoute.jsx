@@ -1,23 +1,24 @@
-// src/routes/ProtectedRoute.jsx
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
 
 /**
- * ProtectedRoute - Protège les routes selon l'authentification et le type d'utilisateur
- * 
+ * ProtectedRoute
+ * Protège les routes selon l'authentification et le type d'utilisateur
  * @param {ReactNode} children - Composant à afficher si autorisé
- * @param {Array} allowedTypes - Types d'utilisateurs autorisés ['admin', 'restaurant', 'client']
+ * @param {Array} allowedTypes - Types d'utilisateurs autorisés ['admin', 'restaurant']
  */
 const ProtectedRoute = ({ children, allowedTypes = [] }) => {
-  const { isAuthenticated, userType } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userType = useAuthStore((state) => state.userType);
   const location = useLocation();
 
-  // Pas connecté → rediriger vers auth
+  // Pas connecté → redirection vers login
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Connecté mais pas le bon type → rediriger vers son dashboard
+  // Connecté mais pas le bon type → redirection vers son dashboard
   if (allowedTypes.length > 0 && !allowedTypes.includes(userType)) {
     const redirectPath = getRedirectPath(userType);
     return <Navigate to={redirectPath} replace />;
@@ -28,11 +29,12 @@ const ProtectedRoute = ({ children, allowedTypes = [] }) => {
 };
 
 /**
- * PublicRoute - Accessible seulement si NON connecté
- * Redirige vers le dashboard si déjà connecté
+ * PublicRoute
+ * Accessible uniquement si NON connecté. Sinon redirige vers le dashboard.
  */
 export const PublicRoute = ({ children }) => {
-  const { isAuthenticated, userType } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userType = useAuthStore((state) => state.userType);
 
   if (isAuthenticated) {
     const redirectPath = getRedirectPath(userType);
@@ -43,10 +45,12 @@ export const PublicRoute = ({ children }) => {
 };
 
 /**
- * AuthRedirect - Redirige vers le bon dashboard selon le type
+ * AuthRedirect
+ * Redirige automatiquement vers le bon dashboard selon le userType
  */
 export const AuthRedirect = () => {
-  const { isAuthenticated, userType } = useAuthStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const userType = useAuthStore((state) => state.userType);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -57,7 +61,7 @@ export const AuthRedirect = () => {
 };
 
 /**
- * Fonction helper pour obtenir le chemin de redirection selon le userType
+ * Retourne le chemin de redirection selon le type utilisateur
  */
 const getRedirectPath = (userType) => {
   switch (userType) {

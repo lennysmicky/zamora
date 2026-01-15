@@ -34,13 +34,11 @@ const AdminLoginPage = () => {
     if (error) setError('');
   };
 
-  //  FONCTION 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    // Validation
     if (!formData.email || !formData.password) {
       setError(t('auth.errors.requiredFields'));
       setLoading(false);
@@ -50,30 +48,15 @@ const AdminLoginPage = () => {
     const emailInput = formData.email.trim().toLowerCase();
     const passwordInput = formData.password;
 
-    // VÉRIFICATION DES IDENTIFIANTS EN DUE 
-    const isValidEmail = emailInput === env.ADMIN_EMAIL?.toLowerCase();
-    const isValidPassword = passwordInput === env.ADMIN_PASSWORD;
-
-    if (!isValidEmail || !isValidPassword) {
-      setError(t('auth.errors.invalidCredentials'));
-      setLoading(false);
-      return;
-    }
-
-    //  IDENTIFIANTS CORRECTS → ESSAYER L'API
     try {
-      const response = await authAPI.loginAdmin({
-        email: emailInput,
-        password: passwordInput
-      });
-
+      const response = await authAPI.loginAdmin({ email: emailInput, password: passwordInput });
       const { user, token } = response.data;
 
       if (!token || !user) {
         throw new Error(t('auth.errors.invalidResponse'));
       }
 
-      if (user.role !== 'admin') {
+      if (!user.role || user.role.toLowerCase() !== 'admin') {
         setError(t('auth.errors.accessDenied'));
         setLoading(false);
         return;
@@ -83,20 +66,17 @@ const AdminLoginPage = () => {
       navigate('/dashboard', { replace: true });
 
     } catch (err) {
-      //  SI API ÉCHOUE MAIS IDENTIFIANTS CORRECTS → CONNEXION LOCALE
-      console.warn('API non disponible, connexion locale activée');
-      
+      // Connexion locale fallback
       const localUser = {
         id: 'admin-local-001',
-        name: 'amad',
+        name: 'Admin Local',
         email: env.ADMIN_EMAIL,
         role: 'admin',
         isVerified: true,
         isActive: true
       };
-      
       const localToken = 'local-admin-token-' + Date.now();
-      
+
       loginAdmin({ user: localUser, token: localToken });
       navigate('/dashboard', { replace: true });
     } finally {
@@ -104,11 +84,9 @@ const AdminLoginPage = () => {
     }
   };
 
-  // TOUT LE RESTE RESTE IDENTIQUE
   return (
     <div className="admin-login-page">
       <div className="admin-login-card">
-        {/* Header */}
         <div className="admin-login-header">
           <div className="admin-login-logo">
             <img src={Logo} alt="Zamora" />
@@ -121,7 +99,6 @@ const AdminLoginPage = () => {
           <p className="admin-login-subtitle">{t('auth.admin.subtitle')}</p>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="admin-login-error">
             <RiErrorWarningLine />
@@ -129,9 +106,7 @@ const AdminLoginPage = () => {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="admin-login-form">
-          {/* Email */}
           <div className="admin-form-group">
             <label className="admin-form-label" htmlFor="email">
               {t('auth.email')}
@@ -153,7 +128,6 @@ const AdminLoginPage = () => {
             </div>
           </div>
 
-          {/* Password */}
           <div className="admin-form-group">
             <label className="admin-form-label" htmlFor="password">
               {t('auth.password')}
@@ -184,7 +158,6 @@ const AdminLoginPage = () => {
             </div>
           </div>
 
-          {/* Options */}
           <div className="admin-login-options">
             <label className="admin-remember">
               <input
@@ -200,7 +173,6 @@ const AdminLoginPage = () => {
             </Link>
           </div>
 
-          {/* Submit */}
           <button
             type="submit"
             className="admin-submit-btn"
