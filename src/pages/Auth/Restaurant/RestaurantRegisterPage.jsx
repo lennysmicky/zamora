@@ -51,40 +51,49 @@ const RestaurantRegisterPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validation = validateRegisterForm(formData);
 
+    // Validation locale
+    const validation = validateRegisterForm(formData);
     if (!validation.isValid) {
       setErrors(validation.errors);
+      return;
+    }
+
+    // Vérification confirm password côté frontend
+    if (formData.password !== formData.confirmPassword) {
+      setErrors(prev => ({ ...prev, confirmPassword: 'passwordMismatch' }));
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Appel API
-      const response = await authAPI.registerRestaurant({
-        name: formData.restaurantName,
+      // Payload conforme au schéma backend
+      const payload = {
+        name: formData.restaurantName.trim(),
+        address: formData.address.trim(),
+        phone: Number(formData.phone),       // conversion Number pour Mongoose
         email: formData.email.trim().toLowerCase(),
-        phone: formData.phone,
-        address: formData.address,
-        password: formData.password,
-      });
+        role: 'restaurant',                  // enum valide pour le backend
+        password: formData.password
+      };
+
+      console.log("Payload envoyé au backend:", payload);
+
+      const response = await authAPI.registerRestaurant(payload);
 
       const { user, token } = response.data;
 
       if (token && user) {
-        // Login automatique avec rôle restaurant
-        loginRestaurant({ user: { ...user, role: 'restaurant' }, token });
+        loginRestaurant({ user, token });
         localStorage.setItem('user_role', 'restaurant');
-
-        // Redirection vers dashboard restaurant
         navigate('/restaurant/dashboard', { replace: true });
       } else {
         setErrors({ general: t('auth.errors.registerFailed', 'Inscription échouée') });
       }
     } catch (err) {
-      let message = t('auth.errors.unknown', 'Une erreur est survenue');
-      if (err.response?.data?.message) message = err.response.data.message;
+      console.error("Erreur backend:", err.response?.data);
+      const message = err.response?.data?.message || t('auth.errors.unknown', 'Une erreur est survenue');
       setErrors({ general: message });
     } finally {
       setIsLoading(false);
