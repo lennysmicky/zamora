@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { 
   AreaChart, 
@@ -10,39 +10,18 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 import { RiMoreLine } from 'react-icons/ri';
+import useDashboardData from '../../hooks/useDashboardData';
 import './RevenueChart.css';
 
 const RevenueChart = () => {
   const { t } = useTranslation();
 
-  // État initialisé à tableau vide (prêt pour le backend)
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fonction pour charger les données depuis le backend
-  const fetchRevenueData = async () => {
-    setLoading(true);
-    try {
-      // TODO: Remplacer par l'appel API réel
-      // const response = await fetch('/api/dashboard/revenue');
-      // const data = await response.json();
-      // setData(data);
-
-      // Pour l'instant, on garde le tableau vide
-      setData([]);
-    } catch (error) {
-      console.error('Erreur lors du chargement des revenus:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRevenueData();
-  }, []);
+  // 📊 Récupération des données du hook
+  const { revenueData, isLoading, error } = useDashboardData();
 
   // Fonction pour formater la monnaie dans le tooltip
   const formatCurrency = (value) => {
+    if (!value) return '0';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -52,12 +31,8 @@ const RevenueChart = () => {
 
   // Fonction pour formater l'axe Y
   const formatYAxis = (value) => {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M`;
-    }
-    if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)}k`;
-    }
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
     return value.toString();
   };
 
@@ -77,7 +52,7 @@ const RevenueChart = () => {
   // ================================
   // ÉTAT 1 : LOADING (Skeleton)
   // ================================
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="chart-card">
         <div className="chart-card-header">
@@ -109,7 +84,7 @@ const RevenueChart = () => {
   // ================================
   // ÉTAT 2 : EMPTY (Aucune donnée)
   // ================================
-  if (data.length === 0) {
+  if (!revenueData?.datasets?.length || revenueData.labels?.length === 0) {
     return (
       <div className="chart-card">
         <div className="chart-card-header">
@@ -133,6 +108,12 @@ const RevenueChart = () => {
   // ================================
   // ÉTAT 3 : DATA (Affichage normal)
   // ================================
+  // Préparer les données pour Recharts
+  const chartData = revenueData.labels.map((label, i) => ({
+    name: label,
+    revenue: revenueData.datasets[0]?.data[i] || 0
+  }));
+
   return (
     <div className="chart-card">
       <div className="chart-card-header">
@@ -147,18 +128,14 @@ const RevenueChart = () => {
 
       <div className="chart-card-body">
         <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
                 <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid 
-              strokeDasharray="3 3" 
-              vertical={false} 
-              stroke="#e2e8f0" 
-            />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
             <XAxis 
               dataKey="name" 
               axisLine={false} 

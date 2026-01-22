@@ -59,22 +59,29 @@ const RestaurantRegisterPage = () => {
       return;
     }
 
-    // Vérification confirm password côté frontend
+    // Vérification confirm password
     if (formData.password !== formData.confirmPassword) {
       setErrors(prev => ({ ...prev, confirmPassword: 'passwordMismatch' }));
+      return;
+    }
+
+    // Nettoyage et conversion du phone en Number
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    const phoneNumber = cleanPhone ? Number(cleanPhone) : null;
+    if (!phoneNumber) {
+      setErrors(prev => ({ ...prev, phone: 'required' }));
       return;
     }
 
     setIsLoading(true);
 
     try {
-      // Payload conforme au schéma backend
+      // Payload backend
       const payload = {
         name: formData.restaurantName.trim(),
         address: formData.address.trim(),
-        phone: Number(formData.phone),       // conversion Number pour Mongoose
+        phone: phoneNumber,
         email: formData.email.trim().toLowerCase(),
-        role: 'restaurant',                  // enum valide pour le backend
         password: formData.password
       };
 
@@ -82,15 +89,24 @@ const RestaurantRegisterPage = () => {
 
       const response = await authAPI.registerRestaurant(payload);
 
-      const { user, token } = response.data;
+      console.log("Réponse backend:", response.data);
 
-      if (token && user) {
-        loginRestaurant({ user, token });
-        localStorage.setItem('user_role', 'restaurant');
-        navigate('/restaurant/dashboard', { replace: true });
+      // Gestion de la réponse backend
+      if (response.status === 201 || response.data.user) {
+        // Si token fourni, connexion auto
+        if (response.data.token && response.data.user) {
+          loginRestaurant({ user: response.data.user, token: response.data.token });
+          localStorage.setItem('user_role', 'restaurant');
+          navigate('/restaurant/dashboard', { replace: true });
+        } else {
+          // Sinon, redirection vers login avec succès
+          navigate('/', { replace: true });
+        }
       } else {
-        setErrors({ general: t('auth.errors.registerFailed', 'Inscription échouée') });
+        const message = response.data?.message || t('auth.errors.registerFailed', 'Inscription échouée');
+        setErrors({ general: message });
       }
+
     } catch (err) {
       console.error("Erreur backend:", err.response?.data);
       const message = err.response?.data?.message || t('auth.errors.unknown', 'Une erreur est survenue');

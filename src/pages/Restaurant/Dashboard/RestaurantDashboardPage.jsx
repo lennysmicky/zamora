@@ -2,35 +2,42 @@
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../../../stores/authStore';
 
-// ✅ IMPORTER les composants existants
+// Composants existants
 import KpiGrid from '../../../components/kpi/KpiGrid';
 import RevenueChart from '../../../components/charts/RevenueChart';
 import OrdersStatusChart from '../../../components/charts/OrdersStatusChart';
 import TopSellingItems from '../../../components/dashboard/TopSellingItems';
 import RecentOrdersTable from '../../../components/dashboard/RecentOrdersTable';
 
-// Réutiliser le hook existant avec filtre
-import { useDashboardData } from '../../../hooks/useDashboardData';
+// Hook Dashboard
+import useDashboardData from '../../../hooks/useDashboardData';
 
-import './restaurant.css'; // Réutiliser le CSS
+import './restaurant.css'; 
 
 const RestaurantDashboardPage = () => {
   const { t } = useTranslation();
   const { restaurantId } = useAuthStore();
 
-  // ✅ Passer restaurantId pour filtrer les données
-  const { kpis, revenueData, ordersStatusData, topSellingItems, recentOrders, isLoading } = 
-    useDashboardData(restaurantId);
+  //  Passer restaurantId sous forme d'objet
+  const { kpis, charts, recentOrders, isLoading } = useDashboardData({ restaurantId });
+
+  // Extraire les datas depuis charts
+  const revenueData = charts?.revenue || [];
+  const ordersStatusData = charts?.ordersStatus || [];
+  const topSellingItems = charts?.topSellingItems || [];
 
   return (
     <div className="dashboard-page">
+      {/* KPI */}
       <KpiGrid kpis={kpis} isLoading={isLoading} />
 
+      {/* Graphiques */}
       <div className="dashboard-charts">
         <RevenueChart data={revenueData} isLoading={isLoading} />
         <OrdersStatusChart data={ordersStatusData} isLoading={isLoading} />
       </div>
 
+      {/* Listes */}
       <div className="dashboard-bottom">
         <TopSellingItems items={topSellingItems} isLoading={isLoading} />
         <RecentOrdersTable orders={recentOrders} isLoading={isLoading} />

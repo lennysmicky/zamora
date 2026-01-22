@@ -2,13 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  FiMail, 
-  FiLock, 
-  FiEye, 
-  FiEyeOff, 
-  FiArrowRight 
-} from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import { MdRestaurant } from 'react-icons/md';
 import { validateLoginForm } from '../../../utils/validators';
 import useAuthStore from '../../../stores/authStore';
@@ -26,7 +20,7 @@ const RestaurantLoginPage = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false
+    rememberMe: true
   });
   
   const [showPassword, setShowPassword] = useState(false);
@@ -46,74 +40,41 @@ const RestaurantLoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation côté client
     const validation = validateLoginForm(formData.email, formData.password);
-    
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
     }
-    
+
     setIsLoading(true);
     setErrors({});
-    
+
     try {
-      // ========================================
-      //  MODE TEST - Données mock
-      // ========================================
-      const useMockData = true; // ← Mettre à false quand backend prêt
-      
-      if (useMockData) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        loginRestaurant({
-          id: 1,
-          name: 'Ahmed Benali',
-          email: formData.email,
-          phone: '+212 6 12 34 56 78',
-          avatar: null,
-          restaurantId: 123,
-          restaurantName: 'Chez Ahmed - Fast Food',
-          restaurantLogo: null,
-          token: 'mock-jwt-token-restaurant-123'
-        });
-        
-        navigate('/restaurant/dashboard');
-        return;
-      }
-      // ========================================
-      // FIN MODE TEST
-      // ========================================
-      
-      // Appel API réel au backend
       const response = await authAPI.loginRestaurant({
         email: formData.email,
         password: formData.password
       });
-      
-      const { user, token, restaurant } = response.data;
-      
+
+      const { user, token } = response.data;
+
+      // Mettre à jour le store
       loginRestaurant({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        password: user.password,
-        phone: user.phone,
-        address: user.address,
-        avatar: user.avatar,
-        restaurantId: restaurant.id,
-        restaurantName: restaurant.name,
-        restaurantLogo: restaurant.logo,
-        token: token
+        user: {
+          ...user,
+          restaurantId: user.id,
+          restaurantName: user.name
+        },
+        token
       });
-      
-      navigate('/restaurant/dashboard');
-      
+
+      // Redirection vers le dashboard
+      navigate('/restaurant/dashboard', { replace: true });
+
     } catch (error) {
       if (error.response) {
         const status = error.response.status;
-        
         if (status === 401) {
           setErrors({ general: 'invalidCredentials' });
         } else if (status === 403) {
@@ -133,7 +94,6 @@ const RestaurantLoginPage = () => {
 
   return (
     <div className="auth-container">
-      {/* Left - Image */}
       <div className="auth-image-side">
         <img src={restaurantBg} alt="" className="auth-image-bg" />
         <div className="auth-image-overlay"></div>
@@ -144,10 +104,7 @@ const RestaurantLoginPage = () => {
         </div>
       </div>
 
-      {/* Right - Form */}
       <div className="auth-form-side">
-        {/* Supprimé: Bouton retour - plus besoin car c'est la page principale */}
-
         <div className="auth-form-container">
           <div className="auth-form-logo">
             <img src={logoImage} alt="Zamora" />

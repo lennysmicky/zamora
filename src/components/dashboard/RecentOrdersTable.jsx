@@ -1,38 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiArrowRightSLine } from 'react-icons/ri';
+import useDashboardData from '../../hooks/useDashboardData';
 import './RecentOrdersTable.css';
 
 const RecentOrdersTable = () => {
   const { t } = useTranslation();
 
-  // État initialisé à tableau vide (prêt pour le backend)
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  //  Récupération des données depuis le hook
+  const { recentOrders, isLoading } = useDashboardData();
 
-  // Fonction pour charger les données depuis le backend
-  const fetchRecentOrders = async () => {
-    setLoading(true);
-    try {
-      // TODO: Remplacer par l'appel API réel
-      // const response = await fetch('/api/dashboard/recent-orders');
-      // const data = await response.json();
-      // setOrders(data);
-
-      // Pour l'instant, on garde le tableau vide
-      setOrders([]);
-    } catch (error) {
-      console.error('Erreur lors du chargement des commandes récentes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchRecentOrders();
-  }, []);
-
-  // Fonction pour déterminer la classe CSS du statut
   const getStatusClass = (status) => {
     const statusClasses = {
       delivered: 'status-delivered',
@@ -43,12 +20,8 @@ const RecentOrdersTable = () => {
     return statusClasses[status] || '';
   };
 
-  // Fonction pour obtenir le label traduit du statut
-  const getStatusLabel = (status) => {
-    return t(`status.${status}`);
-  };
+  const getStatusLabel = (status) => t(`status.${status}`);
 
-  // Fonction pour formater la monnaie
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -57,15 +30,16 @@ const RecentOrdersTable = () => {
     }).format(value);
   };
 
-  // Fonction pour formater le nombre d'articles
   const formatItems = (count) => {
     if (count === 0) return `0 ${t('orders.item')}`;
     if (count === 1) return `1 ${t('orders.item')}`;
     return `${count} ${t('orders.itemPlural')}`;
   };
 
-  // Affichage pendant le chargement
-  if (loading) {
+  // ================================
+  // ÉTAT 1 : LOADING
+  // ================================
+  if (isLoading) {
     return (
       <div className="recent-orders-card">
         <div className="recent-orders-header">
@@ -90,8 +64,10 @@ const RecentOrdersTable = () => {
     );
   }
 
-  // Affichage si aucune commande
-  if (orders.length === 0) {
+  // ================================
+  // ÉTAT 2 : EMPTY
+  // ================================
+  if (!recentOrders || recentOrders.length === 0) {
     return (
       <div className="recent-orders-card">
         <div className="recent-orders-header">
@@ -108,6 +84,9 @@ const RecentOrdersTable = () => {
     );
   }
 
+  // ================================
+  // ÉTAT 3 : DATA
+  // ================================
   return (
     <div className="recent-orders-card">
       <div className="recent-orders-header">
@@ -130,7 +109,7 @@ const RecentOrdersTable = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
+            {recentOrders.map((order) => (
               <tr key={order.id}>
                 <td className="order-id">{order.id}</td>
                 <td className="order-customer">{order.customer}</td>

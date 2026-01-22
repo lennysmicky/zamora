@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import KpiCard from './KpiCard';
 import { 
@@ -7,54 +7,25 @@ import {
   RiShoppingCartLine,
   RiGroupLine 
 } from 'react-icons/ri';
+import useDashboardData from '../../hooks/useDashboardData';
 import './KpiGrid.css';
 
 const KpiGrid = () => {
   const { t } = useTranslation();
 
-  // État initialisé à zéro (prêt pour le backend)
-  const [kpiData, setKpiData] = useState({
-    totalOrders: 0,
-    totalRevenue: 0,
-    averageBasket: 0,
-    uniqueCustomers: 0,
-    totalOrdersChange: 0,
-    totalRevenueChange: 0,
-    averageBasketChange: 0,
-    uniqueCustomersChange: 0
-  });
+  // Récupération des données depuis le hook
+  const { kpis, isLoading } = useDashboardData();
 
-  const [loading, setLoading] = useState(true);
-
-  // Fonction pour charger les données depuis le backend
-  const fetchKpiData = async () => {
-    setLoading(true);
-    try {
-      // TODO: Remplacer par l'appel API réel
-      // const response = await fetch('/api/dashboard/kpis');
-      // const data = await response.json();
-      // setKpiData(data);
-      
-      setKpiData({
-        totalOrders: 0,
-        totalRevenue: 0,
-        averageBasket: 0,
-        uniqueCustomers: 0,
-        totalOrdersChange: 0,
-        totalRevenueChange: 0,
-        averageBasketChange: 0,
-        uniqueCustomersChange: 0
-      });
-    } catch (error) {
-      console.error('Erreur lors du chargement des KPIs:', error);
-    } finally {
-      setLoading(false);
-    }
+  // Sécuriser l'accès aux valeurs pour toujours afficher les cartes
+  const safeKpis = {
+    totalOrders: kpis?.totalOrders ?? 0,
+    growthOrders: kpis?.growthOrders ?? 0,
+    totalRevenue: kpis?.totalRevenue ?? 0,
+    growthRevenue: kpis?.growthRevenue ?? 0,
+    averageOrderValue: kpis?.averageOrderValue ?? 0,
+    totalCustomers: kpis?.totalCustomers ?? 0,
+    growthCustomers: kpis?.growthCustomers ?? 0
   };
-
-  useEffect(() => {
-    fetchKpiData();
-  }, []);
 
   const getChangeType = (value) => {
     if (value > 0) return 'positive';
@@ -63,12 +34,13 @@ const KpiGrid = () => {
   };
 
   const formatChange = (value) => {
-    if (value === 0) return '0%';
+    if (!value) return '0%';
     const sign = value > 0 ? '+' : '';
     return `${sign}${value.toFixed(1)}%`;
   };
 
   const formatCurrency = (value) => {
+    if (!value) return '0';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -77,56 +49,48 @@ const KpiGrid = () => {
   };
 
   const formatNumber = (value) => {
+    if (!value) return '0';
     return new Intl.NumberFormat('fr-FR').format(value);
   };
 
-  // Configuration des cartes KPI (avec traductions)
+  // Configuration des cartes KPI
   const kpiCards = [
     {
       id: 1,
       title: t('dashboard.kpi.totalOrders'),
-      value: formatNumber(kpiData.totalOrders),
-      change: formatChange(kpiData.totalOrdersChange),
-      changeType: getChangeType(kpiData.totalOrdersChange),
-      icon: RiShoppingBag3Line
+      value: formatNumber(safeKpis.totalOrders),
+      change: formatChange(safeKpis.growthOrders),
+      changeType: getChangeType(safeKpis.growthOrders),
+      icon: RiShoppingBag3Line,
+      unit:''
     },
     {
       id: 2,
       title: t('dashboard.kpi.totalRevenue'),
-      value: formatCurrency(kpiData.totalRevenue),
-      change: formatChange(kpiData.totalRevenueChange),
-      changeType: getChangeType(kpiData.totalRevenueChange),
-      icon: RiMoneyDollarCircleLine
+      value: formatCurrency(safeKpis.totalRevenue),
+      change: formatChange(safeKpis.growthRevenue),
+      changeType: getChangeType(safeKpis.growthRevenue),
+      icon: RiMoneyDollarCircleLine,
+      unit: 'FCFA'
     },
     {
       id: 3,
       title: t('dashboard.kpi.averageBasket'),
-      value: formatCurrency(kpiData.averageBasket),
-      change: formatChange(kpiData.averageBasketChange),
-      changeType: getChangeType(kpiData.averageBasketChange),
-      icon: RiShoppingCartLine
+      value: formatCurrency(safeKpis.averageOrderValue),
+      change: formatChange(safeKpis.growthBasket), // Si pas de croissance spécifique pour le panier moyen
+      changeType: 'neutral',
+      icon: RiShoppingCartLine,
+      unit:''
     },
     {
       id: 4,
       title: t('dashboard.kpi.uniqueCustomers'),
-      value: formatNumber(kpiData.uniqueCustomers),
-      change: formatChange(kpiData.uniqueCustomersChange),
-      changeType: getChangeType(kpiData.uniqueCustomersChange),
+      value: formatNumber(safeKpis.totalCustomers),
+      change: formatChange(safeKpis.growthCustomers),
+      changeType: getChangeType(safeKpis.growthCustomers),
       icon: RiGroupLine
     }
   ];
-
-  if (loading) {
-    return (
-      <div className="kpi-grid">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="kpi-card-skeleton">
-            {t('common.loading')}
-          </div>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <div className="kpi-grid">
@@ -134,8 +98,8 @@ const KpiGrid = () => {
         <KpiCard
           key={kpi.id}
           title={kpi.title}
-          value={kpi.value}
-          change={kpi.change}
+          value={isLoading ? '...' : kpi.value}
+          change={isLoading ? '...' : kpi.change}
           changeType={kpi.changeType}
           icon={kpi.icon}
         />

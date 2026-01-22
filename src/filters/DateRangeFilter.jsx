@@ -22,7 +22,9 @@ const DateRangeFilter = ({
     { id: 'thisMonth', labelKey: 'filters.thisMonth' },
     { id: 'lastMonth', labelKey: 'filters.lastMonth' },
     { id: 'thisYear', labelKey: 'filters.thisYear' },
-    { id: 'custom', labelKey: 'filters.custom' }
+    { id: 'custom', labelKey: 'filters.custom' },
+    { id: 'all', labelKey: 'filters.all' }
+
   ];
 
   // Fermer dropdown si clic extérieur

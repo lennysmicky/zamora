@@ -1,38 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiArrowRightSLine } from 'react-icons/ri';
+import useDashboardData from '../../hooks/useDashboardData';
 import './TopSellingItems.css';
 
 const TopSellingItems = () => {
   const { t } = useTranslation();
 
-  // État initialisé à tableau vide (prêt pour le backend)
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  //  Récupération des données depuis le hook
+  const { topSellingItems, isLoading } = useDashboardData();
 
-  // Fonction pour charger les données depuis le backend
-  const fetchTopSellingItems = async () => {
-    setLoading(true);
-    try {
-      // TODO: Remplacer par l'appel API réel
-      // const response = await fetch('/api/dashboard/top-selling');
-      // const data = await response.json();
-      // setItems(data);
-
-      // Pour l'instant, on garde le tableau vide
-      setItems([]);
-    } catch (error) {
-      console.error('Erreur lors du chargement des meilleures ventes:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTopSellingItems();
-  }, []);
-
-  // Fonction pour formater la monnaie
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -41,18 +18,15 @@ const TopSellingItems = () => {
     }).format(value);
   };
 
-  // Fonction pour formater le nombre de ventes
   const formatSold = (count) => {
-    if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}k`;
-    }
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
     return count.toString();
   };
 
   // ================================
-  // ÉTAT 1 : LOADING (Skeleton)
+  // ÉTAT 1 : LOADING
   // ================================
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="top-selling-card">
         <div className="top-selling-header">
@@ -79,9 +53,9 @@ const TopSellingItems = () => {
   }
 
   // ================================
-  // ÉTAT 2 : EMPTY (Aucune donnée)
+  // ÉTAT 2 : EMPTY
   // ================================
-  if (items.length === 0) {
+  if (!topSellingItems || topSellingItems.length === 0) {
     return (
       <div className="top-selling-card">
         <div className="top-selling-header">
@@ -99,7 +73,7 @@ const TopSellingItems = () => {
   }
 
   // ================================
-  // ÉTAT 3 : DATA (Affichage normal)
+  // ÉTAT 3 : DATA
   // ================================
   return (
     <div className="top-selling-card">
@@ -112,7 +86,7 @@ const TopSellingItems = () => {
       </div>
 
       <div className="top-selling-list">
-        {items.map((item, index) => (
+        {topSellingItems.map((item, index) => (
           <div key={item.id} className="top-selling-item">
             <div className={`top-selling-rank rank-${index + 1}`}>
               {index + 1}

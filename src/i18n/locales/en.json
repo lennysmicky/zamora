@@ -348,6 +348,7 @@
       "last7Days": "Last 7 days",
       "last30Days": "Last 30 days",
       "custom": "Custom",
+      "All": "All",
       "advanced": "Advanced filters",
       "reset": "Reset"
     },
@@ -558,7 +559,80 @@
     "inactive": "Inactive",
     "code": "Promo code",
     "usageLimit": "Usage limit",
-    "usageCount": "Uses"
+    "usageCount": "Uses",
+    "subtitle": "Manage the promotions displayed on the mobile app",
+    "addNew": "New Promotion",
+    "allRestaurants": "All Restaurants",
+    "searchPlaceholder": "Search for a promotion...",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "expired": "Expired"
+    },
+    "status": {
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "expired": "Expired",
+      "inactive": "Inactive"
+    },
+    "filters": {
+      "all": "All",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "expired": "Expired"
+    },
+    "table": {
+      "title": "Title",
+      "restaurant": "Restaurant",
+      "discount": "Discount",
+      "period": "Period",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "createTitle": "New Promotion",
+      "editTitle": "Edit Promotion",
+      "title": "Title",
+      "titlePlaceholder": "Ex: 20% off pizzas",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe the promotion...",
+      "code": "Promo Code",
+      "codePlaceholder": "Ex: PIZZA20",
+      "discountType": "Discount Type",
+      "percentage": "Percentage",
+      "fixedAmount": "Fixed Amount",
+      "discountValue": "Value",
+      "minOrderAmount": "Minimum Order",
+      "restaurant": "Restaurant",
+      "allRestaurants": "All Restaurants",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "isActive": "Active Promotion"
+    },
+    "empty": {
+      "title": "No Promotions",
+      "description": "Create your first promotion to attract more customers"
+    },
+    "deleteDialog": {
+      "title": "Delete Promotion",
+      "message": "Are you sure you want to delete the promotion \"{{title}}\"? This action cannot be undone."
+    },
+    "errors": {
+      "fetchFailed": "Error loading promotions",
+      "createFailed": "Error creating promotion",
+      "updateFailed": "Error updating promotion",
+      "deleteFailed": "Error deleting promotion",
+      "toggleFailed": "Error changing status",
+      "titleRequired": "Title is required",
+      "discountRequired": "Discount value is required",
+      "percentageMax": "Percentage cannot exceed 100%",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "endDateInvalid": "End date must be after start date"
+    }
   },
   "specialOffers": {
     "title": "Special Offers",

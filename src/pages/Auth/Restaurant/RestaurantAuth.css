@@ -573,3 +573,22 @@
 .dark .auth-footer-text {
   color: var(--color-text-muted);
 }
+/* ========================================
+   FIX ADRESSE INPUT SCROLL
+   ======================================== */
+.auth-form-container {
+  max-height: 100%; /* Limite la hauteur totale du formulaire */
+  overflow-y: auto; /* Scroll interne si le contenu dépasse */
+  padding-right: 0.25rem; /* Pour éviter le scroll caché par la scrollbar */
+}
+
+.auth-input-wrapper input[name="address"] {
+  height: 2.5rem; /* fixe une hauteur confortable pour l'adresse */
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  overflow: hidden; /* empêche l'input de grossir si le texte est long */
+}
+
+.auth-input-wrapper input[name="address"]::placeholder {
+  font-size: 0.75rem;
+}

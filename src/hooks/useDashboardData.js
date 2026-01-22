@@ -2,295 +2,168 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import useAuthStore from '../stores/authStore';
-import * as dashboardAPI from '../api/dashboard';
+import dashboardAPI from '../api/dashboard';
 
-// ⚡ SWITCH ICI - mettre false pour utiliser le vrai backend
-const USE_MOCK = true;
-
-export const useDashboardData = (restaurantIdParam = null) => {
+/**
+ * Hook Dashboard – Admin & Restaurant
+ * Toutes les données viennent du backend
+ */
+const useDashboardData = ({
+  restaurantId: restaurantIdParam = null,
+  startDate = null,
+  endDate = null,
+  period = null
+} = {}) => {
   const { t } = useTranslation();
-  
-  // Récupérer restaurantId du store si pas passé en param
-  const { restaurantId: storeRestaurantId, userType, token } = useAuthStore();
-  
-  // Utiliser le param ou celui du store
+  const { userType, restaurantId: storeRestaurantId } = useAuthStore();
+
+  // ===============================
+  // CONTEXTE UTILISATEUR
+  // ===============================
   const restaurantId = restaurantIdParam || storeRestaurantId;
+  const isAdminMode = userType === 'admin';
+  const isRestaurantMode = userType === 'restaurant';
 
-  // Déterminer si mode restaurant ou admin
-  const isRestaurantMode = userType === 'restaurant' && !!restaurantId;
-  const isAdminMode = userType === 'admin' || !restaurantId;
-
-  // ============================================
-  // 📊 STATES
-  // ============================================
+  // ===============================
+  // STATES
+  // ===============================
   const [kpis, setKpis] = useState({
-    // Common
-    totalRevenue: 0,
     totalOrders: 0,
-    totalCustomers: 0,
-    averageOrderValue: 0,
-    pendingOrders: 0,
-    completedOrders: 0,
-    // Admin only
-    totalRestaurants: 0,
-    activeRestaurants: 0,
-    // Restaurant only
-    todayRevenue: 0,
-    todayOrders: 0,
-    inProgressOrders: 0,
-    cancelledOrders: 0,
-    // Growth
-    growthRevenue: 0,
     growthOrders: 0,
+    totalRevenue: 0,
+    growthRevenue: 0,
+    averageOrderValue: 0,
+    totalCustomers: 0,
     growthCustomers: 0
   });
-
-  const [revenueData, setRevenueData] = useState({
-    labels: [],
-    datasets: []
-  });
-
-  const [ordersStatusData, setOrdersStatusData] = useState({
-    labels: [],
-    data: [],
-    colors: []
-  });
-
+  const [revenueData, setRevenueData] = useState([]);
+  const [ordersStatusData, setOrdersStatusData] = useState([]);
   const [topSellingItems, setTopSellingItems] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
-  const [topRestaurants, setTopRestaurants] = useState([]); // Admin only
-  const [hourlyOrders, setHourlyOrders] = useState(null); // Restaurant only
+  const [topRestaurants, setTopRestaurants] = useState([]); // admin only
+  const [hourlyOrders, setHourlyOrders] = useState([]); // restaurant only
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ============================================
-  // 🌐 API CONFIG (pour mode réel)
-  // ============================================
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  // ===============================
+  // BUILD FILTERS
+  // ===============================
+  const buildFilters = () => {
+    const filters = {};
+    if (startDate) filters.startDate = startDate;
+    if (endDate) filters.endDate = endDate;
+    if (period) filters.period = period;
+    if (isRestaurantMode) filters.restaurantId = restaurantId;
+    return filters;
+  };
 
-  const getHeaders = useCallback(() => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  }), [token]);
-
-  // ============================================
-  // 🎭 FETCH AVEC MOCK
-  // ============================================
-  const fetchDashboardData = useCallback(async () => {
+  // ===============================
+  // FETCH DASHBOARD
+  // ===============================
+  const fetchDashboard = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      if (USE_MOCK) {
-        // ========== MODE MOCK ==========
-        if (isAdminMode) {
-          const response = await dashboardAPI.getAdminDashboard();
-          
-          if (response.success) {
-            const { data } = response;
-            setKpis(data.kpis);
-            setRevenueData(data.revenueChart);
-            setOrdersStatusData(data.ordersStatusChart);
-            setTopSellingItems(data.topSellingItems);
-            setRecentOrders(data.recentOrders);
-            setTopRestaurants(data.topRestaurants);
-          }
-        } else {
-          const response = await dashboardAPI.getRestaurantDashboard(restaurantId);
-          
-          if (response.success) {
-            const { data } = response;
-            setKpis(data.kpis);
-            setRevenueData(data.revenueChart);
-            setOrdersStatusData(data.ordersStatusChart);
-            setTopSellingItems(data.topSellingItems);
-            setRecentOrders(data.recentOrders);
-            setHourlyOrders(data.hourlyOrders);
-          }
-        }
-      } else {
-        // ========== MODE RÉEL ==========
-        const headers = getHeaders();
-        
-        const baseUrl = isRestaurantMode
-          ? `${API_URL}/restaurants/${restaurantId}/dashboard`
-          : `${API_URL}/dashboard`;
+      const filters = buildFilters();
 
-        const ordersUrl = isRestaurantMode
-          ? `${API_URL}/restaurants/${restaurantId}/orders?limit=10&sort=-createdAt`
-          : `${API_URL}/orders?limit=10&sort=-createdAt`;
+      // ================= ADMIN =================
+      if (isAdminMode) {
+        const data = await dashboardAPI.getAdminDashboard(filters);
+        if (!data) throw new Error('Invalid admin dashboard response');
 
-        const [
-          statsRes,
-          revenueRes,
-          ordersStatusRes,
-          topItemsRes,
-          recentOrdersRes
-        ] = await Promise.all([
-          fetch(`${baseUrl}/stats`, { headers }).catch(() => null),
-          fetch(`${baseUrl}/revenue`, { headers }).catch(() => null),
-          fetch(`${baseUrl}/orders-status`, { headers }).catch(() => null),
-          fetch(`${baseUrl}/top-items`, { headers }).catch(() => null),
-          fetch(ordersUrl, { headers }).catch(() => null)
-        ]);
-
-        if (statsRes?.ok) {
-          const data = await statsRes.json();
-          setKpis(prev => ({ ...prev, ...data }));
-        }
-
-        if (revenueRes?.ok) {
-          const data = await revenueRes.json();
-          setRevenueData(data.data || data || []);
-        }
-
-        if (ordersStatusRes?.ok) {
-          const data = await ordersStatusRes.json();
-          setOrdersStatusData(data.data || data || []);
-        }
-
-        if (topItemsRes?.ok) {
-          const data = await topItemsRes.json();
-          setTopSellingItems(data.data || data || []);
-        }
-
-        if (recentOrdersRes?.ok) {
-          const data = await recentOrdersRes.json();
-          setRecentOrders(data.data || data || []);
-        }
-
-        // Admin: fetch top restaurants
-        if (isAdminMode) {
-          try {
-            const topRestosRes = await fetch(`${API_URL}/dashboard/top-restaurants`, { headers });
-            if (topRestosRes?.ok) {
-              const data = await topRestosRes.json();
-              setTopRestaurants(data.data || data || []);
-            }
-          } catch (e) {
-            console.warn('Top restaurants fetch failed:', e);
-          }
-        }
-
-        // Restaurant: fetch hourly orders
-        if (isRestaurantMode) {
-          try {
-            const hourlyRes = await fetch(`${baseUrl}/hourly-orders`, { headers });
-            if (hourlyRes?.ok) {
-              const data = await hourlyRes.json();
-              setHourlyOrders(data.data || data || null);
-            }
-          } catch (e) {
-            console.warn('Hourly orders fetch failed:', e);
-          }
-        }
+        setKpis({
+          totalOrders: data.kpis?.totalOrders ?? 0,
+          growthOrders: data.kpis?.growthOrders ?? 0,
+          totalRevenue: data.kpis?.totalRevenue ?? 0,
+          growthRevenue: data.kpis?.growthRevenue ?? 0,
+          averageOrderValue: data.kpis?.averageOrderValue ?? 0,
+          totalCustomers: data.kpis?.totalCustomers ?? 0,
+          growthCustomers: data.kpis?.growthCustomers ?? 0
+        });
+        setRevenueData(data.charts?.revenue || []);
+        setOrdersStatusData(data.charts?.ordersStatus || []);
+        setRecentOrders(data.recentOrders || []);
+        setTopRestaurants(data.topRestaurants || []);
       }
 
+      // ================= RESTAURANT =================
+      if (isRestaurantMode && restaurantId) {
+        const data = await dashboardAPI.getRestaurantDashboard(filters);
+        if (!data) throw new Error('Invalid restaurant dashboard response');
+
+        setKpis({
+          totalOrders: data.kpis?.totalOrders ?? 0,
+          growthOrders: data.kpis?.growthOrders ?? 0,
+          totalRevenue: data.kpis?.totalRevenue ?? 0,
+          growthRevenue: data.kpis?.growthRevenue ?? 0,
+          averageOrderValue: data.kpis?.averageOrderValue ?? 0,
+          totalCustomers: data.kpis?.totalCustomers ?? 0,
+          growthCustomers: data.kpis?.growthCustomers ?? 0
+        });
+        setRevenueData(data.charts?.revenue || []);
+        setOrdersStatusData(data.charts?.ordersStatus || []);
+        setTopSellingItems(data.topSellingItems || []);
+        setRecentOrders(data.recentOrders || []);
+        setHourlyOrders(data.hourlyOrders || []);
+      }
     } catch (err) {
-      console.error('Dashboard fetch error:', err);
-      setError(t('dashboard.errors.fetchFailed'));
+      console.error('Dashboard error:', err);
+      setError(t('dashboard.errors.fetchFailed', 'Erreur lors du chargement du dashboard'));
     } finally {
       setIsLoading(false);
     }
-  }, [
-    isAdminMode, 
-    isRestaurantMode, 
-    restaurantId, 
-    getHeaders, 
-    API_URL, 
-    t
-  ]);
+  }, [isAdminMode, isRestaurantMode, restaurantId, startDate, endDate, period, t]);
 
-  // ============================================
-  // 🔄 REFRESH INDIVIDUEL
-  // ============================================
-  const refreshKpis = useCallback(async () => {
-    try {
-      if (USE_MOCK) {
-        const type = isAdminMode ? 'admin' : 'restaurant';
-        const response = await dashboardAPI.getKpis(type);
-        if (response.success) {
-          setKpis(response.data.kpis);
-        }
-      } else {
-        const headers = getHeaders();
-        const baseUrl = isRestaurantMode
-          ? `${API_URL}/restaurants/${restaurantId}/dashboard`
-          : `${API_URL}/dashboard`;
-        
-        const res = await fetch(`${baseUrl}/stats`, { headers });
-        if (res?.ok) {
-          const data = await res.json();
-          setKpis(prev => ({ ...prev, ...data }));
-        }
-      }
-    } catch (err) {
-      console.error('KPIs refresh error:', err);
-    }
-  }, [isAdminMode, isRestaurantMode, restaurantId, getHeaders, API_URL]);
-
-  const refreshRecentOrders = useCallback(async () => {
-    try {
-      if (USE_MOCK) {
-        const type = isAdminMode ? 'admin' : 'restaurant';
-        const response = await dashboardAPI.getRecentOrders(type);
-        if (response.success) {
-          setRecentOrders(response.data.orders);
-        }
-      } else {
-        const headers = getHeaders();
-        const ordersUrl = isRestaurantMode
-          ? `${API_URL}/restaurants/${restaurantId}/orders?limit=10&sort=-createdAt`
-          : `${API_URL}/orders?limit=10&sort=-createdAt`;
-        
-        const res = await fetch(ordersUrl, { headers });
-        if (res?.ok) {
-          const data = await res.json();
-          setRecentOrders(data.data || data || []);
-        }
-      }
-    } catch (err) {
-      console.error('Recent orders refresh error:', err);
-    }
-  }, [isAdminMode, isRestaurantMode, restaurantId, getHeaders, API_URL]);
-
-  // ============================================
-  // 🚀 EFFECT
-  // ============================================
+  // ===============================
+  // EFFECT
+  // ===============================
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    fetchDashboard();
+  }, [fetchDashboard]);
 
-  // ============================================
-  // 📤 RETURN
-  // ============================================
+  // ===============================
+  // PARTIAL REFRESH
+  // ===============================
+  const refreshTopRestaurants = async (limit = 5) => {
+    if (!isAdminMode) return;
+    const data = await dashboardAPI.getTopRestaurants({ limit });
+    setTopRestaurants(data || []);
+  };
+
+  const refreshHourlyOrders = async (date = null) => {
+    if (!isRestaurantMode || !restaurantId) return;
+    const data = await dashboardAPI.getHourlyOrders({ restaurantId, date });
+    setHourlyOrders(data || []);
+  };
+
+  // ===============================
+  // RETURN
+  // ===============================
   return {
     // Data
     kpis,
     revenueData,
     ordersStatusData,
-    topSellingItems,
+    topSellingItems,  // restaurant only
     recentOrders,
-    topRestaurants,      // Admin only
-    hourlyOrders,        // Restaurant only
-    
+    topRestaurants,   // admin only
+    hourlyOrders,     // restaurant only
+
     // States
     isLoading,
     error,
-    
-    // Mode info
+
+    // Context
     isAdminMode,
     isRestaurantMode,
     restaurantId,
-    
+
     // Actions
-    refresh: fetchDashboardData,
-    refreshKpis,
-    refreshRecentOrders,
-    
-    // Debug
-    _isMockMode: USE_MOCK
+    refresh: fetchDashboard,
+    refreshTopRestaurants,
+    refreshHourlyOrders
   };
 };
 
