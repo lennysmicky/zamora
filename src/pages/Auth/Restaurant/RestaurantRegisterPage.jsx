@@ -327,7 +327,7 @@ const RestaurantRegisterPage = () => {
 
           <p className="auth-switch">
             {t('auth.register.hasAccount')}{' '}
-            <Link to="/">{t('auth.register.login')}</Link>
+            <Link to="/login">{t('auth.register.login')}</Link>
           </p>
         </div>
 
