@@ -829,5 +829,119 @@
   "logout": {
     "title": "Déconnexion",
     "confirmMessage": "Voulez-vous vraiment vous déconnecter?"
+  },
+  "landing": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "benefits": "Avantages",
+      "contact": "Contact",
+      "login": "Connexion",
+      "register": "Créer mon restaurant"
+    },
+    "hero": {
+      "badge": "Plateforme #1 de gestion de restaurant",
+      "title1": "Gérez votre restaurant",
+      "titleHighlight": "Le vrai goût",
+      "subtitle": "Solution complète de gestion depuis la prise de commande jusqu'au suivi des ventes. Vos clients commandent via QR code, payent en ligne et vous gagnez en efficacité.",
+      "getStarted": "Commencer gratuitement",
+      "watchDemo": "Voir la démo",
+      "orderNow": "Commander maintenant",
+      "stats": {
+        "restaurants": "Restaurants",
+        "orders": "Commandes/mois",
+        "rating": "Note moyenne"
+      },
+      "cards": {
+        "newOrder": "Nouvelle commande",
+        "items": "articles",
+        "payment": "Paiement reçu",
+        "ready": "Commande prête",
+        "orderReady": "Table 3 - Prête à servir"
+      }
+    },
+    "features": {
+      "badge": "Fonctionnalités",
+      "title": "Tout ce dont vous avez besoin",
+      "subtitle": "Une solution complète pour moderniser votre restaurant et améliorer l'expérience client",
+      "qrCode": {
+        "title": "Commandes via QR Code",
+        "description": "Chaque table dispose d'un QR code unique. Les clients accèdent au menu, commandent et payent sans attendre."
+      },
+      "realtime": {
+        "title": "Suivi en temps réel",
+        "description": "Les commandes apparaissent instantanément sur l'interface cuisine et l'application serveur."
+      },
+      "payment": {
+        "title": "Paiement intégré",
+        "description": "Carte bancaire, mobile money ou portefeuille électronique. Tout est accepté."
+      },
+      "analytics": {
+        "title": "Statistiques & Rapports",
+        "description": "Analysez vos ventes, les plats populaires et les performances grâce à des tableaux de bord intuitifs."
+      },
+      "tables": {
+        "title": "Gestion des tables",
+        "description": "Visualisez la disponibilité des tables et gérez les réservations facilement."
+      },
+      "multiuser": {
+        "title": "Multi-utilisateurs",
+        "description": "Créez des comptes pour les serveurs, cuisiniers et gestionnaires avec des accès personnalisés."
+      }
+    },
+    "howItWorks": {
+      "badge": "Comment ça marche",
+      "title": "Simple comme 1, 2, 3",
+      "step1": {
+        "title": "Scannez le QR Code",
+        "description": "Le client scanne le code sur sa table avec son téléphone"
+      },
+      "step2": {
+        "title": "Commandez en ligne",
+        "description": "Il parcourt le menu, choisit ses plats et valide sa commande"
+      },
+      "step3": {
+        "title": "Payez et savourez",
+        "description": "Paiement sécurisé en ligne, puis il n'a plus qu'à attendre son repas"
+      }
+    },
+    "benefits": {
+      "badge": "Avantages",
+      "title": "Pourquoi choisir Zamora ?",
+      "subtitle": "Augmentez vos revenus et améliorez l'expérience de vos clients",
+      "cta": "Rejoindre Zamora",
+      "list": {
+        "waitTime": "Réduction du temps d'attente",
+        "sales": "Augmentation des ventes grâce aux promotions",
+        "organization": "Organisation optimale de la salle et cuisine",
+        "realtime": "Suivi des performances en temps réel",
+        "experience": "Meilleure expérience client",
+        "automation": "Automatisation des opérations"
+      },
+      "statsCard": {
+        "title": "Croissance des ventes",
+        "label": "en moyenne"
+      }
+    },
+    "cta": {
+      "title": "Prêt à révolutionner votre restaurant ?",
+      "subtitle": "Rejoignez les centaines de restaurants qui utilisent déjà Zamora",
+      "register": "Créer mon restaurant",
+      "login": "J'ai déjà un compte"
+    },
+    "footer": {
+      "tagline": "Le vrai goût - La solution moderne pour automatiser vos opérations et proposer une expérience fluide.",
+      "product": "Produit",
+      "features": "Fonctionnalités",
+      "benefits": "Avantages",
+      "pricing": "Tarifs",
+      "company": "Entreprise",
+      "about": "À propos",
+      "contact": "Contact",
+      "careers": "Carrières",
+      "legal": "Légal",
+      "privacy": "Confidentialité",
+      "terms": "CGU",
+      "rights": "Tous droits réservés."
+    }
   }
 }

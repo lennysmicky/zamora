@@ -824,5 +824,120 @@
   "logout": {
     "title": "Logout",
     "confirmMessage": "Are you sure you want to log out?"
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "benefits": "Benefits",
+      "contact": "Contact",
+      "login": "Login",
+      "register": "Create my restaurant"
+    },
+    "hero": {
+      "badge": "The #1 Restaurant Management Platform",
+      "title1": "Manage your restaurant",
+      "titleHighlight": "The real taste",
+      "subtitle": "Complete management solution from order taking to sales tracking. Your customers order via QR code, pay online, and you gain efficiency.",
+      "getStarted": "Get started for free",
+      "watchDemo": "Watch demo",
+      "orderNow": "Order now",
+      "stats": {
+        "restaurants": "Restaurants",
+        "orders": "Orders/month",
+        "rating": "Average rating"
+      },
+      "cards": {
+        "newOrder": "New order",
+        "items": "items",
+        "payment": "Payment received",
+        "ready": "Order ready",
+        "orderReady": "Table 3 - Ready to serve"
+      }
+    },
+    "features": {
+      "badge": "Features",
+      "title": "Everything you need",
+      "subtitle": "A complete solution to modernize your restaurant and improve customer experience",
+      "qrCode": {
+        "title": "QR Code Orders",
+        "description": "Each table has a unique QR code. Customers access the menu, order, and pay without waiting."
+      },
+      "realtime": {
+        "title": "Real-time tracking",
+        "description": "Orders appear instantly on the kitchen interface and server app."
+      },
+      "payment": {
+        "title": "Integrated payment",
+        "description": "Credit card, mobile money, or e-wallet. All accepted."
+      },
+      "analytics": {
+        "title": "Statistics & Reports",
+        "description": "Analyze your sales, popular dishes, and performance with intuitive dashboards."
+      },
+      "tables": {
+        "title": "Table management",
+        "description": "Visualize table availability and manage reservations easily."
+      },
+      "multiuser": {
+        "title": "Multi-users",
+        "description": "Create accounts for servers, cooks, and managers with personalized access."
+      }
+    },
+    "howItWorks": {
+      "badge": "How it works",
+      "title": "As simple as 1, 2, 3",
+      "step1": {
+        "title": "Scan the QR Code",
+        "description": "The customer scans the code on their table using their phone"
+      },
+      "step2": {
+        "title": "Order online",
+        "description": "They browse the menu, choose dishes, and confirm the order"
+      },
+      "step3": {
+        "title": "Pay and enjoy",
+        "description": "Secure online payment, then they just wait for their meal"
+      }
+    },
+    "benefits": {
+      "badge": "Benefits",
+      "title": "Why choose Zamora?",
+      "subtitle": "Increase your revenue and improve your customers' experience",
+      "cta": "Join Zamora",
+      "list": {
+        "waitTime": "Reduced waiting time",
+        "sales": "Increased sales through promotions",
+        "organization": "Optimal organization of dining area and kitchen",
+        "realtime": "Real-time performance tracking",
+        "experience": "Better customer experience",
+        "automation": "Operations automation"
+      },
+      "statsCard": {
+        "title": "Sales growth",
+        "label": "on average"
+      }
+    },
+    "cta": {
+      "title": "Ready to revolutionize your restaurant?",
+      "subtitle": "Join the hundreds of restaurants already using Zamora",
+      "register": "Create my restaurant",
+      "login": "I already have an account"
+    },
+    "footer": {
+      "tagline": "The real taste - The modern solution to automate operations and provide a smooth experience.",
+      "product": "Product",
+      "features": "Features",
+      "benefits": "Benefits",
+      "pricing": "Pricing",
+      "company": "Company",
+      "about": "About",
+      "contact": "Contact",
+      "careers": "Careers",
+      "legal": "Legal",
+      "privacy": "Privacy",
+      "terms": "Terms of Service",
+      "rights": "All rights reserved."
+    }
   }
 }
+
