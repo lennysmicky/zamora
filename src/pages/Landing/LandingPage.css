@@ -1398,67 +1398,39 @@
   font-size: 1rem;
 }
 
-/* Phone Mockup */
+/* Phone Mockup - Image */
 .download-visual {
   display: flex;
   justify-content: center;
 }
 
-.phone-mockup {
-  width: 220px;
-  height: 440px;
-  background: var(--landing-text-dark);
-  border-radius: 32px;
-  padding: 8px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.15);
-}
-
-.phone-screen {
+.phone-mockup-image {
+  max-width: 280px;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, var(--landing-primary) 0%, var(--landing-primary-dark) 100%);
-  border-radius: 26px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  text-align: center;
+  height: auto;
+  filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15));
+  animation: floatPhone 4s ease-in-out infinite;
 }
 
-.phone-logo {
-  width: 60px;
-  height: 60px;
-  border-radius: 16px;
-  margin-bottom: 0.75rem;
+@keyframes floatPhone {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
 }
 
-.phone-app-name {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: white;
+@media (max-width: 767px) {
+  .phone-mockup-image {
+    max-width: 220px;
+  }
 }
 
-.phone-tagline {
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 1.5rem;
-}
-
-.phone-food-preview {
-  width: 120px;
-  height: 120px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.phone-food-preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
-  animation: floatFood 3s ease-in-out infinite;
+@media (max-width: 480px) {
+  .phone-mockup-image {
+    max-width: 180px;
+  }
 }
 
 /* ========================================
