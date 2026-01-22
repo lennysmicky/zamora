@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -13,7 +13,12 @@ import {
   RiArrowRightLine,
   RiCheckLine,
   RiStarFill,
-  RiPlayCircleLine
+  RiPlayCircleLine,
+  RiDownloadLine,
+  RiAndroidLine,
+  RiAppleLine,
+  RiHome4Line,
+  RiRestaurantLine
 } from 'react-icons/ri';
 
 // Images
@@ -29,10 +34,24 @@ import IcecreamImg from '../../assets/images/food/icecream.png';
 
 import './LandingPage.css';
 
+// Liste des plats pour le slider
+const foodItems = [
+  { img: BurgerImg, name: 'Classic Burger', desc: 'Boeuf juteux, salade fraîche, tomate et sauce maison' },
+  { img: PizzaImg, name: 'Pizza Margherita', desc: 'Sauce tomate, mozzarella fondante et basilic frais' },
+  { img: TacoImg, name: 'Taco Mexicain', desc: 'Poulet épicé, poivrons grillés et guacamole' },
+  { img: FriesImg, name: 'Frites Maison', desc: 'Croustillantes à l\'extérieur, fondantes à l\'intérieur' },
+  { img: HotdogImg, name: 'Hot Dog', desc: 'Saucisse premium, moutarde et oignons caramélisés' },
+  { img: DrinkImg, name: 'Boissons Fraîches', desc: 'Sodas, jus de fruits et cocktails maison' },
+  { img: DonutImg, name: 'Donut Gourmand', desc: 'Glacé au chocolat avec topping colorés' },
+  { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
+];
+
 const LandingPage = () => {
   const { t } = useTranslation();
-  const heroRef = useRef(null);
-  const featuresRef = useRef(null);
+  const [currentFood, setCurrentFood] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const particlesRef = useRef(null);
 
   // Animation au scroll
   useEffect(() => {
@@ -55,62 +74,100 @@ const LandingPage = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Slider automatique des images
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsAnimating(true);
+      setTimeout(() => {
+        setCurrentFood(prev => (prev + 1) % foodItems.length);
+        setIsAnimating(false);
+      }, 500);
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Générer des particules
+  const generateParticles = () => {
+    const particles = [];
+    for (let i = 0; i < 15; i++) {
+      const style = {
+        '--x': `${Math.random() * 100}%`,
+        '--y': `${Math.random() * 100}%`,
+        '--delay': `${Math.random() * 2}s`,
+        '--size': `${Math.random() * 6 + 3}px`,
+        '--duration': `${Math.random() * 3 + 2}s`
+      };
+      particles.push(<div key={i} className="particle" style={style} />);
+    }
+    return particles;
+  };
+
   const features = [
     {
       icon: RiQrCodeLine,
-      title: t('landing.features.qrCode.title'),
-      description: t('landing.features.qrCode.description')
+      title: 'Commande via QR Code',
+      description: 'Au restaurant, scannez le QR code sur votre table pour accéder au menu et commander instantanément.'
+    },
+    {
+      icon: RiSmartphoneLine,
+      title: 'Commande depuis l\'app',
+      description: 'Chez vous, commandez directement depuis l\'application mobile et faites-vous livrer.'
     },
     {
       icon: RiTimeLine,
-      title: t('landing.features.realtime.title'),
-      description: t('landing.features.realtime.description')
+      title: 'Suivi en temps réel',
+      description: 'Suivez votre commande en direct, de la préparation jusqu\'à la livraison ou le service.'
     },
     {
       icon: RiSecurePaymentLine,
-      title: t('landing.features.payment.title'),
-      description: t('landing.features.payment.description')
-    },
-    {
-      icon: RiPieChartLine,
-      title: t('landing.features.analytics.title'),
-      description: t('landing.features.analytics.description')
+      title: 'Paiement sécurisé',
+      description: 'Payez par carte bancaire, mobile money ou en espèces à la livraison.'
     },
     {
       icon: RiTableLine,
-      title: t('landing.features.tables.title'),
-      description: t('landing.features.tables.description')
+      title: 'Réservation de table',
+      description: 'Réservez votre table à l\'avance et évitez l\'attente au restaurant.'
     },
     {
-      icon: RiTeamLine,
-      title: t('landing.features.multiuser.title'),
-      description: t('landing.features.multiuser.description')
+      icon: RiPieChartLine,
+      title: 'Historique & favoris',
+      description: 'Retrouvez vos commandes passées et recommandez vos plats préférés en un clic.'
+    }
+  ];
+
+  const howItWorks = [
+    {
+      icon: RiRestaurantLine,
+      title: 'Au restaurant',
+      description: 'Scannez le QR code sur votre table, consultez le menu, passez commande et payez. Tout depuis votre téléphone.',
+      step: '1'
+    },
+    {
+      icon: RiHome4Line,
+      title: 'Chez vous',
+      description: 'Ouvrez l\'app Zamora, choisissez votre restaurant, commandez et faites-vous livrer directement.',
+      step: '2'
+    },
+    {
+      icon: RiTimeLine,
+      title: 'Suivez en direct',
+      description: 'Recevez des notifications à chaque étape : préparation, en route, arrivée imminente.',
+      step: '3'
     }
   ];
 
   const benefits = [
-    t('landing.benefits.list.waitTime'),
-    t('landing.benefits.list.sales'),
-    t('landing.benefits.list.organization'),
-    t('landing.benefits.list.realtime'),
-    t('landing.benefits.list.experience'),
-    t('landing.benefits.list.automation')
+    'Réduction du temps d\'attente',
+    'Commandez où que vous soyez',
+    'Paiement simple et sécurisé',
+    'Suivi de commande en temps réel',
+    'Historique de vos commandes',
+    'Offres exclusives dans l\'app'
   ];
 
   return (
     <div className="landing-page">
-      {/* Floating Food Elements */}
-      <div className="floating-foods">
-        <img src={BurgerImg} alt="" className="floating-food food-1" />
-        <img src={PizzaImg} alt="" className="floating-food food-2" />
-        <img src={TacoImg} alt="" className="floating-food food-3" />
-        <img src={FriesImg} alt="" className="floating-food food-4" />
-        <img src={HotdogImg} alt="" className="floating-food food-5" />
-        <img src={DrinkImg} alt="" className="floating-food food-6" />
-        <img src={DonutImg} alt="" className="floating-food food-7" />
-        <img src={IcecreamImg} alt="" className="floating-food food-8" />
-      </div>
-
       {/* Header */}
       <header className="landing-header">
         <div className="landing-container">
@@ -118,139 +175,131 @@ const LandingPage = () => {
             <img src={Logo} alt="Zamora" />
             <span>Zamora</span>
           </Link>
-          <nav className="landing-nav">
-            <a href="#features">{t('landing.nav.features')}</a>
-            <a href="#benefits">{t('landing.nav.benefits')}</a>
-            <a href="#contact">{t('landing.nav.contact')}</a>
+          
+          <nav className={`landing-nav ${mobileMenuOpen ? 'open' : ''}`}>
+            <a href="#features" onClick={() => setMobileMenuOpen(false)}>Fonctionnalités</a>
+            <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Comment ça marche</a>
+            <a href="#download" onClick={() => setMobileMenuOpen(false)}>Télécharger</a>
+            <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
           </nav>
+          
           <div className="landing-header-actions">
             <Link to="/login" className="btn-login">
-              {t('landing.nav.login')}
+              Connexion
             </Link>
             <Link to="/register" className="btn-register">
-              {t('landing.nav.register')}
+              <span className="btn-register-text">Espace Restaurant</span>
               <RiArrowRightLine />
             </Link>
           </div>
+          
+          {/* Mobile menu toggle */}
+          <button 
+            className="mobile-menu-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="landing-hero" ref={heroRef}>
+      <section className="landing-hero">
         <div className="landing-container">
           <div className="hero-content">
             <div className="hero-badge animate-on-scroll">
               <RiStarFill />
-              <span>{t('landing.hero.badge')}</span>
+              <span>Application #1 de commande restaurant</span>
             </div>
             <h1 className="hero-title animate-on-scroll">
-              <span className="hero-title-line">{t('landing.hero.title1')}</span>
-              <span className="hero-title-highlight">{t('landing.hero.titleHighlight')}</span>
+              <span className="hero-title-line">Commandez vos plats</span>
+              <span className="hero-title-highlight">Le vrai goût</span>
             </h1>
             <p className="hero-subtitle animate-on-scroll">
-              {t('landing.hero.subtitle')}
+              Au restaurant ou chez vous, commandez facilement vos plats préférés. 
+              Scannez, commandez, payez et savourez !
             </p>
             <div className="hero-actions animate-on-scroll">
-              <Link to="/register" className="btn-primary-lg">
-                {t('landing.hero.getStarted')}
-                <RiArrowRightLine />
+              <a href="#download" className="btn-primary-lg">
+                <RiDownloadLine />
+                Télécharger l'app
+              </a>
+              <Link to="/register" className="btn-secondary-lg">
+                <RiRestaurantLine />
+                Je suis restaurateur
               </Link>
-              <button className="btn-secondary-lg">
-                <RiPlayCircleLine />
-                {t('landing.hero.watchDemo')}
-              </button>
             </div>
             <div className="hero-stats animate-on-scroll">
               <div className="hero-stat">
                 <span className="stat-number">500+</span>
-                <span className="stat-label">{t('landing.hero.stats.restaurants')}</span>
+                <span className="stat-label">Restaurants</span>
               </div>
               <div className="hero-stat-divider"></div>
               <div className="hero-stat">
                 <span className="stat-number">50K+</span>
-                <span className="stat-label">{t('landing.hero.stats.orders')}</span>
+                <span className="stat-label">Téléchargements</span>
               </div>
               <div className="hero-stat-divider"></div>
               <div className="hero-stat">
                 <span className="stat-number">4.9</span>
-                <span className="stat-label">{t('landing.hero.stats.rating')}</span>
+                <span className="stat-label">Note moyenne</span>
               </div>
             </div>
           </div>
+
+          {/* Hero Visual - Single Image Slider with Particles */}
           <div className="hero-visual animate-on-scroll">
-            <div className="hero-phone">
-              <div className="phone-screen">
-                <div className="phone-header">
-                  <img src={Logo} alt="Zamora" />
-                  <span>Zamora</span>
-                </div>
-                <div className="phone-menu">
-                  <div className="menu-item">
-                    <img src={BurgerImg} alt="Burger" />
-                    <div className="menu-item-info">
-                      <span className="menu-item-name">Classic Burger</span>
-                      <span className="menu-item-price">2500 FCFA</span>
-                    </div>
-                  </div>
-                  <div className="menu-item">
-                    <img src={PizzaImg} alt="Pizza" />
-                    <div className="menu-item-info">
-                      <span className="menu-item-name">Margherita</span>
-                      <span className="menu-item-price">4500 FCFA</span>
-                    </div>
-                  </div>
-                  <div className="menu-item">
-                    <img src={TacoImg} alt="Taco" />
-                    <div className="menu-item-info">
-                      <span className="menu-item-name">Taco Mexican</span>
-                      <span className="menu-item-price">1800 FCFA</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="phone-cta">
-                  <button>{t('landing.hero.orderNow')}</button>
-                </div>
+            <div className="hero-slider">
+              {/* Particules */}
+              <div className="particles-container" ref={particlesRef}>
+                {generateParticles()}
               </div>
-            </div>
-            <div className="hero-cards">
-              <div className="floating-card card-order">
-                <RiSmartphoneLine />
-                <div>
-                  <span className="card-title">{t('landing.hero.cards.newOrder')}</span>
-                  <span className="card-subtitle">Table 5 • 3 {t('landing.hero.cards.items')}</span>
-                </div>
+
+              {/* Image principale */}
+              <div className={`hero-food-container ${isAnimating ? 'animating-out' : 'animating-in'}`}>
+                <img 
+                  src={foodItems[currentFood].img} 
+                  alt={foodItems[currentFood].name}
+                  className="hero-food-image"
+                />
               </div>
-              <div className="floating-card card-payment">
-                <RiSecurePaymentLine />
-                <div>
-                  <span className="card-title">{t('landing.hero.cards.payment')}</span>
-                  <span className="card-subtitle">12,500 FCFA</span>
-                </div>
+              
+              {/* Info sous l'image - séparé pour éviter les chevauchements */}
+              <div className={`hero-food-info ${isAnimating ? 'animating-out' : 'animating-in'}`}>
+                <h3 className="hero-food-name">{foodItems[currentFood].name}</h3>
+                <p className="hero-food-desc">{foodItems[currentFood].desc}</p>
               </div>
-              <div className="floating-card card-notification">
-                <RiNotification3Line />
-                <div>
-                  <span className="card-title">{t('landing.hero.cards.ready')}</span>
-                  <span className="card-subtitle">{t('landing.hero.cards.orderReady')}</span>
-                </div>
+
+              {/* Indicateurs */}
+              <div className="slider-indicators">
+                {foodItems.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`slider-dot ${index === currentFood ? 'active' : ''}`}
+                    onClick={() => {
+                      setIsAnimating(true);
+                      setTimeout(() => {
+                        setCurrentFood(index);
+                        setIsAnimating(false);
+                      }, 300);
+                    }}
+                  />
+                ))}
               </div>
             </div>
           </div>
-        </div>
-        <div className="hero-wave">
-          <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="currentColor"/>
-          </svg>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="landing-features" id="features" ref={featuresRef}>
+      <section className="landing-features" id="features">
         <div className="landing-container">
           <div className="section-header animate-on-scroll">
-            <span className="section-badge">{t('landing.features.badge')}</span>
-            <h2>{t('landing.features.title')}</h2>
-            <p>{t('landing.features.subtitle')}</p>
+            <span className="section-badge">Fonctionnalités</span>
+            <h2>Tout pour commander facilement</h2>
+            <p>Que vous soyez au restaurant ou chez vous, Zamora simplifie votre expérience culinaire</p>
           </div>
           <div className="features-grid">
             {features.map((feature, index) => (
@@ -271,43 +320,75 @@ const LandingPage = () => {
       </section>
 
       {/* How It Works */}
-      <section className="landing-how-it-works">
+      <section className="landing-how-it-works" id="how-it-works">
         <div className="landing-container">
           <div className="section-header animate-on-scroll">
-            <span className="section-badge">{t('landing.howItWorks.badge')}</span>
-            <h2>{t('landing.howItWorks.title')}</h2>
+            <span className="section-badge">Comment ça marche</span>
+            <h2>Simple comme bonjour</h2>
           </div>
           <div className="steps-container">
-            <div className="step animate-on-scroll">
-              <div className="step-number">1</div>
-              <div className="step-content">
-                <h3>{t('landing.howItWorks.step1.title')}</h3>
-                <p>{t('landing.howItWorks.step1.description')}</p>
+            {howItWorks.map((step, index) => (
+              <React.Fragment key={index}>
+                <div className="step animate-on-scroll">
+                  <div className="step-number">{step.step}</div>
+                  <div className="step-icon-wrapper">
+                    <step.icon />
+                  </div>
+                  <div className="step-content">
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </div>
+                </div>
+                {index < howItWorks.length - 1 && <div className="step-connector"></div>}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Download Section */}
+      <section className="landing-download" id="download">
+        <div className="landing-container">
+          <div className="download-content">
+            <div className="download-text animate-on-scroll">
+              <span className="section-badge">Téléchargement</span>
+              <h2>Téléchargez l'app Zamora</h2>
+              <p>
+                Commandez vos plats préférés où que vous soyez. 
+                L'application est disponible en téléchargement direct, 
+                pas besoin de passer par un store !
+              </p>
+              <div className="download-buttons">
+                <a href="/downloads/zamora-android.apk" className="download-btn android" download>
+                  <RiAndroidLine />
+                  <div className="download-btn-text">
+                    <span className="download-btn-label">Télécharger pour</span>
+                    <span className="download-btn-platform">Android</span>
+                  </div>
+                </a>
+                <a href="/downloads/zamora-ios.ipa" className="download-btn ios" download>
+                  <RiAppleLine />
+                  <div className="download-btn-text">
+                    <span className="download-btn-label">Télécharger pour</span>
+                    <span className="download-btn-platform">iOS</span>
+                  </div>
+                </a>
               </div>
-              <div className="step-image">
-                <RiQrCodeLine />
+              <div className="download-note">
+                <RiCheckLine />
+                <span>Installation facile • Mises à jour automatiques • 100% gratuit</span>
               </div>
             </div>
-            <div className="step-connector"></div>
-            <div className="step animate-on-scroll">
-              <div className="step-number">2</div>
-              <div className="step-content">
-                <h3>{t('landing.howItWorks.step2.title')}</h3>
-                <p>{t('landing.howItWorks.step2.description')}</p>
-              </div>
-              <div className="step-image">
-                <RiSmartphoneLine />
-              </div>
-            </div>
-            <div className="step-connector"></div>
-            <div className="step animate-on-scroll">
-              <div className="step-number">3</div>
-              <div className="step-content">
-                <h3>{t('landing.howItWorks.step3.title')}</h3>
-                <p>{t('landing.howItWorks.step3.description')}</p>
-              </div>
-              <div className="step-image">
-                <RiSecurePaymentLine />
+            <div className="download-visual animate-on-scroll">
+              <div className="phone-mockup">
+                <div className="phone-screen">
+                  <img src={Logo} alt="Zamora" className="phone-logo" />
+                  <span className="phone-app-name">Zamora</span>
+                  <p className="phone-tagline">Le vrai goût</p>
+                  <div className="phone-food-preview">
+                    <img src={BurgerImg} alt="Food" />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -319,9 +400,9 @@ const LandingPage = () => {
         <div className="landing-container">
           <div className="benefits-content">
             <div className="benefits-text animate-on-scroll">
-              <span className="section-badge">{t('landing.benefits.badge')}</span>
-              <h2>{t('landing.benefits.title')}</h2>
-              <p>{t('landing.benefits.subtitle')}</p>
+              <span className="section-badge">Avantages</span>
+              <h2>Pourquoi choisir Zamora ?</h2>
+              <p>Une expérience de commande unique, pensée pour vous simplifier la vie</p>
               <ul className="benefits-list">
                 {benefits.map((benefit, index) => (
                   <li key={index}>
@@ -330,10 +411,10 @@ const LandingPage = () => {
                   </li>
                 ))}
               </ul>
-              <Link to="/register" className="btn-primary-lg">
-                {t('landing.benefits.cta')}
-                <RiArrowRightLine />
-              </Link>
+              <a href="#download" className="btn-primary-lg">
+                <RiDownloadLine />
+                Télécharger maintenant
+              </a>
             </div>
             <div className="benefits-visual animate-on-scroll">
               <div className="benefits-image-container">
@@ -343,10 +424,10 @@ const LandingPage = () => {
                 <div className="benefits-stats-card">
                   <div className="stats-card-header">
                     <RiPieChartLine />
-                    <span>{t('landing.benefits.statsCard.title')}</span>
+                    <span>Satisfaction client</span>
                   </div>
-                  <div className="stats-card-value">+45%</div>
-                  <div className="stats-card-label">{t('landing.benefits.statsCard.label')}</div>
+                  <div className="stats-card-value">98%</div>
+                  <div className="stats-card-label">de clients satisfaits</div>
                 </div>
               </div>
             </div>
@@ -354,19 +435,22 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* CTA Section - Pour les restaurateurs */}
       <section className="landing-cta" id="contact">
         <div className="landing-container">
           <div className="cta-content animate-on-scroll">
-            <h2>{t('landing.cta.title')}</h2>
-            <p>{t('landing.cta.subtitle')}</p>
+            <h2>Vous êtes restaurateur ?</h2>
+            <p>
+              Rejoignez Zamora et digitalisez votre restaurant. 
+              Gérez vos commandes, menus et paiements depuis un seul tableau de bord.
+            </p>
             <div className="cta-actions">
               <Link to="/register" className="btn-cta-primary">
-                {t('landing.cta.register')}
+                Créer mon restaurant
                 <RiArrowRightLine />
               </Link>
               <Link to="/login" className="btn-cta-secondary">
-                {t('landing.cta.login')}
+                J'ai déjà un compte
               </Link>
             </div>
           </div>
@@ -382,30 +466,34 @@ const LandingPage = () => {
                 <img src={Logo} alt="Zamora" />
                 <span>Zamora</span>
               </Link>
-              <p className="footer-tagline">{t('landing.footer.tagline')}</p>
+              <p className="footer-tagline">
+                Le vrai goût - Commandez vos plats préférés au restaurant ou chez vous, 
+                en toute simplicité.
+              </p>
             </div>
             <div className="footer-links">
               <div className="footer-column">
-                <h4>{t('landing.footer.product')}</h4>
-                <a href="#features">{t('landing.footer.features')}</a>
-                <a href="#benefits">{t('landing.footer.benefits')}</a>
-                <a href="#pricing">{t('landing.footer.pricing')}</a>
+                <h4>Application</h4>
+                <a href="#download">Télécharger</a>
+                <a href="#features">Fonctionnalités</a>
+                <a href="#how-it-works">Comment ça marche</a>
               </div>
               <div className="footer-column">
-                <h4>{t('landing.footer.company')}</h4>
-                <a href="#about">{t('landing.footer.about')}</a>
-                <a href="#contact">{t('landing.footer.contact')}</a>
-                <a href="#careers">{t('landing.footer.careers')}</a>
+                <h4>Restaurateurs</h4>
+                <Link to="/register">Créer un compte</Link>
+                <Link to="/login">Connexion</Link>
+                <a href="#benefits">Avantages</a>
               </div>
               <div className="footer-column">
-                <h4>{t('landing.footer.legal')}</h4>
-                <a href="#privacy">{t('landing.footer.privacy')}</a>
-                <a href="#terms">{t('landing.footer.terms')}</a>
+                <h4>Légal</h4>
+                <a href="#privacy">Confidentialité</a>
+                <a href="#terms">CGU</a>
+                <a href="#contact">Contact</a>
               </div>
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; {new Date().getFullYear()} Zamora. {t('landing.footer.rights')}</p>
+            <p>&copy; {new Date().getFullYear()} Zamora. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
