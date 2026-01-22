@@ -100,7 +100,7 @@ const RestaurantRegisterPage = () => {
           navigate('/restaurant/dashboard', { replace: true });
         } else {
           // Sinon, redirection vers login avec succès
-          navigate('/', { replace: true });
+          navigate('/login', { replace: true });
         }
       } else {
         const message = response.data?.message || t('auth.errors.registerFailed', 'Inscription échouée');
