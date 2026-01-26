@@ -345,11 +345,11 @@
       "today": "Aujourd'hui",
       "yesterday": "Hier",
       "thisMonth": "Ce mois",
+      "all": "Tout",
       "thisYear": "Cette année",
       "last7Days": "7 derniers jours",
       "last30Days": "30 derniers jours",
       "custom": "Personnalisé",
-      "all": "Tout",
       "advanced": "Filtres avancés",
       "reset": "Réinitialiser"
     },

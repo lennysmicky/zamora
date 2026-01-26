@@ -16,46 +16,35 @@ const RestaurantSelector = ({
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef(null);
 
-  // 🧪 MODE MOCK - Mettre à false quand backend prêt
-  const useMockData = true;
-
-  // Charger les restaurants
+  // Charger les restaurants depuis le backend
   useEffect(() => {
     const fetchRestaurants = async () => {
       setIsLoading(true);
-      
       try {
-        if (useMockData) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          setRestaurants([
-            { id: null, name: t('filters.allRestaurants') },
-            { id: 1, name: 'Chez Ahmed - Fast Food' },
-            { id: 2, name: 'Pizza Palace' },
-            { id: 3, name: 'Burger King Express' },
-            { id: 4, name: 'Le Petit Bistro' },
-            { id: 5, name: 'Taco Loco' },
-            { id: 6, name: 'Sushi Master' },
-            { id: 7, name: 'La Bonne Cuisine' }
-          ]);
-        } else {
-          // TODO: Appel API
-          const response = await fetch('/api/restaurants');
-          const data = await response.json();
-          setRestaurants([
-            { id: null, name: t('filters.allRestaurants') },
-            ...data
-          ]);
-        }
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurants`, {
+          headers: {
+            'Content-Type': 'application/json',
+            // Si auth token nécessaire
+            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+          }
+        });
+        if (!response.ok) throw new Error('Erreur réseau');
+
+        const data = await response.json();
+        setRestaurants([
+          { id: null, name: t('filters.allRestaurants') },
+          ...data
+        ]);
       } catch (error) {
         console.error('Erreur chargement restaurants:', error);
+        setRestaurants([{ id: null, name: t('filters.allRestaurants') }]); // fallback
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchRestaurants();
-  }, [useMockData, t]);
+  }, [t]);
 
   // Fermer dropdown si clic extérieur
   useEffect(() => {
@@ -64,7 +53,6 @@ const RestaurantSelector = ({
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);

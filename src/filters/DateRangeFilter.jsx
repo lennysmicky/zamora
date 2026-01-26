@@ -24,7 +24,6 @@ const DateRangeFilter = ({
     { id: 'thisYear', labelKey: 'filters.thisYear' },
     { id: 'custom', labelKey: 'filters.custom' },
     { id: 'all', labelKey: 'filters.all' }
-
   ];
 
   // Fermer dropdown si clic extérieur
@@ -34,7 +33,6 @@ const DateRangeFilter = ({
         setIsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -45,9 +43,9 @@ const DateRangeFilter = ({
     setIsOpen(false);
   };
 
-  // Label affiché
-  const currentRange = dateRanges.find(r => r.id === selectedRange?.id) || dateRanges[4]; // Default: thisMonth
-  const displayLabel = t(currentRange.labelKey);
+  // Label affiché avec sécurité
+  const currentRange = dateRanges.find(r => r.id === selectedRange?.id) || dateRanges.find(r => r.id === 'all');
+  const displayLabel = t(currentRange?.labelKey || 'filters.all');
 
   return (
     <div className={`filter-dropdown ${className}`} ref={dropdownRef}>
