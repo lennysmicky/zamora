@@ -33,6 +33,7 @@ const useDashboardData = ({
     totalRevenue: 0,
     growthRevenue: 0,
     averageOrderValue: 0,
+    growthBasket: 0,
     totalCustomers: 0,
     growthCustomers: 0
   });
@@ -79,6 +80,7 @@ const useDashboardData = ({
           totalRevenue: data.kpis?.totalRevenue ?? 0,
           growthRevenue: data.kpis?.growthRevenue ?? 0,
           averageOrderValue: data.kpis?.averageOrderValue ?? 0,
+          averageBasket: data.kpis?.averageBasket ?? 0,
           totalCustomers: data.kpis?.totalCustomers ?? 0,
           growthCustomers: data.kpis?.growthCustomers ?? 0
         });
@@ -99,6 +101,7 @@ const useDashboardData = ({
           totalRevenue: data.kpis?.totalRevenue ?? 0,
           growthRevenue: data.kpis?.growthRevenue ?? 0,
           averageOrderValue: data.kpis?.averageOrderValue ?? 0,
+          growthBasket: data.kpis?.growthBasket ?? 0,
           totalCustomers: data.kpis?.totalCustomers ?? 0,
           growthCustomers: data.kpis?.growthCustomers ?? 0
         });

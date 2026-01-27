@@ -18,18 +18,18 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   const { t } = useTranslation();
   const { selectedOrders, setSelectedOrders } = useOrdersStore();
   
-  // 🆕 Récupérer restaurantId du store si pas passé en prop
+  //  Récupérer restaurantId du store si pas passé en prop
   const { restaurantId: storeRestaurantId, userType } = useAuthStore();
   const restaurantId = restaurantIdProp || storeRestaurantId;
   
-  // 🆕 Déterminer le mode
+  //  Déterminer le mode
   const isRestaurantMode = userType === 'restaurant' || !!restaurantIdProp;
   
   // États locaux
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 🆕 Hook personnalisé avec restaurantId
+  //  Hook personnalisé avec restaurantId
   const {
     orders,
     stats,

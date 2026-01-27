@@ -87,7 +87,6 @@ Selon le rôle :
 → C’est ton module principal de travail en React.
 
 ---
-
 ### 3.2. Restaurants
 
 **Objectif** : gérer les entités “Restaurant” que le backend expose aux mobiles.
@@ -104,6 +103,7 @@ Selon le rôle :
    - Bouton Enregistrer / Annuler
 
 Ce module est surtout utile pour l’admin global.
+
 
 ---
 

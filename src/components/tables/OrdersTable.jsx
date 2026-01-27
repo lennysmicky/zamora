@@ -17,7 +17,7 @@ const OrdersTable = ({
   onSelectAll, 
   onViewDetails,
   onUpdateStatus,
-  isRestaurantMode = false  // 🆕 Nouveau prop
+  isRestaurantMode = false  // Nouveau prop
 }) => {
   const { t } = useTranslation();
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });

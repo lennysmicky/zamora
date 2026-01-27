@@ -1,142 +1,184 @@
-import React, { useEffect, useState } from "react";
-import './RestaurantsPage.css'
-function RestaurantForm({ restaurant, onSave, onCancel }) {
-  const [form, setForm] = useState({
-    name: "",
-    address: "",
-    city: "",
-    country: "",
-    phone: "",
-    email: "",
-    status: "actif",
-    openingHours: "",
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  RiStore2Line,
+  RiMapPinLine,
+  RiPhoneLine,
+  RiMailLine
+} from 'react-icons/ri';
+import './RestaurantsForm.css';
+
+const RestaurantsForm = ({ 
+  restaurant, 
+  onSubmit, 
+  onCancel, 
+  isSubmitting 
+}) => {
+  const { t } = useTranslation();
+
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    status: 'active'
   });
 
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
-    if (restaurant) setForm(restaurant);
+    if (restaurant) {
+      setFormData({
+        name: restaurant.name || '',
+        address: restaurant.address || '',
+        phone: restaurant.phone ? String(restaurant.phone) : '',
+        email: restaurant.email || '',
+        status: restaurant.status || 'active'
+      });
+    }
   }, [restaurant]);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    
+    if (type === 'checkbox') {
+      setFormData(prev => ({ 
+        ...prev, 
+        status: checked ? 'active' : 'inactive' 
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+    
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!formData.name.trim()) errs.name = 'required';
+    if (!formData.address.trim()) errs.address = 'required';
+    if (!formData.phone.trim()) errs.phone = 'required';
+    if (!formData.email.trim()) errs.email = 'required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'invalid';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form);
+    if (validate()) onSubmit(formData);
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit} className="promotion-form">
-        <div className="form-group">
-          <label>Nom</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Nom"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-        </div>
+    <form className="restaurant-form" onSubmit={handleSubmit}>
+      {/* Nom */}
+      <div className={`form-group ${errors.name ? 'error' : ''}`}>
+        <label>
+          <RiStore2Line />
+          {t('restaurants.form.name', 'Nom du restaurant')} <span className="required">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          placeholder={t('restaurants.form.namePlaceholder', 'Ex: Pizza Palace')}
+        />
+        {errors.name && <span className="form-error">{t('common.required', 'Ce champ est requis')}</span>}
+      </div>
 
-        <div className="form-group">
-          <label>Adresse</label>
-          <input
-            type="text"
-            name="address"
-            placeholder="Adresse"
-            value={form.address}
-            onChange={handleChange}
-            required
-          />
-        </div>
+      {/* Adresse */}
+      <div className={`form-group ${errors.address ? 'error' : ''}`}>
+        <label>
+          <RiMapPinLine />
+          {t('restaurants.form.address', 'Adresse')} <span className="required">*</span>
+        </label>
+        <input
+          type="text"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+          placeholder={t('restaurants.form.addressPlaceholder', 'Ex: 123 Rue de Paris')}
+        />
+        {errors.address && <span className="form-error">{t('common.required', 'Ce champ est requis')}</span>}
+      </div>
 
-        <div className="form-group">
-          <label>Ville</label>
+      {/* Téléphone + Email */}
+      <div className="form-row">
+        <div className={`form-group ${errors.phone ? 'error' : ''}`}>
+          <label>
+            <RiPhoneLine />
+            {t('restaurants.form.phone', 'Téléphone')} <span className="required">*</span>
+          </label>
           <input
-            type="text"
-            name="city"
-            placeholder="Ville"
-            value={form.city}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Pays</label>
-          <input
-            type="text"
-            name="country"
-            placeholder="Pays"
-            value={form.country}
-            onChange={handleChange}
-            required
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Téléphone</label>
-          <input
-            type="text"
+            type="tel"
             name="phone"
-            placeholder="Téléphone"
-            value={form.phone}
+            value={formData.phone}
             onChange={handleChange}
-            required
+            placeholder={t('restaurants.form.phonePlaceholder', '0612345678')}
           />
+          {errors.phone && <span className="form-error">{t('common.required', 'Ce champ est requis')}</span>}
         </div>
 
-        <div className="form-group">
-          <label>Email</label>
+        <div className={`form-group ${errors.email ? 'error' : ''}`}>
+          <label>
+            <RiMailLine />
+            {t('restaurants.form.email', 'Email')} <span className="required">*</span>
+          </label>
           <input
             type="email"
             name="email"
-            placeholder="Email"
-            value={form.email}
+            value={formData.email}
             onChange={handleChange}
-            required
+            placeholder={t('restaurants.form.emailPlaceholder', 'contact@restaurant.fr')}
           />
+          {errors.email && (
+            <span className="form-error">
+              {errors.email === 'invalid' 
+                ? t('common.invalidEmail', 'Email invalide') 
+                : t('common.required', 'Ce champ est requis')
+              }
+            </span>
+          )}
         </div>
+      </div>
 
-        <div className="form-group">
-          <label>Statut</label>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            required
-          >
-            <option value="actif">Actif</option>
-            <option value="inactif">Inactif</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Horaires d'ouverture</label>
+      {/* Statut - Checkbox */}
+      <div className="form-group">
+        <label className="checkbox-label">
           <input
-            type="text"
-            name="openingHours"
-            placeholder="08:00 - 22:00"
-            value={form.openingHours}
+            type="checkbox"
+            name="status"
+            checked={formData.status === 'active'}
             onChange={handleChange}
-            required
           />
-        </div>
+          <span className="checkmark"></span>
+          <span className="checkbox-text">
+            {t('restaurants.form.activeStatus', 'Restaurant actif')}
+          </span>
+        </label>
+      </div>
 
-        <div className="form-actions">
-          <button type="button" className="cancel" onClick={onCancel}>
-            Annuler
-          </button>
-
-          <button type="submit" className="secondary">
-            {restaurant ? "Mettre à jour" : "Créer"}
-          </button>
-        </div>
-      </form>
-    </div>
+      {/* Actions */}
+      <div className="form-actions">
+        <button 
+          type="button" 
+          className="btn-cancel" 
+          onClick={onCancel} 
+          disabled={isSubmitting}
+        >
+          {t('common.cancel', 'Annuler')}
+        </button>
+        <button 
+          type="submit" 
+          className="btn-submit" 
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <span className="btn-spinner"></span> : t('common.save', 'Enregistrer')}
+        </button>
+      </div>
+    </form>
   );
-}
+};
 
-export default RestaurantForm;
+export default RestaurantsForm;

@@ -451,12 +451,15 @@
     "close": "Fermer",
     "actions": "Actions",
     "view": "Voir",
-    "refresh": "Actualiser",
     "noData": "Aucune donnée",
     "error": "Erreur",
     "success": "Succès",
     "warning": "Attention",
-    "info": "Information"
+    "info": "Information",
+    "refresh": "Actualiser",
+    "retry": "Réessayer",
+    "required": "Ce champ est requis",
+    "invalidEmail": "Email invalide"
   },
   "confirm": {
     "title": "Êtes-vous sûr ?",
@@ -943,5 +946,123 @@
       "terms": "CGU",
       "rights": "Tous droits réservés."
     }
+  },
+   "restaurants": {
+    "title": "Restaurants",
+    "subtitle": "Gérez tous vos restaurants",
+    "add": "Ajouter",
+    "search": "Rechercher...",
+    "allStatus": "Tous",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "createTitle": "Nouveau restaurant",
+    "editTitle": "Modifier le restaurant",
+    "deleteTitle": "Supprimer le restaurant",
+    "deleteMessage": "Supprimer ce restaurant ?",
+    "noResults": "Aucun résultat",
+    "noResultsDesc": "Modifiez vos filtres",
+    "noRestaurants": "Aucun restaurant",
+    "noRestaurantsDesc": "Créez votre premier restaurant",
+    "stats": {
+      "total": "Total",
+      "active": "Actifs",
+      "inactive": "Inactifs"
+    },
+    
+    "filters": {
+      "all": "Tous les statuts",
+      "active": "Actifs",
+      "inactive": "Inactifs"
+    },
+    
+    "status": {
+      "active": "Actif",
+      "inactive": "Inactif"
+    },
+    
+    "table": {
+      "name": "Restaurant",
+      "address": "Adresse",
+      "contact": "Contact",
+      "hours": "Horaires",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    
+    "form": {
+      "createTitle": "Nouveau restaurant",
+      "editTitle": "Modifier le restaurant",
+      
+      "sections": {
+        "basic": "Informations de base",
+        "address": "Adresse",
+        "contact": "Contact",
+        "details": "Détails"
+      },
+      
+      "name": "Nom du restaurant",
+      "namePlaceholder": "Ex: Pizza Palace",
+      "address": "Adresse",
+      "addressPlaceholder": "Ex: 123 Rue de Paris",
+      "city": "Ville",
+      "cityPlaceholder": "Ex: Paris",
+      "country": "Pays",
+      "countryPlaceholder": "Ex: France",
+      "phone": "Téléphone",
+      "phonePlaceholder": "Ex: +33 1 23 45 67 89",
+      "email": "Email",
+      "emailPlaceholder": "Ex: contact@restaurant.fr",
+      "hours": "Horaires d'ouverture",
+      "hoursPlaceholder": "Ex: 10:00 - 23:00",
+      "logo": "URL du logo",
+      "logoPlaceholder": "https://...",
+      "status": "Statut",
+      
+      "errors": {
+        "nameRequired": "Le nom est requis",
+        "addressRequired": "L'adresse est requise",
+        "cityRequired": "La ville est requise",
+        "emailInvalid": "Email invalide"
+      }
+    },
+    
+    "delete": {
+      "title": "Supprimer le restaurant",
+      "message": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
+    },
+    
+    "empty": {
+      "title": "Aucun restaurant",
+      "message": "Commencez par créer votre premier restaurant"
+    },
+    
+    "errors": {
+      "loadFailed": "Erreur lors du chargement des restaurants",
+      "saveFailed": "Erreur lors de la sauvegarde",
+      "deleteFailed": "Erreur lors de la suppression"
+    }
+    },
+    "table": {
+      "name": "Restaurant",
+      "contact": "Contact",
+      "status": "Statut",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Nom du restaurant",
+      "namePlaceholder": "Ex: Pizza Palace",
+      "address": "Adresse",
+      "addressPlaceholder": "Ex: 123 Rue de Paris",
+      "phone": "Téléphone",
+      "phonePlaceholder": "0612345678",
+      "email": "Email",
+      "emailPlaceholder": "contact@restaurant.fr",
+      "activeStatus": "Restaurant actif"
+    },
+    "errors": {
+      "load": "Erreur de chargement",
+      "save": "Erreur lors de la sauvegarde",
+      "delete": "Erreur lors de la suppression"
+    }
   }
-}
+

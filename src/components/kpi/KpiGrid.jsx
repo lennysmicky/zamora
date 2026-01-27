@@ -23,6 +23,7 @@ const KpiGrid = () => {
     totalRevenue: kpis?.totalRevenue ?? 0,
     growthRevenue: kpis?.growthRevenue ?? 0,
     averageOrderValue: kpis?.averageOrderValue ?? 0,
+    growthBasket: kpis?.growthBasket ?? 0, 
     totalCustomers: kpis?.totalCustomers ?? 0,
     growthCustomers: kpis?.growthCustomers ?? 0
   };
@@ -77,8 +78,8 @@ const KpiGrid = () => {
       id: 3,
       title: t('dashboard.kpi.averageBasket'),
       value: formatCurrency(safeKpis.averageOrderValue),
-      change: formatChange(safeKpis.growthBasket), // Si pas de croissance spécifique pour le panier moyen
-      changeType: 'neutral',
+      change: formatChange(safeKpis.growthBasket),
+      changeType: getChangeType(safeKpis.growthBasket),
       icon: RiShoppingCartLine,
       unit:''
     },

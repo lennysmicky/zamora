@@ -348,7 +348,7 @@
       "last7Days": "Last 7 days",
       "last30Days": "Last 30 days",
       "custom": "Custom",
-      "all": "All",
+      "all": "all",
       "advanced": "Advanced filters",
       "reset": "Reset"
     },
@@ -450,12 +450,15 @@
     "close": "Close",
     "actions": "Actions",
     "view": "View",
-    "refresh": "Refresh",
     "noData": "No data",
     "error": "Error",
     "success": "Success",
     "warning": "Warning",
-    "info": "Information"
+    "info": "Information",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "required": "This field is required",
+    "invalidEmail": "Invalid email"
   },
   "confirm": {
     "title": "Are you sure?",
@@ -938,6 +941,112 @@
       "terms": "Terms of Service",
       "rights": "All rights reserved."
     }
+  },
+  "restaurants": {
+    "title": "Restaurants",
+    "subtitle": "Manage all your restaurants",
+    "add": "Add",
+    "search": "Search...",
+    "allStatus": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "createTitle": "New restaurant",
+    "editTitle": "Edit restaurant",
+    "deleteTitle": "Delete restaurant",
+    "deleteMessage": "Delete this restaurant?",
+    "noResults": "No results",
+    "noResultsDesc": "Try adjusting your filters",
+    "noRestaurants": "No restaurants",
+    "noRestaurantsDesc": "Create your first restaurant",
+    "stats": {
+      "total": "Total",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "filters": {
+      "all": "All statuses",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "table": {
+      "name": "Restaurant",
+      "address": "Address",
+      "contact": "Contact",
+      "hours": "Opening hours",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "createTitle": "New restaurant",
+      "editTitle": "Edit restaurant",
+      "sections": {
+        "basic": "Basic information",
+        "address": "Address",
+        "contact": "Contact",
+        "details": "Details"
+      },
+      "name": "Restaurant name",
+      "namePlaceholder": "e.g. Pizza Palace",
+      "address": "Address",
+      "addressPlaceholder": "e.g. 123 Paris Street",
+      "city": "City",
+      "cityPlaceholder": "e.g. Paris",
+      "country": "Country",
+      "countryPlaceholder": "e.g. France",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. +33 1 23 45 67 89",
+      "email": "Email",
+      "emailPlaceholder": "e.g. contact@restaurant.com",
+      "hours": "Opening hours",
+      "hoursPlaceholder": "e.g. 10:00 AM – 11:00 PM",
+      "logo": "Logo URL",
+      "logoPlaceholder": "https://...",
+      "status": "Status",
+      "errors": {
+        "nameRequired": "Name is required",
+        "addressRequired": "Address is required",
+        "cityRequired": "City is required",
+        "emailInvalid": "Invalid email"
+      }
+    },
+    "delete": {
+      "title": "Delete restaurant",
+      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+    },
+    "empty": {
+      "title": "No restaurants",
+      "message": "Start by creating your first restaurant"
+    },
+    "errors": {
+      "loadFailed": "Failed to load restaurants",
+      "saveFailed": "Failed to save",
+      "deleteFailed": "Failed to delete"
+    }
+  },
+  "table": {
+    "name": "Restaurant",
+    "contact": "Contact",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "form": {
+    "name": "Restaurant name",
+    "namePlaceholder": "Ex: Pizza Palace",
+    "address": "Address",
+    "addressPlaceholder": "Ex: 123 Main Street",
+    "phone": "Phone",
+    "phonePlaceholder": "0612345678",
+    "email": "Email",
+    "emailPlaceholder": "contact@restaurant.com",
+    "activeStatus": "Active restaurant"
+  },
+  "errors": {
+    "load": "Loading error",
+    "save": "Save error",
+    "delete": "Delete error"
   }
 }
-
