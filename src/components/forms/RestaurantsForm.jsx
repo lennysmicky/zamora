@@ -33,7 +33,7 @@ const RestaurantsForm = ({
         address: restaurant.address || '',
         phone: restaurant.phone ? String(restaurant.phone) : '',
         email: restaurant.email || '',
-        status: restaurant.status || 'active'
+        status: restaurant.status || 'ouvert'
       });
     }
   }, [restaurant]);
@@ -44,7 +44,7 @@ const RestaurantsForm = ({
     if (type === 'checkbox') {
       setFormData(prev => ({ 
         ...prev, 
-        status: checked ? 'active' : 'inactive' 
+        status: checked ? 'ouvert' : 'fermé' 
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));

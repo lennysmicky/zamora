@@ -74,15 +74,15 @@ const RestaurantsTable = ({
                   className={`status-toggle ${restaurant.status}`}
                   onClick={() => onToggleStatus(restaurant)}
                 >
-                  {restaurant.status === 'active' ? (
+                  {restaurant.status === 'Ouvert' ? (
                     <>
                       <RiToggleFill />
-                      <span>{t('restaurants.active', 'Actif')}</span>
+                      <span>{t('restaurants.active', 'Ouvert')}</span>
                     </>
                   ) : (
                     <>
                       <RiToggleLine />
-                      <span>{t('restaurants.inactive', 'Inactif')}</span>
+                      <span>{t('restaurants.inactive', 'Fermé')}</span>
                     </>
                   )}
                 </button>

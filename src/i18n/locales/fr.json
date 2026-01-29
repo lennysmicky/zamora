@@ -953,8 +953,8 @@
     "add": "Ajouter",
     "search": "Rechercher...",
     "allStatus": "Tous",
-    "active": "Actif",
-    "inactive": "Inactif",
+    "active": "Ouvert",
+    "inactive": "Fermé",
     "createTitle": "Nouveau restaurant",
     "editTitle": "Modifier le restaurant",
     "deleteTitle": "Supprimer le restaurant",
@@ -965,19 +965,19 @@
     "noRestaurantsDesc": "Créez votre premier restaurant",
     "stats": {
       "total": "Total",
-      "active": "Actifs",
-      "inactive": "Inactifs"
+      "active": "Ouverts",
+      "inactive": "Fermés"
     },
     
     "filters": {
       "all": "Tous les statuts",
-      "active": "Actifs",
-      "inactive": "Inactifs"
+      "active": "Ouvert",
+      "inactive": "Fermé"
     },
     
     "status": {
-      "active": "Actif",
-      "inactive": "Inactif"
+      "active": "Ouvert",
+      "inactive": "Fermé"
     },
     
     "table": {

@@ -82,7 +82,8 @@ const RestaurantRegisterPage = () => {
         address: formData.address.trim(),
         phone: phoneNumber,
         email: formData.email.trim().toLowerCase(),
-        password: formData.password
+        password: formData.password,
+
       };
 
       console.log("Payload envoyé au backend:", payload);
