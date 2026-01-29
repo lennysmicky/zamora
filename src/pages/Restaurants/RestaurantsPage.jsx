@@ -23,39 +23,30 @@ const RestaurantsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [filters, setFilters] = useState({
-    search: '',
-    status: ''
-  });
+  const [filters, setFilters] = useState({ search: '', status: '' });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [deleteConfirm, setDeleteConfirm] = useState({
-    isOpen: false,
-    restaurant: null
-  });
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, restaurant: null });
 
+  // FETCH RESTAURANTS
   const fetchRestaurants = useCallback(async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await restaurantsAPI.getAll();
-      
       let data = [];
       if (response.data) {
-        if (Array.isArray(response.data.data)) {
-          data = response.data.data;
-        } else if (Array.isArray(response.data.restaurants)) {
-          data = response.data.restaurants;
-        } else if (Array.isArray(response.data)) {
-          data = response.data;
-        }
+        if (Array.isArray(response.data.data)) data = response.data.data;
+        else if (Array.isArray(response.data.restaurants)) data = response.data.restaurants;
+        else if (Array.isArray(response.data)) data = response.data;
       }
-      
-      setRestaurants(data);
+
+      // fallback pour status
+      const mappedData = data.map(r => ({ ...r, status: r.status || 'ouvert' }));
+      setRestaurants(mappedData);
     } catch (err) {
       console.error('Erreur chargement:', err);
       setError(err.response?.data?.message || t('restaurants.errors.load', 'Erreur de chargement'));
@@ -70,26 +61,28 @@ const RestaurantsPage = () => {
 
   const getId = (r) => r._id || r.id;
 
+  // FILTRAGE
   const filteredRestaurants = restaurants.filter(r => {
-    const matchSearch = 
+    const matchSearch =
       !filters.search ||
       r.name?.toLowerCase().includes(filters.search.toLowerCase()) ||
       r.address?.toLowerCase().includes(filters.search.toLowerCase()) ||
       r.email?.toLowerCase().includes(filters.search.toLowerCase());
 
-    const matchStatus = 
-      !filters.status || 
-      r.status === filters.status;
+    const matchStatus =
+      !filters.status || r.status === filters.status;
 
     return matchSearch && matchStatus;
   });
 
+  // STATS
   const stats = {
     total: restaurants.length,
-    active: restaurants.filter(r => r.status === 'active').length,
-    inactive: restaurants.filter(r => r.status === 'inactive').length
+    ouvert: restaurants.filter(r => r.status === 'ouvert').length,
+    ferme: restaurants.filter(r => r.status === 'fermé').length
   };
 
+  // MODAL CREATE / EDIT
   const handleCreate = () => {
     setSelectedRestaurant(null);
     setIsModalOpen(true);
@@ -106,9 +99,9 @@ const RestaurantsPage = () => {
       const payload = {
         name: formData.name.trim(),
         address: formData.address.trim(),
-        phone: formData.phone ? Number(String(formData.phone).replace(/\D/g, '')) : null,
+        phone: formData.phone ? String(formData.phone).replace(/\D/g, '') : null,
         email: formData.email.trim().toLowerCase(),
-        status: formData.status || 'active'
+        status: formData.status || 'ouvert'
       };
 
       if (selectedRestaurant) {
@@ -116,7 +109,7 @@ const RestaurantsPage = () => {
       } else {
         await restaurantsAPI.create(payload);
       }
-      
+
       setIsModalOpen(false);
       setSelectedRestaurant(null);
       fetchRestaurants();
@@ -127,9 +120,8 @@ const RestaurantsPage = () => {
     }
   };
 
-  const handleDelete = (restaurant) => {
-    setDeleteConfirm({ isOpen: true, restaurant });
-  };
+  // SUPPRESSION
+  const handleDelete = (restaurant) => setDeleteConfirm({ isOpen: true, restaurant });
 
   const handleDeleteConfirm = async () => {
     try {
@@ -142,25 +134,25 @@ const RestaurantsPage = () => {
     }
   };
 
+  // TOGGLE STATUS (ouvert/fermé)
   const handleToggleStatus = async (restaurant) => {
-    const newStatus = restaurant.status === 'active' ? 'inactive' : 'active';
+    const newStatus = restaurant.status === 'ouvert' ? 'fermé' : 'ouvert';
     try {
       await restaurantsAPI.update(getId(restaurant), { ...restaurant, status: newStatus });
       fetchRestaurants();
     } catch (err) {
-      setRestaurants(prev => 
-        prev.map(r => getId(r) === getId(restaurant) ? { ...r, status: newStatus } : r)
+      setRestaurants(prev =>
+        prev.map(r => (getId(r) === getId(restaurant) ? { ...r, status: newStatus } : r))
       );
     }
   };
 
-  const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
+  // FILTRES
+  const handleFilterChange = (key, value) => setFilters(prev => ({ ...prev, [key]: value }));
 
   return (
     <div className="restaurants-page">
-      {/* Header */}
+      {/* HEADER */}
       <div className="restaurants-header">
         <div className="restaurants-header-info">
           <h1>
@@ -170,11 +162,7 @@ const RestaurantsPage = () => {
           <p>{t('restaurants.subtitle', 'Gérez tous vos restaurants')}</p>
         </div>
         <div className="restaurants-header-actions">
-          <button 
-            className="restaurants-btn-secondary" 
-            onClick={fetchRestaurants}
-            disabled={loading}
-          >
+          <button className="restaurants-btn-secondary" onClick={fetchRestaurants} disabled={loading}>
             <RiRefreshLine className={loading ? 'spin' : ''} />
             <span>{t('common.refresh', 'Actualiser')}</span>
           </button>
@@ -185,38 +173,32 @@ const RestaurantsPage = () => {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* STATS */}
       <div className="restaurants-stats">
         <div className="restaurants-stat-card">
-          <div className="restaurants-stat-icon primary">
-            <RiStore2Line />
-          </div>
+          <div className="restaurants-stat-icon primary"><RiStore2Line /></div>
           <div className="restaurants-stat-content">
             <span className="restaurants-stat-value">{stats.total}</span>
             <span className="restaurants-stat-label">{t('restaurants.stats.total', 'Total')}</span>
           </div>
         </div>
         <div className="restaurants-stat-card">
-          <div className="restaurants-stat-icon success">
-            <RiStore2Line />
-          </div>
+          <div className="restaurants-stat-icon success"><RiStore2Line /></div>
           <div className="restaurants-stat-content">
-            <span className="restaurants-stat-value">{stats.active}</span>
-            <span className="restaurants-stat-label">{t('restaurants.stats.active', 'Actifs')}</span>
+            <span className="restaurants-stat-value">{stats.ouvert}</span>
+            <span className="restaurants-stat-label">{t('restaurants.stats.open', 'Ouverts')}</span>
           </div>
         </div>
         <div className="restaurants-stat-card">
-          <div className="restaurants-stat-icon error">
-            <RiStore2Line />
-          </div>
+          <div className="restaurants-stat-icon error"><RiStore2Line /></div>
           <div className="restaurants-stat-content">
-            <span className="restaurants-stat-value">{stats.inactive}</span>
-            <span className="restaurants-stat-label">{t('restaurants.stats.inactive', 'Inactifs')}</span>
+            <span className="restaurants-stat-value">{stats.ferme}</span>
+            <span className="restaurants-stat-label">{t('restaurants.stats.closed', 'Fermés')}</span>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
+      {/* FILTRES */}
       <div className="restaurants-filters">
         <div className="restaurants-search">
           <RiSearchLine />
@@ -229,23 +211,18 @@ const RestaurantsPage = () => {
         </div>
         <div className="restaurants-filter-select">
           <RiFilterLine />
-          <select
-            value={filters.status}
-            onChange={(e) => handleFilterChange('status', e.target.value)}
-          >
+          <select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)}>
             <option value="">{t('restaurants.allStatus', 'Tous')}</option>
-            <option value="active">{t('restaurants.active', 'Actifs')}</option>
-            <option value="inactive">{t('restaurants.inactive', 'Inactifs')}</option>
+            <option value="ouvert">{t('restaurants.open', 'Ouvert')}</option>
+            <option value="fermé">{t('restaurants.closed', 'Fermé')}</option>
           </select>
         </div>
       </div>
 
-      {/* Content */}
+      {/* CONTENT */}
       <div className="restaurants-content">
         {loading ? (
-          <div className="restaurants-loading">
-            <LoadingSpinner />
-          </div>
+          <LoadingSpinner />
         ) : error ? (
           <div className="restaurants-error">
             <p>{error}</p>
@@ -253,20 +230,16 @@ const RestaurantsPage = () => {
           </div>
         ) : filteredRestaurants.length === 0 ? (
           <div className="restaurants-empty">
-            <div className="restaurants-empty-icon">
-              <RiStore2Line />
-            </div>
+            <div className="restaurants-empty-icon"><RiStore2Line /></div>
             <h3>
-              {filters.search || filters.status 
-                ? t('restaurants.noResults', 'Aucun résultat') 
-                : t('restaurants.noRestaurants', 'Aucun restaurant')
-              }
+              {filters.search || filters.status
+                ? t('restaurants.noResults', 'Aucun résultat')
+                : t('restaurants.noRestaurants', 'Aucun restaurant')}
             </h3>
             <p>
-              {filters.search || filters.status 
-                ? t('restaurants.noResultsDesc', 'Modifiez vos filtres') 
-                : t('restaurants.noRestaurantsDesc', 'Créez votre premier restaurant')
-              }
+              {filters.search || filters.status
+                ? t('restaurants.noResultsDesc', 'Modifiez vos filtres')
+                : t('restaurants.noRestaurantsDesc', 'Créez votre premier restaurant')}
             </p>
           </div>
         ) : (
@@ -279,31 +252,24 @@ const RestaurantsPage = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* MODAL */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedRestaurant(null);
-        }}
-        title={selectedRestaurant 
-          ? t('restaurants.editTitle', 'Modifier le restaurant') 
-          : t('restaurants.createTitle', 'Nouveau restaurant')
-        }
+        onClose={() => { setIsModalOpen(false); setSelectedRestaurant(null); }}
+        title={selectedRestaurant
+          ? t('restaurants.editTitle', 'Modifier le restaurant')
+          : t('restaurants.createTitle', 'Nouveau restaurant')}
         size="medium"
       >
         <RestaurantsForm
           restaurant={selectedRestaurant}
           onSubmit={handleSubmit}
-          onCancel={() => {
-            setIsModalOpen(false);
-            setSelectedRestaurant(null);
-          }}
+          onCancel={() => { setIsModalOpen(false); setSelectedRestaurant(null); }}
           isSubmitting={isSubmitting}
         />
       </Modal>
 
-      {/* Delete Confirm */}
+      {/* DELETE CONFIRM */}
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}
         onClose={() => setDeleteConfirm({ isOpen: false, restaurant: null })}
