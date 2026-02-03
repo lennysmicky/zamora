@@ -12,12 +12,7 @@ import {
 } from 'react-icons/ri';
 import './css/RestaurantsTable.css';
 
-const RestaurantsTable = ({ 
-  restaurants = [], 
-  onEdit, 
-  onDelete, 
-  onToggleStatus 
-}) => {
+const RestaurantsTable = ({ restaurants = [], onEdit, onDelete, onToggleStatus }) => {
   const { t } = useTranslation();
 
   const formatPhone = (phone) => {
@@ -26,6 +21,9 @@ const RestaurantsTable = ({
   };
 
   const getId = (r) => r._id || r.id;
+
+  // Map backend status → CSS class
+  const mapStatusToClass = (status) => (status === 'Ouvert' ? 'active' : 'inactive');
 
   return (
     <div className="restaurants-table-wrapper">
@@ -39,75 +37,80 @@ const RestaurantsTable = ({
           </tr>
         </thead>
         <tbody>
-          {restaurants.map((restaurant) => (
-            <tr key={getId(restaurant)}>
-              <td>
-                <div className="restaurant-cell">
-                  <div className="restaurant-avatar">
-                    <RiStore2Line />
-                  </div>
-                  <div className="restaurant-info">
-                    <span className="restaurant-name">{restaurant.name}</span>
-                    <span className="restaurant-address">
-                      <RiMapPinLine />
-                      {restaurant.address || '-'}
-                    </span>
-                  </div>
-                </div>
-              </td>
+          {restaurants.map((restaurant) => {
+            const statusClass = mapStatusToClass(restaurant.status);
+            const isOpen = restaurant.status === 'Ouvert';
 
-              <td>
-                <div className="contact-cell">
-                  <div className="contact-item">
-                    <RiPhoneLine />
-                    <span>{formatPhone(restaurant.phone)}</span>
+            return (
+              <tr key={getId(restaurant)}>
+                <td>
+                  <div className="restaurant-cell">
+                    <div className="restaurant-avatar">
+                      <RiStore2Line />
+                    </div>
+                    <div className="restaurant-info">
+                      <span className="restaurant-name">{restaurant.name}</span>
+                      <span className="restaurant-address">
+                        <RiMapPinLine />
+                        {restaurant.address || '-'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="contact-item">
-                    <RiMailLine />
-                    <span>{restaurant.email || '-'}</span>
+                </td>
+
+                <td>
+                  <div className="contact-cell">
+                    <div className="contact-item">
+                      <RiPhoneLine />
+                      <span>{formatPhone(restaurant.phone)}</span>
+                    </div>
+                    <div className="contact-item">
+                      <RiMailLine />
+                      <span>{restaurant.email || '-'}</span>
+                    </div>
                   </div>
-                </div>
-              </td>
+                </td>
 
-              <td>
-                <button
-                  className={`status-toggle ${restaurant.status}`}
-                  onClick={() => onToggleStatus(restaurant)}
-                >
-                  {restaurant.status === 'Ouvert' ? (
-                    <>
-                      <RiToggleFill />
-                      <span>{t('restaurants.active', 'Ouvert')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <RiToggleLine />
-                      <span>{t('restaurants.inactive', 'Fermé')}</span>
-                    </>
-                  )}
-                </button>
-              </td>
-
-              <td>
-                <div className="actions-cell">
+                <td>
                   <button
-                    className="action-btn edit"
-                    onClick={() => onEdit(restaurant)}
-                    title={t('common.edit', 'Modifier')}
+                    className={`status-toggle ${statusClass}`}
+                    onClick={() => onToggleStatus(restaurant)}
                   >
-                    <RiEditLine />
+                    {isOpen ? (
+                      <>
+                        <RiToggleFill />
+                        <span>{t('restaurants.active', 'Ouvert')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <RiToggleLine />
+                        <span>{t('restaurants.inactive', 'Fermé')}</span>
+                      </>
+                    )}
                   </button>
-                  <button
-                    className="action-btn delete"
-                    onClick={() => onDelete(restaurant)}
-                    title={t('common.delete', 'Supprimer')}
-                  >
-                    <RiDeleteBinLine />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                </td>
+
+                <td>
+                  <div className="actions-cell">
+                    <button
+                      className="action-btn edit"
+                      onClick={() => onEdit(restaurant)}
+                      title={t('common.edit', 'Modifier')}
+                    >
+                      <RiEditLine />
+                    </button>
+                    <button
+                      className="action-btn delete"
+                      onClick={() => onDelete(restaurant)}
+                      title={t('common.delete', 'Supprimer')}
+                    >
+                      <RiDeleteBinLine />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

@@ -948,8 +948,8 @@
     "add": "Add",
     "search": "Search...",
     "allStatus": "All",
-    "active": "Active",
-    "inactive": "Inactive",
+    "active": "Open",
+    "inactive": "Closed",
     "createTitle": "New restaurant",
     "editTitle": "Edit restaurant",
     "deleteTitle": "Delete restaurant",
@@ -960,17 +960,17 @@
     "noRestaurantsDesc": "Create your first restaurant",
     "stats": {
       "total": "Total",
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "Open",
+      "inactive": "Closed"
     },
     "filters": {
       "all": "All statuses",
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "Open",
+      "inactive": "Closed"
     },
     "status": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "active": "Open",
+      "inactive": "Closed"
     },
     "table": {
       "name": "Restaurant",

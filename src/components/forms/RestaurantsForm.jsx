@@ -4,7 +4,10 @@ import {
   RiStore2Line,
   RiMapPinLine,
   RiPhoneLine,
-  RiMailLine
+  RiMailLine,
+  RiLockPasswordLine,
+  RiEyeLine,
+  RiEyeOffLine
 } from 'react-icons/ri';
 import './RestaurantsForm.css';
 
@@ -16,14 +19,18 @@ const RestaurantsForm = ({
 }) => {
   const { t } = useTranslation();
 
+  const isEditMode = !!restaurant;
+
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     phone: '',
     email: '',
+    password: '',
     status: 'active'
   });
 
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -33,7 +40,17 @@ const RestaurantsForm = ({
         address: restaurant.address || '',
         phone: restaurant.phone ? String(restaurant.phone) : '',
         email: restaurant.email || '',
-        status: restaurant.status || 'ouvert'
+        password: '',
+        status: restaurant.status || 'active'
+      });
+    } else {
+      setFormData({
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        password: '',
+        status: 'active'
       });
     }
   }, [restaurant]);
@@ -44,7 +61,7 @@ const RestaurantsForm = ({
     if (type === 'checkbox') {
       setFormData(prev => ({ 
         ...prev, 
-        status: checked ? 'ouvert' : 'fermé' 
+        status: checked ? 'active' : 'inactive' 
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -55,18 +72,36 @@ const RestaurantsForm = ({
 
   const validate = () => {
     const errs = {};
+    
     if (!formData.name.trim()) errs.name = 'required';
     if (!formData.address.trim()) errs.address = 'required';
     if (!formData.phone.trim()) errs.phone = 'required';
     if (!formData.email.trim()) errs.email = 'required';
     else if (!/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'invalid';
+    
+    // Password requis uniquement en création
+    if (!isEditMode) {
+      if (!formData.password.trim()) {
+        errs.password = 'required';
+      } else if (formData.password.length < 8) {
+        errs.password = 'minLength';
+      }
+    }
+    
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validate()) onSubmit(formData);
+    if (validate()) {
+      // En modification, ne pas envoyer le password s'il est vide
+      const dataToSubmit = { ...formData };
+      if (isEditMode && !formData.password.trim()) {
+        delete dataToSubmit.password;
+      }
+      onSubmit(dataToSubmit);
+    }
   };
 
   return (
@@ -141,6 +176,44 @@ const RestaurantsForm = ({
             </span>
           )}
         </div>
+      </div>
+
+      {/* Password */}
+      <div className={`form-group ${errors.password ? 'error' : ''}`}>
+        <label>
+          <RiLockPasswordLine />
+          {t('restaurants.form.password', 'Mot de passe')} 
+          {!isEditMode && <span className="required">*</span>}
+          {isEditMode && <span className="optional">({t('common.optional', 'optionnel')})</span>}
+        </label>
+        <div className="password-input-wrapper">
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder={isEditMode 
+              ? t('restaurants.form.passwordPlaceholderEdit', 'Laisser vide pour ne pas modifier')
+              : t('restaurants.form.passwordPlaceholder', 'Minimum 8 caractères')
+            }
+          />
+          <button
+            type="button"
+            className="password-toggle"
+            onClick={() => setShowPassword(!showPassword)}
+            tabIndex={-1}
+          >
+            {showPassword ? <RiEyeOffLine /> : <RiEyeLine />}
+          </button>
+        </div>
+        {errors.password && (
+          <span className="form-error">
+            {errors.password === 'minLength' 
+              ? t('common.minLength', 'Minimum 6 caractères') 
+              : t('common.required', 'Ce champ est requis')
+            }
+          </span>
+        )}
       </div>
 
       {/* Statut - Checkbox */}

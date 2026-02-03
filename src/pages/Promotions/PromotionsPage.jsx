@@ -3,16 +3,17 @@ import { useTranslation } from 'react-i18next';
 import {
   RiAddLine,
   RiSearchLine,
-  RiFilterLine,
   RiPercentLine,
   RiTimeLine,
   RiCheckboxCircleLine,
-  RiCloseCircleLine
+  RiCloseCircleLine,
+  RiRefreshLine
 } from 'react-icons/ri';
 import { usePromotions } from '../../hooks/usePromotions';
 import PromotionsTable from '../../components/Promotions/PromotionsTable';
 import PromotionForm from '../../components/Promotions/PromotionForm';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 import './PromotionsPage.css';
 
 const PromotionsPage = () => {
@@ -22,14 +23,14 @@ const PromotionsPage = () => {
     promotions,
     stats,
     loading,
-    error,
     filters,
     setFilters,
     createPromotion,
     updatePromotion,
     deletePromotion,
     togglePromotionStatus,
-    getPromotionStatus
+    getPromotionStatus,
+    refetch
   } = usePromotions();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,8 +39,11 @@ const PromotionsPage = () => {
   const [promotionToDelete, setPromotionToDelete] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Données des restaurants (à récupérer depuis l'API)
   const [restaurants] = useState([]);
+
+  const handleRefresh = () => {
+    if (refetch) refetch();
+  };
 
   const handleCreate = () => {
     setSelectedPromotion(null);
@@ -58,7 +62,7 @@ const PromotionsPage = () => {
 
   const confirmDelete = async () => {
     if (promotionToDelete) {
-      await deletePromotion(promotionToDelete.id);
+      await deletePromotion(promotionToDelete.id || promotionToDelete._id);
       setIsDeleteDialogOpen(false);
       setPromotionToDelete(null);
     }
@@ -69,7 +73,7 @@ const PromotionsPage = () => {
     let result;
     
     if (selectedPromotion) {
-      result = await updatePromotion(selectedPromotion.id, data);
+      result = await updatePromotion(selectedPromotion.id || selectedPromotion._id, data);
     } else {
       result = await createPromotion(data);
     }
@@ -101,111 +105,143 @@ const PromotionsPage = () => {
     <div className="promotions-page">
       {/* Header */}
       <div className="promotions-header">
-        <div className="promotions-header-left">
-          <h1>{t('promotions.title')}</h1>
-          <p>{t('promotions.subtitle')}</p>
+        <div className="promotions-header-info">
+          <h1>
+            <RiPercentLine />
+            {t('promotions.title', 'Promotions')}
+          </h1>
+          <p>{t('promotions.subtitle', 'Gérez toutes les promotions')}</p>
         </div>
-        <button className="btn-primary" onClick={handleCreate}>
-          <RiAddLine />
-          {t('promotions.addNew')}
-        </button>
+        <div className="promotions-header-actions">
+          <button
+            className="promotions-btn-secondary"
+            onClick={handleRefresh}
+            disabled={loading}
+          >
+            <RiRefreshLine className={loading ? 'spin' : ''} />
+            <span>{t('common.refresh', 'Actualiser')}</span>
+          </button>
+          <button className="promotions-btn-primary" onClick={handleCreate}>
+            <RiAddLine />
+            <span>{t('promotions.add', 'Ajouter')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
       <div className="promotions-stats">
-        <div className="stat-card">
-          <div className="stat-icon total">
+        <div className="promotions-stat-card">
+          <div className="promotions-stat-icon total">
             <RiPercentLine />
           </div>
-          <div className="stat-info">
-            <span className="stat-value">{stats.total}</span>
-            <span className="stat-label">{t('promotions.stats.total')}</span>
+          <div className="promotions-stat-content">
+            <span className="promotions-stat-value">{stats?.total || 0}</span>
+            <span className="promotions-stat-label">{t('promotions.stats.total', 'Total')}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon active">
+        <div className="promotions-stat-card">
+          <div className="promotions-stat-icon active">
             <RiCheckboxCircleLine />
           </div>
-          <div className="stat-info">
-            <span className="stat-value">{stats.active}</span>
-            <span className="stat-label">{t('promotions.stats.active')}</span>
+          <div className="promotions-stat-content">
+            <span className="promotions-stat-value">{stats?.active || 0}</span>
+            <span className="promotions-stat-label">{t('promotions.stats.active', 'Actives')}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon scheduled">
+        <div className="promotions-stat-card">
+          <div className="promotions-stat-icon scheduled">
             <RiTimeLine />
           </div>
-          <div className="stat-info">
-            <span className="stat-value">{stats.scheduled}</span>
-            <span className="stat-label">{t('promotions.stats.scheduled')}</span>
+          <div className="promotions-stat-content">
+            <span className="promotions-stat-value">{stats?.scheduled || 0}</span>
+            <span className="promotions-stat-label">{t('promotions.stats.scheduled', 'Programmées')}</span>
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon expired">
+        <div className="promotions-stat-card">
+          <div className="promotions-stat-icon expired">
             <RiCloseCircleLine />
           </div>
-          <div className="stat-info">
-            <span className="stat-value">{stats.expired}</span>
-            <span className="stat-label">{t('promotions.stats.expired')}</span>
+          <div className="promotions-stat-content">
+            <span className="promotions-stat-value">{stats?.expired || 0}</span>
+            <span className="promotions-stat-label">{t('promotions.stats.expired', 'Expirées')}</span>
           </div>
         </div>
       </div>
 
       {/* Filters */}
       <div className="promotions-filters">
-        <div className="search-box">
+        <div className="promotions-search">
           <RiSearchLine />
           <input
             type="text"
-            placeholder={t('promotions.searchPlaceholder')}
-            value={filters.search}
+            placeholder={t('promotions.search', 'Rechercher...')}
+            value={filters?.search || ''}
             onChange={handleSearch}
           />
         </div>
-        <div className="filter-buttons">
+        <div className="promotions-filter-buttons">
           <button
-            className={`filter-btn ${filters.status === '' ? 'active' : ''}`}
+            className={`filter-btn ${filters?.status === '' ? 'active' : ''}`}
             onClick={() => handleStatusFilter('')}
           >
-            {t('promotions.filters.all')}
+            {t('promotions.filters.all', 'Toutes')}
           </button>
           <button
-            className={`filter-btn ${filters.status === 'active' ? 'active' : ''}`}
+            className={`filter-btn ${filters?.status === 'active' ? 'active' : ''}`}
             onClick={() => handleStatusFilter('active')}
           >
-            {t('promotions.filters.active')}
+            {t('promotions.filters.active', 'Actives')}
           </button>
           <button
-            className={`filter-btn ${filters.status === 'scheduled' ? 'active' : ''}`}
+            className={`filter-btn ${filters?.status === 'scheduled' ? 'active' : ''}`}
             onClick={() => handleStatusFilter('scheduled')}
           >
-            {t('promotions.filters.scheduled')}
+            {t('promotions.filters.scheduled', 'Programmées')}
           </button>
           <button
-            className={`filter-btn ${filters.status === 'expired' ? 'active' : ''}`}
+            className={`filter-btn ${filters?.status === 'expired' ? 'active' : ''}`}
             onClick={() => handleStatusFilter('expired')}
           >
-            {t('promotions.filters.expired')}
+            {t('promotions.filters.expired', 'Expirées')}
           </button>
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="promotions-error">
-          <p>{error}</p>
-        </div>
-      )}
-
-      {/* Table */}
-      <PromotionsTable
-        promotions={promotions}
-        loading={loading}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onToggleStatus={handleToggleStatus}
-        getPromotionStatus={getPromotionStatus}
-      />
+      {/* Content */}
+      <div className="promotions-content">
+        {loading ? (
+          <div className="promotions-loading">
+            <LoadingSpinner />
+          </div>
+        ) : promotions?.length === 0 ? (
+          <div className="promotions-empty">
+            <div className="promotions-empty-icon">
+              <RiPercentLine />
+            </div>
+            <h3>
+              {filters?.search || filters?.status
+                ? t('promotions.noResults', 'Aucun résultat')
+                : t('promotions.noPromotions', 'Aucune promotion')
+              }
+            </h3>
+            <p>
+              {filters?.search || filters?.status
+                ? t('promotions.noResultsDesc', 'Modifiez vos filtres')
+                : t('promotions.noPromotionsDesc', 'Créez votre première promotion')
+              }
+            </p>
+          </div>
+        ) : (
+          <PromotionsTable
+            promotions={promotions}
+            loading={loading}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onToggleStatus={handleToggleStatus}
+            getPromotionStatus={getPromotionStatus}
+          />
+        )}
+      </div>
 
       {/* Form Modal */}
       <PromotionForm
@@ -228,11 +264,11 @@ const PromotionsPage = () => {
           setPromotionToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title={t('promotions.deleteDialog.title')}
-        message={t('promotions.deleteDialog.message', { title: promotionToDelete?.title })}
-        confirmText={t('common.delete')}
-        cancelText={t('common.cancel')}
-        type="danger"
+        title={t('promotions.deleteTitle', 'Supprimer la promotion')}
+        message={t('promotions.deleteMessage', `Supprimer "${promotionToDelete?.title}" ?`)}
+        confirmText={t('common.delete', 'Supprimer')}
+        cancelText={t('common.cancel', 'Annuler')}
+        variant="danger"
       />
     </div>
   );

@@ -1,7 +1,6 @@
 /* ========================================
    RESTAURANTS PAGE - Compact Version
    ======================================== */
-
 .restaurants-page {
   display: flex;
   flex-direction: column;
@@ -272,11 +271,7 @@
   border-color: var(--color-border-dark);
 }
 
-.restaurants-filter-select svg {
-  color: var(--color-text-muted);
-  font-size: 0.75rem;
-}
-
+/* fix dark mode pour select */
 .restaurants-filter-select select {
   padding: 0.375rem 0;
   border: none;
@@ -287,6 +282,17 @@
 }
 
 .dark .restaurants-filter-select select {
+  background: var(--color-card-dark);
+  color: var(--color-text-white);
+}
+
+.restaurants-filter-select option {
+  background: var(--color-card-light);
+  color: var(--color-text-primary);
+}
+
+.dark .restaurants-filter-select option {
+  background: var(--color-card-dark);
   color: var(--color-text-white);
 }
 

@@ -42,9 +42,20 @@
   color: var(--color-error);
 }
 
+.form-group label .optional {
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 0.25rem;
+}
+
+/* ========================================
+   INPUTS
+   ======================================== */
 .form-group input[type="text"],
 .form-group input[type="tel"],
-.form-group input[type="email"] {
+.form-group input[type="email"],
+.form-group input[type="password"] {
   padding: 0.4375rem 0.625rem;
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-md);
@@ -52,11 +63,13 @@
   color: var(--color-text-primary);
   background-color: var(--color-card-light);
   transition: all var(--transition-fast);
+  width: 100%;
 }
 
 .dark .form-group input[type="text"],
 .dark .form-group input[type="tel"],
-.dark .form-group input[type="email"] {
+.dark .form-group input[type="email"],
+.dark .form-group input[type="password"] {
   background-color: var(--color-card-dark);
   border-color: var(--color-border-dark);
   color: var(--color-text-white);
@@ -79,6 +92,45 @@
 .form-error {
   font-size: 0.625rem;
   color: var(--color-error);
+}
+
+/* ========================================
+   PASSWORD INPUT
+   ======================================== */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  width: 100%;
+  padding-right: 2rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: color var(--transition-fast);
+}
+
+.password-toggle:hover {
+  color: var(--color-primary);
+}
+
+.password-toggle svg {
+  font-size: 0.75rem;
 }
 
 /* ========================================
