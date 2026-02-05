@@ -272,13 +272,13 @@ const MessagesPage = () => {
                 <RiMailLine className="messages-main-empty-icon" />
                 <h3>{t('messages.selectConversation')}</h3>
                 <p>{t('messages.selectConversationDesc')}</p>
-                <button 
+                {/* <button 
                   className="btn btn-primary"
                   onClick={() => setShowNewConversation(true)}
                 >
                   <RiAddLine />
                   {t('messages.newConversation')}
-                </button>
+                </button> */}
               </div>
             )
           ) : (
@@ -295,7 +295,7 @@ const MessagesPage = () => {
                 <RiMegaphoneLine className="messages-main-empty-icon" />
                 <h3>{t('messages.selectAnnouncement')}</h3>
                 <p>{t('messages.selectAnnouncementDesc')}</p>
-                {isAdmin && (
+                {/* {isAdmin && (
                   <button 
                     className="btn btn-primary"
                     onClick={() => setShowNewAnnouncement(true)}
@@ -303,7 +303,7 @@ const MessagesPage = () => {
                     <RiAddLine />
                     {t('messages.newAnnouncement')}
                   </button>
-                )}
+                )} */}
               </div>
             )
           )}

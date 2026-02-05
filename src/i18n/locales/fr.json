@@ -723,6 +723,8 @@
     "selectConversation": "Sélectionnez une conversation",
     "selectConversationDesc": "Choisissez une conversation dans la liste pour afficher les messages",
     "announcementsTitle": "Annonces",
+    "selectAnnouncement":" Sélectionnez une annonce",
+    "selectAnnouncementDesc":"Choisissez une annonce dans la liste pour afficher les annonces",
     "announcementsDesc": "Créez des annonces pour informer tous les restaurants",
     "announcementsRestaurantDesc": "Consultez les annonces importantes de l'administration",
     "typeMessage": "Écrire un message...",

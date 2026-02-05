@@ -707,6 +707,8 @@
     "noMessages": "No messages in this conversation",
     "selectConversation": "Select a conversation",
     "selectConversationDesc": "Choose a conversation from the list to view messages",
+    "selectAnnouncement":" Select a announcement",
+    "selectAnnouncementDesc": "Choose a announcement from the list to view announcement",
     "announcementsTitle": "Announcements",
     "announcementsDesc": "Create announcements to inform all restaurants",
     "announcementsRestaurantDesc": "View important announcements from administration",
