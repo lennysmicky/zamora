@@ -1,0 +1,35 @@
+/* src/pages/Restaurant/Payments/payments.css */
+
+.payments-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+}
+
+/* Toast Messages */
+.payments-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.payments-toast.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .payments-toast.success {
+  background-color: var(--color-success-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payments-page {
+    padding: 0.75rem;
+  }
+}

@@ -1,43 +1,41 @@
 // src/filters/RestaurantSelector.jsx
-import { useState, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RiStoreLine, RiArrowDownSLine, RiCheckLine, RiSearchLine } from 'react-icons/ri';
-import './Filters.css'
+import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { RiStoreLine, RiArrowDownSLine, RiCheckLine, RiSearchLine } from "react-icons/ri";
+import client from "../api/client";
+import "./Filters.css";
 
-const RestaurantSelector = ({ 
-  selectedRestaurant, 
-  onSelectRestaurant,
-  className = ''
-}) => {
+const RestaurantSelector = ({ selectedRestaurant, onSelectRestaurant, className = "" }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [restaurants, setRestaurants] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Charger les restaurants depuis le backend
   useEffect(() => {
     const fetchRestaurants = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/restaurants`, {
-          headers: {
-            'Content-Type': 'application/json',
-            // Si auth token nécessaire
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-          }
-        });
-        if (!response.ok) throw new Error('Erreur réseau');
+        const { data } = await client.get("/restaurent");
 
-        const data = await response.json();
+        // unwrap (supporte: array direct, {data:[]}, {restaurants:[]}, {results:[]})
+        const list = data?.restaurants ?? data?.data ?? data?.results ?? data;
+
+        // normalize (supporte: id/_id/restaurantId + name/restaurantName/nom)
+        const normalize = (r) => ({
+          id: r?.id ?? r?._id ?? r?.restaurantId ?? r?.restuarentId ?? null,
+          name: r?.name ?? r?.restaurantName ?? r?.nom ?? "Restaurant",
+          raw: r,
+        });
+
         setRestaurants([
-          { id: null, name: t('filters.allRestaurants') },
-          ...data
+          { id: null, name: t("filters.allRestaurants") },
+          ...(Array.isArray(list) ? list.map(normalize) : []),
         ]);
       } catch (error) {
-        console.error('Erreur chargement restaurants:', error);
-        setRestaurants([{ id: null, name: t('filters.allRestaurants') }]); // fallback
+        console.error("Erreur chargement restaurants:", error);
+        setRestaurants([{ id: null, name: t("filters.allRestaurants") }]);
       } finally {
         setIsLoading(false);
       }
@@ -46,77 +44,75 @@ const RestaurantSelector = ({
     fetchRestaurants();
   }, [t]);
 
-  // Fermer dropdown si clic extérieur
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filtrer restaurants par recherche
-  const filteredRestaurants = restaurants.filter(restaurant =>
-    restaurant.name.toLowerCase().includes(search.toLowerCase())
+  const filteredRestaurants = restaurants.filter((restaurant) =>
+    (restaurant.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
-  // Sélectionner un restaurant
   const handleSelect = (restaurant) => {
-    onSelectRestaurant(restaurant);
+    onSelectRestaurant?.(restaurant);
     setIsOpen(false);
-    setSearch('');
+    setSearch("");
   };
 
-  // Label affiché
-  const displayLabel = selectedRestaurant?.name || t('filters.allRestaurants');
+  const displayLabel = selectedRestaurant?.name || t("filters.allRestaurants");
+
+  const isSelected = (a, b) => String(a ?? "") === String(b ?? "");
 
   return (
     <div className={`filter-dropdown ${className}`} ref={dropdownRef}>
-      <button 
-        className={`filter-trigger ${isOpen ? 'active' : ''}`}
+      <button
+        className={`filter-trigger ${isOpen ? "active" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
+        type="button"
       >
         <RiStoreLine className="filter-icon" />
         <span className="filter-label">{displayLabel}</span>
-        <RiArrowDownSLine className={`filter-arrow ${isOpen ? 'rotate' : ''}`} />
+        <RiArrowDownSLine className={`filter-arrow ${isOpen ? "rotate" : ""}`} />
       </button>
 
       {isOpen && (
         <div className="filter-menu">
-          {/* Recherche */}
           <div className="filter-search">
             <RiSearchLine />
             <input
               type="text"
-              placeholder={t('filters.searchRestaurant')}
+              placeholder={t("filters.searchRestaurant")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               autoFocus
             />
           </div>
 
-          {/* Liste */}
           <div className="filter-list">
             {isLoading ? (
               <div className="filter-loading">
                 <span className="filter-spinner"></span>
-                <span>{t('common.loading')}</span>
+                <span>{t("common.loading")}</span>
               </div>
             ) : filteredRestaurants.length === 0 ? (
-              <div className="filter-empty">
-                {t('filters.noResults')}
-              </div>
+              <div className="filter-empty">{t("filters.noResults")}</div>
             ) : (
               filteredRestaurants.map((restaurant) => (
                 <button
-                  key={restaurant.id || 'all'}
-                  className={`filter-item ${selectedRestaurant?.id === restaurant.id ? 'selected' : ''}`}
+                  key={restaurant.id ?? "all"}
+                  className={`filter-item ${
+                    isSelected(selectedRestaurant?.id, restaurant.id) ? "selected" : ""
+                  }`}
                   onClick={() => handleSelect(restaurant)}
+                  type="button"
                 >
                   <span>{restaurant.name}</span>
-                  {selectedRestaurant?.id === restaurant.id && (
+                  {isSelected(selectedRestaurant?.id, restaurant.id) && (
                     <RiCheckLine className="filter-check" />
                   )}
                 </button>

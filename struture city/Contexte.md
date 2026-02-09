@@ -267,3 +267,125 @@ En résumé, l’interface web Admin/Restaurateurs est organisée ainsi :
   - Menus & Repas → ce que voient les clients dans l’appli  
   - Promotions & Offres → bannières/offres dans l’appli  
   - Paramètres/Restaurants → configuration de l’appli (via backend + SDK)  
+
+
+
+Page “Paiements” (simple, MVP dashboard)
+Objectif
+
+Voir les paiements liés aux commandes
+
+Configurer 1–2 méthodes de paiement
+
+(Optionnel) Exporter pour compta
+
+1) Onglet A — Configuration (très simple)
+
+Bloc 1 : Méthodes
+
+✅ Activer / désactiver :
+
+Cash à la livraison
+
+Mobile Money (ou “Paiement en ligne” générique)
+
+Champ “Devise” (ex: XOF) (optionnel)
+
+Bloc 2 : Compte paiement
+
+“Mode” : Test / Production (select)
+
+Champs : Public Key, Secret Key (masqué)
+
+Bouton : Enregistrer
+
+Petit statut : “Connexion: OK / KO”
+
+Si tu ne veux pas gérer les clés maintenant : remplace par “Paiement en ligne (bientôt)” + toggle.
+
+2) Onglet B — Transactions (table)
+
+Filtres en haut
+
+Période (7j / 30j / personnalisé)
+
+Statut (Payé / En attente / Échoué)
+
+Méthode (Cash / Mobile Money)
+
+Table minimale
+
+Date
+
+N° Commande
+
+Client
+
+Montant
+
+Méthode
+
+Statut
+
+Action: Voir
+
+Détail (modal/drawer)
+
+Infos commande (items + total)
+
+Référence paiement (si dispo)
+
+Message erreur (si échec)
+
+Bouton “Marquer payé” uniquement si Cash (evite erreurs côté online)
+
+3) Règles simples (backend/UI)
+
+Paiement online : statuts PENDING / PAID / FAILED
+
+Cash : statuts CASH_PENDING / CASH_PAID
+
+Pas de remboursement MVP (tu ajoutes plus tard)
+
+Layout recommandé
+
+Page titre Paiements
+
+Tabs : Configuration | Transactions
+
+Toasts succès/erreur + loading states
+
+Si tu veux, je te fournis la structure de composants React (pages + table + modal) et les DTO API minimalistes.
+
+je veux jute le contexte pour pourvoir faire la page paiemant 
+Contexte “Page Paiements” (Dashboard Admin/Restaurateur) — version simple
+
+Dans ton projet, la page web “Paiements” n’est pas une page où le client paie. Le paiement client se fait sur l’app mobile (CityMate). Côté dashboard, la page sert uniquement à :
+
+1) Configurer comment le restaurant encaisse
+
+Choisir les modes acceptés : Cash / Mobile Money / Carte (si tu le prévois).
+
+(Optionnel MVP) Mettre l’intégration en Test/Production + infos minimales de connexion.
+👉 But : éviter que le mobile propose un moyen de paiement non disponible.
+
+2) Suivre l’argent lié aux commandes
+
+Voir pour chaque commande si le paiement est Payé / En attente / Échoué.
+
+Distinguer Cash (à encaisser) vs Online (déjà payé).
+👉 But : le restaurateur sait quoi préparer et quoi encaisser, l’admin suit le CA.
+
+3) Donner une preuve / traçabilité minimale
+
+Afficher une référence de transaction (si paiement en ligne).
+
+Garder un historique pour compta/contrôle.
+👉 But : réduire litiges (“j’ai payé / je n’ai pas payé”).
+
+4) Gestion des rôles (simple)
+
+Restaurateur : voit uniquement ses transactions + active/désactive Cash/Online.
+
+Admin : voit tout + peut configurer globalement si multi-restaurants.
+👉 But : cohérence sécurité + séparation des responsabilités.

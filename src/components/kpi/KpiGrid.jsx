@@ -40,15 +40,7 @@ const KpiGrid = () => {
     return `${sign}${value.toFixed(1)}%`;
   };
 
-  const formatCurrency = (value) => {
-    if (!value) return '0';
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0
-    }).format(value);
-  };
-
+  // Formater le nombre sans le symbole de devise
   const formatNumber = (value) => {
     if (!value) return '0';
     return new Intl.NumberFormat('fr-FR').format(value);
@@ -63,25 +55,25 @@ const KpiGrid = () => {
       change: formatChange(safeKpis.growthOrders),
       changeType: getChangeType(safeKpis.growthOrders),
       icon: RiShoppingBag3Line,
-      unit:''
+      suffix: null
     },
     {
       id: 2,
       title: t('dashboard.kpi.totalRevenue'),
-      value: formatCurrency(safeKpis.totalRevenue),
+      value: formatNumber(safeKpis.totalRevenue),
       change: formatChange(safeKpis.growthRevenue),
       changeType: getChangeType(safeKpis.growthRevenue),
       icon: RiMoneyDollarCircleLine,
-      unit: 'FCFA'
+      suffix: 'F CFA'
     },
     {
       id: 3,
       title: t('dashboard.kpi.averageBasket'),
-      value: formatCurrency(safeKpis.averageOrderValue),
+      value: formatNumber(safeKpis.averageOrderValue),
       change: formatChange(safeKpis.growthBasket),
       changeType: getChangeType(safeKpis.growthBasket),
       icon: RiShoppingCartLine,
-      unit:''
+      suffix: ''
     },
     {
       id: 4,
@@ -89,7 +81,8 @@ const KpiGrid = () => {
       value: formatNumber(safeKpis.totalCustomers),
       change: formatChange(safeKpis.growthCustomers),
       changeType: getChangeType(safeKpis.growthCustomers),
-      icon: RiGroupLine
+      icon: RiGroupLine,
+      suffix: null
     }
   ];
 
@@ -103,6 +96,7 @@ const KpiGrid = () => {
           change={isLoading ? '...' : kpi.change}
           changeType={kpi.changeType}
           icon={kpi.icon}
+          suffix={kpi.suffix}
         />
       ))}
     </div>

@@ -1050,5 +1050,150 @@
     "load": "Loading error",
     "save": "Save error",
     "delete": "Delete error"
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Manage your payments and transactions",
+    
+    "tabs": {
+      "transactions": "Transactions",
+      "config": "Configuration",
+      "overview": "Overview",
+      "restaurants": "By restaurant"
+    },
+    
+    "stats": {
+      "total": "Total",
+      "paid": "Paid",
+      "pending": "Pending",
+      "failed": "Failed",
+      "totalTransactions": "Total transactions",
+      "todayAmount": "Today",
+      "weekAmount": "This week",
+      "monthAmount": "This month"
+    },
+    
+    "status": {
+      "paid": "Paid",
+      "cashPaid": "Collected",
+      "pending": "Pending",
+      "cashPending": "To collect",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "cancelled": "Cancelled"
+    },
+    
+    "methods": {
+      "cash": "Cash",
+      "mobileMoney": "Mobile Money",
+      "card": "Card",
+      "orangeMoney": "Orange Money",
+      "moovMoney": "Moov Money",
+      "wave": "Wave"
+    },
+    
+    "filters": {
+      "7days": "7 days",
+      "30days": "30 days",
+      "90days": "90 days",
+      "custom": "Custom",
+      "allStatus": "All statuses",
+      "allMethods": "All methods",
+      "allRestaurants": "All restaurants",
+      "search": "Search...",
+      "dateFrom": "Start date",
+      "dateTo": "End date"
+    },
+    
+    "table": {
+      "date": "Date",
+      "order": "Order",
+      "customer": "Customer",
+      "restaurant": "Restaurant",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "actions": "Actions",
+      "reference": "Reference",
+      "fee": "Fee"
+    },
+    
+    "detail": {
+      "title": "Transaction detail",
+      "order": "Order",
+      "date": "Date",
+      "customer": "Customer",
+      "restaurant": "Restaurant",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "reference": "Reference",
+      "error": "Error",
+      "items": "Items",
+      "fee": "Transaction fee",
+      "net": "Net amount",
+      "phone": "Phone",
+      "provider": "Provider"
+    },
+    
+    "markPaid": {
+      "title": "Mark as collected",
+      "message": "Confirm collection of this payment?",
+      "button": "Mark as collected",
+      "success": "Payment marked as collected"
+    },
+    
+    "export": "Export",
+    "exportSuccess": "Export successful",
+    "exportError": "Export error",
+    
+    "empty": {
+      "title": "No transactions",
+      "message": "Transactions will appear here"
+    },
+    
+    "config": {
+      "title": "Payment configuration",
+      "methods": "Payment methods",
+      "cash": "Cash on delivery",
+      "mobileMoney": "Mobile Money",
+      "card": "Card payment",
+      "currency": "Currency",
+      "apiSettings": "API Settings",
+      "mode": "Mode",
+      "testMode": "Test",
+      "prodMode": "Production",
+      "publicKey": "Public key",
+      "secretKey": "Secret key",
+      "webhookUrl": "Webhook URL",
+      "testConnection": "Test connection",
+      "connectionOk": "Connection OK",
+      "connectionError": "Connection error",
+      "saveSuccess": "Configuration saved",
+      "saveError": "Error saving configuration"
+    },
+    
+    "admin": {
+      "title": "Payment management",
+      "subtitle": "Supervise all platform payments",
+      "globalStats": "Global statistics",
+      "byRestaurant": "By restaurant",
+      "recentTransactions": "Recent transactions",
+      "topRestaurants": "Top restaurants",
+      "revenue": "Revenue",
+      "commission": "Commission",
+      "platformFees": "Platform fees",
+      "totalRevenue": "Total revenue",
+      "pendingPayouts": "Pending payouts",
+      "completedPayouts": "Completed payouts"
+    },
+    
+    "errors": {
+      "loadFailed": "Failed to load transactions",
+      "saveFailed": "Failed to save",
+      "connectionFailed": "Connection failed",
+      "exportFailed": "Export failed",
+      "markPaidFailed": "Failed to mark as paid"
+    }
   }
 }

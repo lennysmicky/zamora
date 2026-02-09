@@ -1,0 +1,258 @@
+/* src/components/payments/css/PaymentConfig.css */
+
+.payments-config {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.config-section {
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 0.875rem;
+}
+
+.dark .config-section {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.config-section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.75rem 0;
+}
+
+.dark .config-section-title {
+  color: var(--color-text-white);
+}
+
+.config-section-title svg {
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+/* Methods Toggle */
+.config-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.config-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  cursor: pointer;
+}
+
+.config-toggle input {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background-color: var(--color-border-light);
+  border-radius: 9px;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.dark .toggle-switch {
+  background-color: var(--color-border-dark);
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+}
+
+.config-toggle input:checked + .toggle-switch {
+  background-color: var(--color-primary);
+}
+
+.config-toggle input:checked + .toggle-switch::after {
+  left: 16px;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.dark .toggle-label {
+  color: var(--color-text-white);
+}
+
+.toggle-label svg {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* Config Fields */
+.config-field {
+  margin-bottom: 0.625rem;
+}
+
+.config-field label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.dark .config-field label {
+  color: var(--color-text-muted);
+}
+
+.config-field input,
+.config-field select {
+  width: 100%;
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  background-color: var(--color-card-light);
+}
+
+.dark .config-field input,
+.dark .config-field select {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-white);
+}
+
+.config-field input:focus,
+.config-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+/* Password wrapper */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  padding-right: 2rem;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+}
+
+.password-toggle:hover {
+  color: var(--color-primary);
+}
+
+.password-toggle svg {
+  font-size: 0.75rem;
+}
+
+/* Connection Test */
+.config-connection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.connection-status {
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.connection-status.ok {
+  color: var(--color-success);
+}
+
+.connection-status.error {
+  color: var(--color-error);
+}
+
+/* Buttons in config */
+.payments-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-light);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dark .payments-btn-secondary {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-white);
+  border-color: var(--color-border-dark);
+}
+
+.payments-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-border-light);
+}
+
+.dark .payments-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-border-dark);
+}
+
+.payments-btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.payments-btn-secondary svg {
+  font-size: 0.875rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .config-connection {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

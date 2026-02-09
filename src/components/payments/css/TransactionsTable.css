@@ -1,0 +1,201 @@
+/* src/components/payments/css/TransactionsTable.css */
+
+.payments-content {
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  position: relative;
+}
+
+.dark .payments-content {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* Loading overlay silencieux */
+.payments-content.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
+  animation: loading-bar 1.5s ease-in-out infinite;
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.payments-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.payments-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.75rem;
+  background-color: var(--color-surface-light);
+  border-radius: var(--radius-full);
+}
+
+.dark .payments-empty-icon {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.payments-empty-icon svg {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.payments-empty h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.dark .payments-empty h3 {
+  color: var(--color-text-white);
+}
+
+.payments-empty p {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* Table */
+.payments-table-wrapper {
+  overflow-x: auto;
+}
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.payments-table thead {
+  background-color: var(--color-surface-light);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .payments-table thead {
+  background-color: var(--color-surface-dark);
+  border-bottom-color: var(--color-border-dark);
+}
+
+.payments-table th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payments-table td {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--color-border-light);
+  vertical-align: middle;
+}
+
+.dark .payments-table td {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.payments-table tbody tr:hover {
+  background-color: var(--color-primary-lighter);
+}
+
+.dark .payments-table tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.payments-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.transaction-date,
+.transaction-order,
+.transaction-customer {
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.dark .transaction-date,
+.dark .transaction-order,
+.dark .transaction-customer {
+  color: var(--color-text-white);
+}
+
+.transaction-amount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.dark .transaction-amount {
+  color: var(--color-text-white);
+}
+
+/* Actions */
+.actions-cell {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.action-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.action-btn svg {
+  font-size: 0.75rem;
+}
+
+.action-btn.view {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+.action-btn.view:hover {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+
+.action-btn.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.action-btn.success:hover {
+  background-color: var(--color-success);
+  color: var(--color-text-white);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .payments-table {
+    min-width: 600px;
+  }
+}

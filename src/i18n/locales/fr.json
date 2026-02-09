@@ -600,7 +600,6 @@
       "scheduled": "Programmées",
       "expired": "Expirées"
     },
-    
     "table": {
       "title": "Titre",
       "restaurant": "Restaurant",
@@ -650,7 +649,6 @@
       "endDateRequired": "La date de fin est requise",
       "endDateInvalid": "La date de fin doit être après la date de début"
     }
-    
   },
   "specialOffers": {
     "title": "Offres Spéciales",
@@ -723,8 +721,8 @@
     "selectConversation": "Sélectionnez une conversation",
     "selectConversationDesc": "Choisissez une conversation dans la liste pour afficher les messages",
     "announcementsTitle": "Annonces",
-    "selectAnnouncement":" Sélectionnez une annonce",
-    "selectAnnouncementDesc":"Choisissez une annonce dans la liste pour afficher les annonces",
+    "selectAnnouncement": " Sélectionnez une annonce",
+    "selectAnnouncementDesc": "Choisissez une annonce dans la liste pour afficher les annonces",
     "announcementsDesc": "Créez des annonces pour informer tous les restaurants",
     "announcementsRestaurantDesc": "Consultez les annonces importantes de l'administration",
     "typeMessage": "Écrire un message...",
@@ -959,7 +957,7 @@
       "rights": "Tous droits réservés."
     }
   },
-   "restaurants": {
+  "restaurants": {
     "title": "Restaurants",
     "subtitle": "Gérez tous vos restaurants",
     "add": "Ajouter",
@@ -980,18 +978,15 @@
       "active": "Ouverts",
       "inactive": "Fermés"
     },
-    
     "filters": {
       "all": "Tous les statuts",
       "active": "Ouvert",
       "inactive": "Fermé"
     },
-    
     "status": {
       "active": "Ouvert",
       "inactive": "Fermé"
     },
-    
     "table": {
       "name": "Restaurant",
       "address": "Adresse",
@@ -1000,18 +995,15 @@
       "status": "Statut",
       "actions": "Actions"
     },
-    
     "form": {
       "createTitle": "Nouveau restaurant",
       "editTitle": "Modifier le restaurant",
-      
       "sections": {
         "basic": "Informations de base",
         "address": "Adresse",
         "contact": "Contact",
         "details": "Détails"
       },
-      
       "name": "Nom du restaurant",
       "namePlaceholder": "Ex: Pizza Palace",
       "address": "Adresse",
@@ -1029,7 +1021,6 @@
       "logo": "URL du logo",
       "logoPlaceholder": "https://...",
       "status": "Statut",
-      
       "errors": {
         "nameRequired": "Le nom est requis",
         "addressRequired": "L'adresse est requise",
@@ -1037,44 +1028,172 @@
         "emailInvalid": "Email invalide"
       }
     },
-    
     "delete": {
       "title": "Supprimer le restaurant",
       "message": "Êtes-vous sûr de vouloir supprimer \"{{name}}\" ? Cette action est irréversible."
     },
-    
     "empty": {
       "title": "Aucun restaurant",
       "message": "Commencez par créer votre premier restaurant"
     },
-    
     "errors": {
       "loadFailed": "Erreur lors du chargement des restaurants",
       "saveFailed": "Erreur lors de la sauvegarde",
       "deleteFailed": "Erreur lors de la suppression"
     }
-    },
-    "table": {
-      "name": "Restaurant",
-      "contact": "Contact",
-      "status": "Statut",
-      "actions": "Actions"
-    },
-    "form": {
-      "name": "Nom du restaurant",
-      "namePlaceholder": "Ex: Pizza Palace",
-      "address": "Adresse",
-      "addressPlaceholder": "Ex: 123 Rue de Paris",
-      "phone": "Téléphone",
-      "phonePlaceholder": "0612345678",
-      "email": "Email",
-      "emailPlaceholder": "contact@restaurant.fr",
-      "activeStatus": "Restaurant actif"
-    },
-    "errors": {
-      "load": "Erreur de chargement",
-      "save": "Erreur lors de la sauvegarde",
-      "delete": "Erreur lors de la suppression"
+  },
+  "table": {
+    "name": "Restaurant",
+    "contact": "Contact",
+    "status": "Statut",
+    "actions": "Actions"
+  },
+  "form": {
+    "name": "Nom du restaurant",
+    "namePlaceholder": "Ex: Pizza Palace",
+    "address": "Adresse",
+    "addressPlaceholder": "Ex: 123 Rue de Paris",
+    "phone": "Téléphone",
+    "phonePlaceholder": "0612345678",
+    "email": "Email",
+    "emailPlaceholder": "contact@restaurant.fr",
+    "activeStatus": "Restaurant actif"
+  },
+  "errors": {
+    "load": "Erreur de chargement",
+    "save": "Erreur lors de la sauvegarde",
+    "delete": "Erreur lors de la suppression"
+  },
+    "payments": {
+      "title": "Paiements",
+      "subtitle": "Gérez vos paiements et transactions",
+      "tabs": {
+        "transactions": "Transactions",
+        "config": "Configuration",
+        "overview": "Vue d'ensemble",
+        "restaurants": "Par restaurant"
+      },
+      "stats": {
+        "total": "Total",
+        "paid": "Payé",
+        "pending": "En attente",
+        "failed": "Échoué",
+        "totalTransactions": "Total transactions",
+        "todayAmount": "Aujourd'hui",
+        "weekAmount": "Cette semaine",
+        "monthAmount": "Ce mois"
+      },
+      "status": {
+        "paid": "Payé",
+        "cashPaid": "Encaissé",
+        "pending": "En attente",
+        "cashPending": "À encaisser",
+        "failed": "Échoué",
+        "refunded": "Remboursé",
+        "cancelled": "Annulé"
+      },
+      "methods": {
+        "cash": "Espèces",
+        "mobileMoney": "Mobile Money",
+        "card": "Carte",
+        "orangeMoney": "Orange Money",
+        "moovMoney": "Moov Money",
+        "wave": "Wave"
+      },
+      "filters": {
+        "7days": "7 jours",
+        "30days": "30 jours",
+        "90days": "90 jours",
+        "custom": "Personnalisé",
+        "allStatus": "Tous les statuts",
+        "allMethods": "Toutes les méthodes",
+        "allRestaurants": "Tous les restaurants",
+        "search": "Rechercher...",
+        "dateFrom": "Date début",
+        "dateTo": "Date fin"
+      },
+      "table": {
+        "date": "Date",
+        "order": "Commande",
+        "customer": "Client",
+        "restaurant": "Restaurant",
+        "amount": "Montant",
+        "method": "Méthode",
+        "status": "Statut",
+        "actions": "Actions",
+        "reference": "Référence",
+        "fee": "Frais"
+      },
+      "detail": {
+        "title": "Détail de la transaction",
+        "order": "Commande",
+        "date": "Date",
+        "customer": "Client",
+        "restaurant": "Restaurant",
+        "amount": "Montant",
+        "method": "Méthode",
+        "status": "Statut",
+        "reference": "Référence",
+        "error": "Erreur",
+        "items": "Articles",
+        "fee": "Frais de transaction",
+        "net": "Montant net",
+        "phone": "Téléphone",
+        "provider": "Fournisseur"
+      },
+      "markPaid": {
+        "title": "Marquer comme encaissé",
+        "message": "Confirmer l'encaissement de ce paiement ?",
+        "button": "Marquer comme encaissé",
+        "success": "Paiement marqué comme encaissé"
+      },
+      "export": "Exporter",
+      "exportSuccess": "Export réussi",
+      "exportError": "Erreur lors de l'export",
+      "empty": {
+        "title": "Aucune transaction",
+        "message": "Les transactions apparaîtront ici"
+      },
+      "config": {
+        "title": "Configuration des paiements",
+        "methods": "Méthodes de paiement",
+        "cash": "Espèces à la livraison",
+        "mobileMoney": "Mobile Money",
+        "card": "Paiement par carte",
+        "currency": "Devise",
+        "apiSettings": "Paramètres API",
+        "mode": "Mode",
+        "testMode": "Test",
+        "prodMode": "Production",
+        "publicKey": "Clé publique",
+        "secretKey": "Clé secrète",
+        "webhookUrl": "URL Webhook",
+        "testConnection": "Tester la connexion",
+        "connectionOk": "Connexion OK",
+        "connectionError": "Erreur de connexion",
+        "saveSuccess": "Configuration enregistrée",
+        "saveError": "Erreur lors de l'enregistrement"
+      },
+      "admin": {
+        "title": "Gestion des paiements",
+        "subtitle": "Superviser tous les paiements de la plateforme",
+        "globalStats": "Statistiques globales",
+        "byRestaurant": "Par restaurant",
+        "recentTransactions": "Transactions récentes",
+        "topRestaurants": "Top restaurants",
+        "revenue": "Revenus",
+        "commission": "Commission",
+        "platformFees": "Frais plateforme",
+        "totalRevenue": "Revenu total",
+        "pendingPayouts": "Paiements en attente",
+        "completedPayouts": "Paiements effectués"
+      },
+      "errors": {
+        "loadFailed": "Erreur lors du chargement des transactions",
+        "saveFailed": "Erreur lors de l'enregistrement",
+        "connectionFailed": "Échec de la connexion",
+        "exportFailed": "Échec de l'export",
+        "markPaidFailed": "Erreur lors du marquage"
+      }
     }
   }
-

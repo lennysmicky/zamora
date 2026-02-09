@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 const useAuthStore = create(
   persist(
@@ -16,37 +16,45 @@ const useAuthStore = create(
       // ACTIONS
       loginAdmin: ({ user, token }) => {
         if (!token || !user) return;
+
+        const uid = user.id ?? user._id ?? null;
+
         set({
           user: {
-            id: user.id,
+            id: uid,
             name: user.name,
             email: user.email,
             avatar: user.avatar || null,
-            role: user.role || 'admin'
+            role: user.role || "admin",
           },
           token,
-          userType: 'admin',
+          userType: "admin",
           restaurantId: null,
           restaurantName: null,
-          isAuthenticated: true
+          isAuthenticated: true,
         });
       },
 
       loginRestaurant: ({ user, token }) => {
         if (!token || !user) return;
+
+        const uid = user.id ?? user._id ?? null;
+        const rid = user.restaurantId ?? user.restuarentId ?? uid;
+        const rname = user.restaurantName ?? user.name ?? "";
+
         set({
           user: {
-            id: user.id,
-            name: user.name,
+            id: uid,
+            name: user.name ?? user.restaurantName ?? "",
             email: user.email,
             avatar: user.avatar || null,
-            role: user.role || 'restaurant'
+            role: user.role || "restaurant",
           },
           token,
-          userType: 'restaurant',
-          restaurantId: user.restaurantId || user.id,
-          restaurantName: user.restaurantName || user.name,
-          isAuthenticated: true
+          userType: "restaurant",
+          restaurantId: rid,
+          restaurantName: rname,
+          isAuthenticated: true,
         });
       },
 
@@ -57,7 +65,7 @@ const useAuthStore = create(
           userType: null,
           restaurantId: null,
           restaurantName: null,
-          isAuthenticated: false
+          isAuthenticated: false,
         });
       },
 
@@ -67,7 +75,7 @@ const useAuthStore = create(
 
       updateUser: (userData) => {
         set((state) => ({
-          user: { ...state.user, ...userData }
+          user: { ...state.user, ...userData },
         }));
       },
 
@@ -76,22 +84,22 @@ const useAuthStore = create(
       },
 
       // GETTERS
-      isAdmin: () => get().userType === 'admin',
-      isRestaurant: () => get().userType === 'restaurant',
+      isAdmin: () => get().userType === "admin",
+      isRestaurant: () => get().userType === "restaurant",
       getToken: () => get().token,
       getUser: () => get().user,
-      getUserType: () => get().userType
+      getUserType: () => get().userType,
     }),
     {
-      name: 'zamora-auth',
+      name: "zamora-auth",
       partialize: (state) => ({
         user: state.user,
         token: state.token,
         userType: state.userType,
         restaurantId: state.restaurantId,
         restaurantName: state.restaurantName,
-        isAuthenticated: state.isAuthenticated
-      })
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );

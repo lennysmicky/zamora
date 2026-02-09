@@ -102,3 +102,45 @@
 .dark .kpi-card-change.negative {
   background-color: var(--color-error-dark);
 }
+/* ========================================
+   VALUE WITH SUFFIX (F CFA)
+   ======================================== */
+.kpi-card-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.kpi-card-suffix {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+}
+
+.dark .kpi-card-suffix {
+  color: var(--color-text-white);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .kpi-card-value {
+    font-size: 1.125rem;
+  }
+  
+  .kpi-card-suffix {
+    font-size: 0.625rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .kpi-card-value {
+    font-size: 1rem;
+  }
+  
+  .kpi-card-suffix {
+    font-size: 0.5625rem;
+  }
+}

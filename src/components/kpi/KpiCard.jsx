@@ -1,9 +1,8 @@
 import React from 'react';
-
 import { RiArrowUpLine, RiArrowDownLine } from 'react-icons/ri';
 import './KpiCard.css';
 
-const KpiCard = ({ title, value, change, changeType, icon: Icon }) => {
+const KpiCard = ({ title, value, change, changeType, icon: Icon, suffix }) => {
   const isPositive = changeType === 'positive';
   const isNegative = changeType === 'negative';
 
@@ -19,7 +18,10 @@ const KpiCard = ({ title, value, change, changeType, icon: Icon }) => {
       </div>
 
       <div className="kpi-card-body">
-        <span className="kpi-card-value">{value}</span>
+        <div className="kpi-card-value-row">
+          <span className="kpi-card-value">{value}</span>
+          {suffix && <span className="kpi-card-suffix">{suffix}</span>}
+        </div>
 
         {change && (
           <div className={`kpi-card-change ${isPositive ? 'positive' : ''} ${isNegative ? 'negative' : ''}`}>

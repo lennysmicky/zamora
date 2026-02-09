@@ -1,8 +1,8 @@
 // src/hooks/useDashboardData.js
-import { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-import useAuthStore from '../stores/authStore';
-import dashboardAPI from '../api/dashboard';
+import { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
+import useAuthStore from "../stores/authStore";
+import dashboardAPI from "../api/dashboard";
 
 /**
  * Hook Dashboard – Admin & Restaurant
@@ -12,7 +12,7 @@ const useDashboardData = ({
   restaurantId: restaurantIdParam = null,
   startDate = null,
   endDate = null,
-  period = null
+  period = null,
 } = {}) => {
   const { t } = useTranslation();
   const { userType, restaurantId: storeRestaurantId } = useAuthStore();
@@ -21,8 +21,8 @@ const useDashboardData = ({
   // CONTEXTE UTILISATEUR
   // ===============================
   const restaurantId = restaurantIdParam || storeRestaurantId;
-  const isAdminMode = userType === 'admin';
-  const isRestaurantMode = userType === 'restaurant';
+  const isAdminMode = userType === "admin";
+  const isRestaurantMode = userType === "restaurant";
 
   // ===============================
   // STATES
@@ -35,8 +35,9 @@ const useDashboardData = ({
     averageOrderValue: 0,
     growthBasket: 0,
     totalCustomers: 0,
-    growthCustomers: 0
+    growthCustomers: 0,
   });
+
   const [revenueData, setRevenueData] = useState([]);
   const [ordersStatusData, setOrdersStatusData] = useState([]);
   const [topSellingItems, setTopSellingItems] = useState([]);
@@ -49,13 +50,19 @@ const useDashboardData = ({
 
   // ===============================
   // BUILD FILTERS
+  // (ne met pas restaurantId ici: l'ID sert à construire l'URL)
   // ===============================
   const buildFilters = () => {
     const filters = {};
-    if (startDate) filters.startDate = startDate;
-    if (endDate) filters.endDate = endDate;
+    if (startDate) {
+      filters.startDate = startDate;
+      filters.from = startDate;
+    }
+    if (endDate) {
+      filters.endDate = endDate;
+      filters.to = endDate;
+    }
     if (period) filters.period = period;
-    if (isRestaurantMode) filters.restaurantId = restaurantId;
     return filters;
   };
 
@@ -69,42 +76,52 @@ const useDashboardData = ({
     try {
       const filters = buildFilters();
 
+      // Admin sans restaurant sélectionné: ne fetch pas
+      if (isAdminMode && !restaurantId) {
+        setIsLoading(false);
+        return;
+      }
+
       // ================= ADMIN =================
       if (isAdminMode) {
-        const data = await dashboardAPI.getAdminDashboard(filters);
-        if (!data) throw new Error('Invalid admin dashboard response');
+        const data = await dashboardAPI.getAdminDashboard({ restaurantId, ...filters });
+        if (!data) throw new Error("Invalid admin dashboard response");
 
         setKpis({
           totalOrders: data.kpis?.totalOrders ?? 0,
           growthOrders: data.kpis?.growthOrders ?? 0,
           totalRevenue: data.kpis?.totalRevenue ?? 0,
           growthRevenue: data.kpis?.growthRevenue ?? 0,
-          averageOrderValue: data.kpis?.averageOrderValue ?? 0,
-          averageBasket: data.kpis?.averageBasket ?? 0,
+          // compat si backend envoie averageBasket
+          averageOrderValue: data.kpis?.averageOrderValue ?? data.kpis?.averageBasket ?? 0,
+          growthBasket: data.kpis?.growthBasket ?? 0,
           totalCustomers: data.kpis?.totalCustomers ?? 0,
-          growthCustomers: data.kpis?.growthCustomers ?? 0
+          growthCustomers: data.kpis?.growthCustomers ?? 0,
         });
+
         setRevenueData(data.charts?.revenue || []);
         setOrdersStatusData(data.charts?.ordersStatus || []);
+        setTopSellingItems(data.topSellingItems || []);
         setRecentOrders(data.recentOrders || []);
         setTopRestaurants(data.topRestaurants || []);
       }
 
       // ================= RESTAURANT =================
       if (isRestaurantMode && restaurantId) {
-        const data = await dashboardAPI.getRestaurantDashboard(filters);
-        if (!data) throw new Error('Invalid restaurant dashboard response');
+        const data = await dashboardAPI.getRestaurantDashboard({ restaurantId, ...filters });
+        if (!data) throw new Error("Invalid restaurant dashboard response");
 
         setKpis({
           totalOrders: data.kpis?.totalOrders ?? 0,
           growthOrders: data.kpis?.growthOrders ?? 0,
           totalRevenue: data.kpis?.totalRevenue ?? 0,
           growthRevenue: data.kpis?.growthRevenue ?? 0,
-          averageOrderValue: data.kpis?.averageOrderValue ?? 0,
+          averageOrderValue: data.kpis?.averageOrderValue ?? data.kpis?.averageBasket ?? 0,
           growthBasket: data.kpis?.growthBasket ?? 0,
           totalCustomers: data.kpis?.totalCustomers ?? 0,
-          growthCustomers: data.kpis?.growthCustomers ?? 0
+          growthCustomers: data.kpis?.growthCustomers ?? 0,
         });
+
         setRevenueData(data.charts?.revenue || []);
         setOrdersStatusData(data.charts?.ordersStatus || []);
         setTopSellingItems(data.topSellingItems || []);
@@ -112,8 +129,8 @@ const useDashboardData = ({
         setHourlyOrders(data.hourlyOrders || []);
       }
     } catch (err) {
-      console.error('Dashboard error:', err);
-      setError(t('dashboard.errors.fetchFailed', 'Erreur lors du chargement du dashboard'));
+      console.error("Dashboard error:", err);
+      setError(t("dashboard.errors.fetchFailed", "Erreur lors du chargement du dashboard"));
     } finally {
       setIsLoading(false);
     }
@@ -128,6 +145,7 @@ const useDashboardData = ({
 
   // ===============================
   // PARTIAL REFRESH
+  // (conservé tel quel, même si tes routes actuelles ne les exposent pas)
   // ===============================
   const refreshTopRestaurants = async (limit = 5) => {
     if (!isAdminMode) return;
@@ -149,10 +167,10 @@ const useDashboardData = ({
     kpis,
     revenueData,
     ordersStatusData,
-    topSellingItems,  // restaurant only
+    topSellingItems, // restaurant/admin (si dispo)
     recentOrders,
-    topRestaurants,   // admin only
-    hourlyOrders,     // restaurant only
+    topRestaurants, // admin only
+    hourlyOrders, // restaurant only
 
     // States
     isLoading,
@@ -166,7 +184,7 @@ const useDashboardData = ({
     // Actions
     refresh: fetchDashboard,
     refreshTopRestaurants,
-    refreshHourlyOrders
+    refreshHourlyOrders,
   };
 };
 
