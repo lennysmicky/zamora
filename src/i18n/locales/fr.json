@@ -240,7 +240,7 @@
       "forgotPasswordFailed": "Échec de l'envoi",
       "resetPasswordFailed": "Échec de la réinitialisation",
       "sessionExpired": "Votre session a expiré",
-      "addressRequired": "L’adresse est obligatoire",
+      "addressRequired": "L'adresse est obligatoire",
       "invalidResponse": "Réponse invalide du serveur",
       "invalidData": "Données invalides",
       "accessDenied": "Accès refusé. Vous n'êtes pas administrateur.",
@@ -447,6 +447,7 @@
     "loading": "Chargement...",
     "back": "Retour",
     "next": "Suivant",
+    "previous": "Précédent",
     "submit": "Envoyer",
     "close": "Fermer",
     "actions": "Actions",
@@ -459,7 +460,12 @@
     "refresh": "Actualiser",
     "retry": "Réessayer",
     "required": "Ce champ est requis",
-    "invalidEmail": "Email invalide"
+    "invalidEmail": "Email invalide",
+    "reset": "Réinitialiser",
+    "duplicate": "Dupliquer",
+    "activate": "Activer",
+    "deactivate": "Désactiver",
+    "saving": "Enregistrement..."
   },
   "confirm": {
     "title": "Êtes-vous sûr ?",
@@ -470,19 +476,6 @@
     "logoutMessage": "Êtes-vous sûr de vouloir vous déconnecter ?",
     "cancelOrderTitle": "Annuler cette commande ?",
     "cancelOrderMessage": "Cette action ne peut pas être annulée."
-  },
-  "payments": {
-    "title": "Paiements",
-    "revenue": "Revenus du mois",
-    "commission": "Commission Zamora",
-    "net": "Net à recevoir",
-    "history": "Historique des virements",
-    "date": "Date",
-    "amount": "Montant",
-    "status": "Statut",
-    "paid": "Payé",
-    "pending": "En attente",
-    "processing": "En cours"
   },
   "menu": {
     "title": "Menus & Repas",
@@ -650,16 +643,6 @@
       "endDateInvalid": "La date de fin doit être après la date de début"
     }
   },
-  "specialOffers": {
-    "title": "Offres Spéciales",
-    "addOffer": "Ajouter une offre",
-    "editOffer": "Modifier l'offre",
-    "deleteOffer": "Supprimer l'offre",
-    "offerName": "Nom de l'offre",
-    "description": "Description",
-    "discount": "Réduction",
-    "validUntil": "Valable jusqu'au"
-  },
   "notifications": {
     "title": "Notifications",
     "markAllRead": "Tout marquer comme lu",
@@ -670,19 +653,18 @@
     "systemAlert": "Alerte système",
     "settings": "Paramètres",
     "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "saveSuccess": "Paramètres enregistrés",
+    "saveError": "Erreur lors de la sauvegarde",
+    "events": "Événements",
+    "channels": "Canaux de notification",
+    "log": "Journal des notifications",
     "ownerNewOrder": "Notifier le restaurateur à chaque nouvelle commande",
     "clientOrderCreated": "Notifier le client à la création de commande",
     "clientStatusChange": "Notifier le client au changement de statut",
     "clientNewPromotion": "Notifier les clients des nouvelles promotions",
     "channelEmail": "Email",
     "channelPush": "Push",
-    "channels": "Canaux de notification",
-    "events": "Événements",
-    "log": "Journal des notifications",
-    "deleteConfirm": "Supprimer cette notification ?",
-    "saveSuccess": "Paramètres enregistrés",
-    "saveError": "Erreur lors de la sauvegarde",
-    "saving": "Enregistrement...",
     "selectRestaurant": "Restaurant",
     "globalSettings": "Paramètres globaux",
     "restaurantSubtitle": "Configurez vos préférences de notifications",
@@ -694,6 +676,7 @@
     "logStatus": "Statut",
     "logActions": "Actions",
     "deleteTitle": "Supprimer la notification",
+    "deleteConfirm": "Supprimer cette notification ?",
     "delete": "Supprimer",
     "cancel": "Annuler",
     "eventType": {
@@ -705,6 +688,12 @@
       "sent": "Envoyé",
       "pending": "En attente",
       "failed": "Échec"
+    },
+    "statsLabels": {
+      "total": "Total",
+      "sent": "Envoyées",
+      "pending": "En attente",
+      "failed": "Échecs"
     }
   },
   "messages": {
@@ -721,7 +710,7 @@
     "selectConversation": "Sélectionnez une conversation",
     "selectConversationDesc": "Choisissez une conversation dans la liste pour afficher les messages",
     "announcementsTitle": "Annonces",
-    "selectAnnouncement": " Sélectionnez une annonce",
+    "selectAnnouncement": "Sélectionnez une annonce",
     "selectAnnouncementDesc": "Choisissez une annonce dans la liste pour afficher les annonces",
     "announcementsDesc": "Créez des annonces pour informer tous les restaurants",
     "announcementsRestaurantDesc": "Consultez les annonces importantes de l'administration",
@@ -1064,136 +1053,323 @@
     "save": "Erreur lors de la sauvegarde",
     "delete": "Erreur lors de la suppression"
   },
-    "payments": {
-      "title": "Paiements",
-      "subtitle": "Gérez vos paiements et transactions",
-      "tabs": {
-        "transactions": "Transactions",
-        "config": "Configuration",
-        "overview": "Vue d'ensemble",
-        "restaurants": "Par restaurant"
-      },
-      "stats": {
-        "total": "Total",
-        "paid": "Payé",
-        "pending": "En attente",
-        "failed": "Échoué",
-        "totalTransactions": "Total transactions",
-        "todayAmount": "Aujourd'hui",
-        "weekAmount": "Cette semaine",
-        "monthAmount": "Ce mois"
-      },
-      "status": {
-        "paid": "Payé",
-        "cashPaid": "Encaissé",
-        "pending": "En attente",
-        "cashPending": "À encaisser",
-        "failed": "Échoué",
-        "refunded": "Remboursé",
-        "cancelled": "Annulé"
-      },
-      "methods": {
-        "cash": "Espèces",
-        "mobileMoney": "Mobile Money",
-        "card": "Carte",
-        "orangeMoney": "Orange Money",
-        "moovMoney": "Moov Money",
-        "wave": "Wave"
-      },
-      "filters": {
-        "7days": "7 jours",
-        "30days": "30 jours",
-        "90days": "90 jours",
-        "custom": "Personnalisé",
-        "allStatus": "Tous les statuts",
-        "allMethods": "Toutes les méthodes",
-        "allRestaurants": "Tous les restaurants",
-        "search": "Rechercher...",
-        "dateFrom": "Date début",
-        "dateTo": "Date fin"
-      },
-      "table": {
-        "date": "Date",
-        "order": "Commande",
-        "customer": "Client",
-        "restaurant": "Restaurant",
-        "amount": "Montant",
-        "method": "Méthode",
-        "status": "Statut",
-        "actions": "Actions",
-        "reference": "Référence",
-        "fee": "Frais"
-      },
-      "detail": {
-        "title": "Détail de la transaction",
-        "order": "Commande",
-        "date": "Date",
-        "customer": "Client",
-        "restaurant": "Restaurant",
-        "amount": "Montant",
-        "method": "Méthode",
-        "status": "Statut",
-        "reference": "Référence",
-        "error": "Erreur",
-        "items": "Articles",
-        "fee": "Frais de transaction",
-        "net": "Montant net",
-        "phone": "Téléphone",
-        "provider": "Fournisseur"
-      },
-      "markPaid": {
-        "title": "Marquer comme encaissé",
-        "message": "Confirmer l'encaissement de ce paiement ?",
-        "button": "Marquer comme encaissé",
-        "success": "Paiement marqué comme encaissé"
-      },
-      "export": "Exporter",
-      "exportSuccess": "Export réussi",
-      "exportError": "Erreur lors de l'export",
-      "empty": {
-        "title": "Aucune transaction",
-        "message": "Les transactions apparaîtront ici"
-      },
-      "config": {
-        "title": "Configuration des paiements",
-        "methods": "Méthodes de paiement",
-        "cash": "Espèces à la livraison",
-        "mobileMoney": "Mobile Money",
-        "card": "Paiement par carte",
-        "currency": "Devise",
-        "apiSettings": "Paramètres API",
-        "mode": "Mode",
-        "testMode": "Test",
-        "prodMode": "Production",
-        "publicKey": "Clé publique",
-        "secretKey": "Clé secrète",
-        "webhookUrl": "URL Webhook",
-        "testConnection": "Tester la connexion",
-        "connectionOk": "Connexion OK",
-        "connectionError": "Erreur de connexion",
-        "saveSuccess": "Configuration enregistrée",
-        "saveError": "Erreur lors de l'enregistrement"
-      },
-      "admin": {
-        "title": "Gestion des paiements",
-        "subtitle": "Superviser tous les paiements de la plateforme",
-        "globalStats": "Statistiques globales",
-        "byRestaurant": "Par restaurant",
-        "recentTransactions": "Transactions récentes",
-        "topRestaurants": "Top restaurants",
-        "revenue": "Revenus",
-        "commission": "Commission",
-        "platformFees": "Frais plateforme",
-        "totalRevenue": "Revenu total",
-        "pendingPayouts": "Paiements en attente",
-        "completedPayouts": "Paiements effectués"
-      },
-      "errors": {
-        "loadFailed": "Erreur lors du chargement des transactions",
-        "saveFailed": "Erreur lors de l'enregistrement",
-        "connectionFailed": "Échec de la connexion",
-        "exportFailed": "Échec de l'export",
-        "markPaidFailed": "Erreur lors du marquage"
-      }
+  "payments": {
+    "title": "Paiements",
+    "subtitle": "Gérez vos paiements et transactions",
+    "revenue": "Revenus du mois",
+    "commission": "Commission Zamora",
+    "net": "Net à recevoir",
+    "history": "Historique des virements",
+    "date": "Date",
+    "amount": "Montant",
+    "paid": "Payé",
+    "pending": "En attente",
+    "processing": "En cours",
+    "tabs": {
+      "transactions": "Transactions",
+      "config": "Configuration",
+      "overview": "Vue d'ensemble",
+      "restaurants": "Par restaurant"
+    },
+    "stats": {
+      "total": "Total",
+      "paid": "Payé",
+      "pending": "En attente",
+      "failed": "Échoué",
+      "totalTransactions": "Total transactions",
+      "todayAmount": "Aujourd'hui",
+      "weekAmount": "Cette semaine",
+      "monthAmount": "Ce mois"
+    },
+    "status": {
+      "paid": "Payé",
+      "cashPaid": "Encaissé",
+      "pending": "En attente",
+      "cashPending": "À encaisser",
+      "failed": "Échoué",
+      "refunded": "Remboursé",
+      "cancelled": "Annulé"
+    },
+    "methods": {
+      "cash": "Espèces",
+      "mobileMoney": "Mobile Money",
+      "card": "Carte",
+      "orangeMoney": "Orange Money",
+      "moovMoney": "Moov Money",
+      "wave": "Wave"
+    },
+    "filters": {
+      "7days": "7 jours",
+      "30days": "30 jours",
+      "90days": "90 jours",
+      "custom": "Personnalisé",
+      "allStatus": "Tous les statuts",
+      "allMethods": "Toutes les méthodes",
+      "allRestaurants": "Tous les restaurants",
+      "search": "Rechercher...",
+      "dateFrom": "Date début",
+      "dateTo": "Date fin"
+    },
+    "table": {
+      "date": "Date",
+      "order": "Commande",
+      "customer": "Client",
+      "restaurant": "Restaurant",
+      "amount": "Montant",
+      "method": "Méthode",
+      "status": "Statut",
+      "actions": "Actions",
+      "reference": "Référence",
+      "fee": "Frais"
+    },
+    "detail": {
+      "title": "Détail de la transaction",
+      "order": "Commande",
+      "date": "Date",
+      "customer": "Client",
+      "restaurant": "Restaurant",
+      "amount": "Montant",
+      "method": "Méthode",
+      "status": "Statut",
+      "reference": "Référence",
+      "error": "Erreur",
+      "items": "Articles",
+      "fee": "Frais de transaction",
+      "net": "Montant net",
+      "phone": "Téléphone",
+      "provider": "Fournisseur"
+    },
+    "markPaid": {
+      "title": "Marquer comme encaissé",
+      "message": "Confirmer l'encaissement de ce paiement ?",
+      "button": "Marquer comme encaissé",
+      "success": "Paiement marqué comme encaissé"
+    },
+    "export": "Exporter",
+    "exportSuccess": "Export réussi",
+    "exportError": "Erreur lors de l'export",
+    "empty": {
+      "title": "Aucune transaction",
+      "message": "Les transactions apparaîtront ici"
+    },
+    "config": {
+      "title": "Configuration des paiements",
+      "methods": "Méthodes de paiement",
+      "cash": "Espèces à la livraison",
+      "mobileMoney": "Mobile Money",
+      "card": "Paiement par carte",
+      "currency": "Devise",
+      "apiSettings": "Paramètres API",
+      "mode": "Mode",
+      "testMode": "Test",
+      "prodMode": "Production",
+      "publicKey": "Clé publique",
+      "secretKey": "Clé secrète",
+      "webhookUrl": "URL Webhook",
+      "testConnection": "Tester la connexion",
+      "connectionOk": "Connexion OK",
+      "connectionError": "Erreur de connexion",
+      "saveSuccess": "Configuration enregistrée",
+      "saveError": "Erreur lors de l'enregistrement"
+    },
+    "admin": {
+      "title": "Gestion des paiements",
+      "subtitle": "Superviser tous les paiements de la plateforme",
+      "globalStats": "Statistiques globales",
+      "byRestaurant": "Par restaurant",
+      "recentTransactions": "Transactions récentes",
+      "topRestaurants": "Top restaurants",
+      "revenue": "Revenus",
+      "commission": "Commission",
+      "platformFees": "Frais plateforme",
+      "totalRevenue": "Revenu total",
+      "pendingPayouts": "Paiements en attente",
+      "completedPayouts": "Paiements effectués"
+    },
+    "errors": {
+      "loadFailed": "Erreur lors du chargement des transactions",
+      "saveFailed": "Erreur lors de l'enregistrement",
+      "connectionFailed": "Échec de la connexion",
+      "exportFailed": "Échec de l'export",
+      "markPaidFailed": "Erreur lors du marquage"
     }
+  },
+  "specialOffers": {
+    "title": "Offres spéciales",
+    "subtitle": "Gérez vos offres et promotions",
+    "newOffer": "Nouvelle offre",
+    "addOffer": "Ajouter une offre",
+    "editOffer": "Modifier l'offre",
+    "deleteOffer": "Supprimer l'offre",
+    "offerName": "Nom de l'offre",
+    "description": "Description",
+    "discount": "Réduction",
+    "validUntil": "Valable jusqu'au",
+    "tabs": {
+      "list": "Offres",
+      "templates": "Templates",
+      "analytics": "Analytiques"
+    },
+    "stats": {
+      "total": "Total offres",
+      "active": "Actives",
+      "scheduled": "Planifiées",
+      "views": "Vues",
+      "redemptions": "Utilisations",
+      "revenue": "CA généré",
+      "conversion": "Conversion",
+      "restaurants": "Restaurants"
+    },
+    "status": {
+      "draft": "Brouillon",
+      "active": "Active",
+      "scheduled": "Planifiée",
+      "ended": "Terminée",
+      "paused": "En pause"
+    },
+    "types": {
+      "percentage": "% Remise",
+      "fixed": "Montant fixe",
+      "specialPrice": "Prix spécial",
+      "bundle": "Bundle",
+      "bogo": "1+1 Offert",
+      "freeDelivery": "Livraison gratuite"
+    },
+    "channels": {
+      "dineIn": "Sur place",
+      "takeaway": "À emporter",
+      "delivery": "Livraison"
+    },
+    "target": {
+      "all": "Tout le menu",
+      "category": "Catégorie",
+      "items": "Articles spécifiques"
+    },
+    "filters": {
+      "search": "Rechercher une offre...",
+      "allStatus": "Tous les statuts",
+      "allTypes": "Tous les types",
+      "allChannels": "Tous les canaux",
+      "allRestaurants": "Tous les restaurants",
+      "7days": "7 jours",
+      "30days": "30 jours",
+      "90days": "90 jours",
+      "all": "Tout"
+    },
+    "table": {
+      "title": "Titre",
+      "type": "Type",
+      "value": "Valeur",
+      "period": "Période",
+      "target": "Cible",
+      "status": "Statut",
+      "usage": "Utilisations",
+      "actions": "Actions",
+      "restaurant": "Restaurant"
+    },
+    "form": {
+      "createTitle": "Nouvelle offre spéciale",
+      "editTitle": "Modifier l'offre",
+      "basicInfo": "Informations de base",
+      "title": "Titre",
+      "titlePlaceholder": "Ex: Happy Hour -20%",
+      "description": "Description courte",
+      "descriptionPlaceholder": "Décrivez votre offre...",
+      "image": "Image (optionnel)",
+      "uploadImage": "Ajouter une image",
+      "offerType": "Type d'offre",
+      "percentage": "Pourcentage de remise",
+      "fixedAmount": "Montant de la remise",
+      "specialPrice": "Prix spécial",
+      "target": "Cible de l'offre",
+      "targetType": "Appliquer sur",
+      "period": "Période de validité",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
+      "startTime": "Heure de début",
+      "endTime": "Heure de fin",
+      "daysOfWeek": "Jours de la semaine",
+      "daysHint": "Laissez vide pour tous les jours",
+      "conditions": "Conditions",
+      "minOrder": "Commande minimum",
+      "channels": "Canaux",
+      "channelsHint": "Laissez vide pour tous les canaux",
+      "limits": "Limites d'utilisation",
+      "maxRedemptions": "Utilisations totales max",
+      "maxPerCustomer": "Max par client",
+      "unlimited": "Illimité",
+      "promoCode": "Code promo (optionnel)",
+      "code": "Code",
+      "generate": "Générer",
+      "create": "Créer l'offre"
+    },
+    "detail": {
+      "title": "Détail de l'offre",
+      "preview": "Aperçu client",
+      "info": "Informations",
+      "status": "Statut",
+      "type": "Type",
+      "value": "Valeur",
+      "promoCode": "Code promo",
+      "period": "Période",
+      "startDate": "Début",
+      "endDate": "Fin",
+      "timeSlot": "Créneau",
+      "days": "Jours",
+      "stats": "Statistiques",
+      "history": "Historique"
+    },
+    "delete": {
+      "title": "Supprimer l'offre",
+      "message": "Êtes-vous sûr de vouloir supprimer cette offre ?"
+    },
+    "toggle": {
+      "title": "Changer le statut",
+      "activate": "Voulez-vous activer cette offre ?",
+      "deactivate": "Voulez-vous désactiver cette offre ?"
+    },
+    "empty": {
+      "title": "Aucune offre",
+      "message": "Créez votre première offre spéciale"
+    },
+    "templates": {
+      "title": "Templates d'offres",
+      "subtitle": "Utilisez ces modèles pour créer rapidement des offres",
+      "use": "Utiliser",
+      "happyHour": "Happy Hour",
+      "happyHourDesc": "Réduction sur les boissons de 16h à 19h",
+      "lunchMenu": "Menu du midi",
+      "lunchMenuDesc": "Prix spécial pour le déjeuner",
+      "freeDelivery": "Livraison gratuite",
+      "freeDeliveryDesc": "Livraison offerte dès 10 000 F",
+      "buyOneGetOne": "1 acheté = 1 offert",
+      "buyOneGetOneDesc": "Le 2ème produit identique offert",
+      "weekendBundle": "Bundle Weekend",
+      "weekendBundleDesc": "Menu + boisson + dessert à prix réduit",
+      "firstOrder": "Première commande",
+      "firstOrderDesc": "Réduction pour les nouveaux clients"
+    },
+    "analytics": {
+      "topOffers": "Offres les plus performantes",
+      "byRestaurant": "Par restaurant",
+      "summary": "Résumé global",
+      "restaurant": "Restaurant",
+      "activeOffers": "Offres actives",
+      "totalRevenue": "CA total généré",
+      "totalRedemptions": "Utilisations totales",
+      "avgConversion": "Conversion moyenne"
+    }
+  },
+  "days": {
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven",
+    "sat": "Sam",
+    "sun": "Dim"
+  },
+  "validation": {
+    "required": "Champ requis"
   }
+}

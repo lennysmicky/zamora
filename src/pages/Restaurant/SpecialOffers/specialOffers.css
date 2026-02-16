@@ -1,0 +1,44 @@
+/* src/pages/Restaurant/SpecialOffers/specialOffers.css */
+
+.special-offers-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+}
+
+/* Toast */
+.offers-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.offers-toast.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .offers-toast.success {
+  background-color: var(--color-success-dark);
+}
+
+.offers-toast.error {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .offers-toast.error {
+  background-color: var(--color-error-dark);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .special-offers-page {
+    padding: 0.75rem;
+  }
+}

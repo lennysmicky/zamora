@@ -1,9 +1,10 @@
 // pages/Orders/OrdersPage.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ordersStore } from '../../stores/ordersStore';
 import { useOrdersStore } from '../../hooks/useOrdersStore';
 import useAuthStore from '../../stores/authStore';
+
 import OrdersStats from '../../components/orders/OrdersStats';
 import OrdersFilters from '../../components/orders/OrderFilters';
 import OrdersTable from '../../components/tables/OrdersTable';
@@ -12,24 +13,50 @@ import OrderDetailsModal from '../../components/orders/OrderDetailsModal';
 import OrdersEmptyState from '../../components/orders/OrdersEmptyState';
 import OrdersLoadingSkeleton from '../../components/orders/OrderLoadingSkeleton';
 import { useOrders } from '../../hooks/useOrders';
+
+// Modal create (tu peux laisser, on ne le touche pas)
+import Modal from '../../components/common/Modal';
+import OrderCreateForm from '../../components/orders/OrderCreateForm';
+
 import './OrdersPage.css';
+
+const DEFAULT_FILTERS = {
+  search: '',
+  status: '',
+  paymentStatus: '',
+  paymentMethod: '',
+  source: '',
+  period: '30days',
+  from: '',
+  to: '',
+  restaurant: ''
+};
 
 const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   const { t } = useTranslation();
-  const { selectedOrders, setSelectedOrders } = useOrdersStore();
-  
-  //  Récupérer restaurantId du store si pas passé en prop
+
+  const {
+    selectedOrders,
+    setSelectedOrders,
+    isCreateModalOpen,
+    openCreateModal,
+    closeCreateModal
+  } = useOrdersStore();
+
   const { restaurantId: storeRestaurantId, userType } = useAuthStore();
-  const restaurantId = restaurantIdProp || storeRestaurantId;
-  
-  //  Déterminer le mode
-  const isRestaurantMode = userType === 'restaurant' || !!restaurantIdProp;
-  
-  // États locaux
+
+  // ✅ vrai mode restaurant si user restaurant OU page forcée sur un restaurant (prop)
+  const isRestaurantMode = userType === 'restaurant' || Boolean(restaurantIdProp);
+
+  // ✅ IMPORTANT: en admin => restaurantId null (pour endpoints /admin/commandes)
+  const restaurantIdForHook = useMemo(() => {
+    if (!isRestaurantMode) return null;
+    return restaurantIdProp || storeRestaurantId || null;
+  }, [isRestaurantMode, restaurantIdProp, storeRestaurantId]);
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  //  Hook personnalisé avec restaurantId
   const {
     orders,
     stats,
@@ -41,59 +68,65 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     setPagination,
     fetchOrders,
     updateOrderStatus
-  } = useOrders(restaurantId);
+  } = useOrders({
+    restaurantId: restaurantIdForHook,
+    mode: isRestaurantMode ? 'restaurant' : 'admin'
+  });
 
   // ================================
-  // HANDLERS
+  // HANDLERS (memo pour éviter stale + rebind)
   // ================================
-
-  const handleViewDetails = (order) => {
+  const handleViewDetails = useCallback((order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedOrder(null);
     setIsModalOpen(false);
-  };
+  }, []);
 
-  const handleSelectOrder = (orderId) => {
-    const newSelection = selectedOrders.includes(orderId)
-      ? selectedOrders.filter(id => id !== orderId)
-      : [...selectedOrders, orderId];
-    setSelectedOrders(newSelection);
-  };
+  const handleSelectOrder = useCallback((orderId) => {
+    setSelectedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId]
+    );
+  }, [setSelectedOrders]);
 
-  const handleSelectAll = () => {
-    if (selectedOrders.length === orders.length) {
-      setSelectedOrders([]);
-    } else {
-      setSelectedOrders(orders.map(order => order.id));
-    }
-  };
+  const handleSelectAll = useCallback(() => {
+    setSelectedOrders((prev) => {
+      if (prev.length === orders.length) return [];
+      return orders.map((o) => o.id);
+    });
+  }, [orders, setSelectedOrders]);
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     fetchOrders();
-  };
+  }, [fetchOrders]);
 
-  const handleExport = (format) => {
+  const handleExport = useCallback((format) => {
     console.log(`Exporting as ${format}`);
-    // TODO: Implémenter l'export
-  };
+  }, []);
 
-  const handleBulkAction = (action) => {
+  const handleBulkAction = useCallback((action) => {
     console.log(`Bulk action: ${action}`, selectedOrders);
-    // TODO: Implémenter les actions groupées
     ordersStore.clearSelection();
-  };
+  }, [selectedOrders]);
 
-  const handleNewOrder = () => {
-    console.log('New order');
-    // TODO: Implémenter la création
-  };
+  const handleNewOrder = useCallback(() => {
+    openCreateModal();
+  }, [openCreateModal]);
+
+  const handleCreateSuccess = useCallback(() => {
+    closeCreateModal();
+    fetchOrders();
+  }, [closeCreateModal, fetchOrders]);
+
+  const resetFilters = useCallback(() => {
+    setFilters((prev) => ({ ...prev, ...DEFAULT_FILTERS }));
+  }, [setFilters]);
 
   // ================================
-  // ENREGISTRER LES HANDLERS POUR LE HEADER
+  // ✅ HANDLERS HEADER : mount/unmount (pas dépendre de orders)
   // ================================
   useEffect(() => {
     ordersStore.setHandlers({
@@ -103,11 +136,14 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
       onNewOrder: handleNewOrder
     });
 
-    ordersStore.setOrders(orders);
-
     return () => {
       ordersStore.reset();
     };
+  }, [handleRefresh, handleExport, handleBulkAction, handleNewOrder]);
+
+  // ✅ Sync orders -> store (séparé)
+  useEffect(() => {
+    ordersStore.setOrders(orders);
   }, [orders]);
 
   // ================================
@@ -115,43 +151,28 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   // ================================
   return (
     <div className={`orders-page ${isRestaurantMode ? 'restaurant-mode' : 'admin-mode'}`}>
+      <OrdersStats stats={stats} loading={loading} isRestaurantMode={isRestaurantMode} />
 
-      {/* SECTION : STATS */}
-      <OrdersStats 
-        stats={stats} 
-        loading={loading} 
-        isRestaurantMode={isRestaurantMode}
-      />
-
-      {/* SECTION : FILTRES */}
       <OrdersFilters
         filters={filters}
         onFiltersChange={setFilters}
         isRestaurantMode={isRestaurantMode}
       />
 
-      {/* SECTION : CONTENU PRINCIPAL */}
       <div className="orders-content">
         {loading ? (
           <OrdersLoadingSkeleton />
         ) : error ? (
           <div className="orders-error">
             <p>{t('common.error')}: {error}</p>
-            <button 
-              className="orders-btn orders-btn-primary"
-              onClick={handleRefresh}
-            >
+            <button className="orders-btn orders-btn-primary" onClick={handleRefresh}>
               {t('common.retry')}
             </button>
           </div>
         ) : orders.length === 0 ? (
-          <OrdersEmptyState 
-            filters={filters} 
-            onReset={() => setFilters({})} 
-          />
+          <OrdersEmptyState filters={filters} onReset={resetFilters} />
         ) : (
           <>
-            {/* Tableau */}
             <OrdersTable
               orders={orders}
               selectedOrders={selectedOrders}
@@ -162,16 +183,11 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
               isRestaurantMode={isRestaurantMode}
             />
 
-            {/* Pagination */}
-            <OrdersPagination
-              pagination={pagination}
-              onPaginationChange={setPagination}
-            />
+            <OrdersPagination pagination={pagination} onPaginationChange={setPagination} />
           </>
         )}
       </div>
 
-      {/* MODAL DÉTAILS */}
       {isModalOpen && selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
@@ -181,6 +197,20 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
           isRestaurantMode={isRestaurantMode}
         />
       )}
+
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={closeCreateModal}
+        title={t('orders.createOrder', 'Nouvelle Commande')}
+        size="large"
+      >
+        <OrderCreateForm
+          restaurantId={restaurantIdForHook}
+          isRestaurantMode={isRestaurantMode}
+          onCancel={closeCreateModal}
+          onSuccess={handleCreateSuccess}
+        />
+      </Modal>
     </div>
   );
 };

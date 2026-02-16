@@ -1,0 +1,131 @@
+/* src/components/specialOffers/css/SpecialOffersBadges.css */
+
+/* Status Badge */
+.offer-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1875rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+}
+
+.offer-status-badge.draft {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-muted);
+}
+
+.dark .offer-status-badge.draft {
+  background-color: var(--color-surface-dark);
+}
+
+.offer-status-badge.active {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .offer-status-badge.active {
+  background-color: var(--color-success-dark);
+}
+
+.offer-status-badge.scheduled {
+  background-color: #e0f2fe;
+  color: #0ea5e9;
+}
+
+.dark .offer-status-badge.scheduled {
+  background-color: rgba(14, 165, 233, 0.2);
+}
+
+.offer-status-badge.ended {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-secondary);
+}
+
+.dark .offer-status-badge.ended {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-muted);
+}
+
+.offer-status-badge.paused {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.dark .offer-status-badge.paused {
+  background-color: var(--color-warning-dark);
+}
+
+/* Type Badge */
+.offer-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1875rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+}
+
+.offer-type-badge svg {
+  font-size: 0.6875rem;
+}
+
+.offer-type-badge.percentage {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+.offer-type-badge.fixed {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.dark .offer-type-badge.fixed {
+  background-color: rgba(22, 163, 74, 0.2);
+}
+
+.offer-type-badge.special-price {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.dark .offer-type-badge.special-price {
+  background-color: rgba(217, 119, 6, 0.2);
+}
+
+.offer-type-badge.bundle {
+  background-color: #fae8ff;
+  color: #d946ef;
+}
+
+.dark .offer-type-badge.bundle {
+  background-color: rgba(217, 70, 239, 0.2);
+}
+
+.offer-type-badge.bogo {
+  background-color: #fce7f3;
+  color: #ec4899;
+}
+
+.dark .offer-type-badge.bogo {
+  background-color: rgba(236, 72, 153, 0.2);
+}
+
+.offer-type-badge.free-delivery {
+  background-color: #e0f2fe;
+  color: #0ea5e9;
+}
+
+.dark .offer-type-badge.free-delivery {
+  background-color: rgba(14, 165, 233, 0.2);
+}
+
+.offer-type-badge.default {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-muted);
+}
+
+.dark .offer-type-badge.default {
+  background-color: var(--color-surface-dark);
+}

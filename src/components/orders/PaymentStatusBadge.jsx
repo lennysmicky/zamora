@@ -1,48 +1,49 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  RiTimeLine,
-  RiCheckboxCircleLine,
-  RiCloseCircleLine,
-  RiRefund2Line
+import {
+  RiBankCardLine,
+  RiCashLine,
+  RiSmartphoneLine,
+  RiMoneyDollarCircleLine
 } from 'react-icons/ri';
 import './css/OrdersBadges.css';
 
-const PaymentStatusBadge = ({ status }) => {
-  const { t } = useTranslation();
+const normalize = (s) => String(s ?? '').trim().toLowerCase();
 
-  const statusConfig = {
-    PENDING: {
-      label: t('orders.paymentStatus.pending'),
-      icon: RiTimeLine,
-      className: 'payment-pending'
-    },
-    PAID: {
-      label: t('orders.paymentStatus.paid'),
-      icon: RiCheckboxCircleLine,
-      className: 'payment-paid'
-    },
-    FAILED: {
-      label: t('orders.paymentStatus.failed'),
-      icon: RiCloseCircleLine,
-      className: 'payment-failed'
-    },
-    REFUNDED: {
-      label: t('orders.paymentStatus.refunded'),
-      icon: RiRefund2Line,
-      className: 'payment-refunded'
-    }
+const toUIMethod = (m) => {
+  const v = normalize(m);
+
+  // backend enum: espece | virement (+ tmoney dans tes données)
+  if (['espece', 'espèce', 'cash', 'cash_on_delivery', 'cod'].includes(v)) return 'CASH_ON_DELIVERY';
+  if (['virement', 'bank', 'bank_transfer', 'transfer'].includes(v)) return 'CARD'; // si tu veux un badge dédié "virement", dis-le
+  if (['tmoney', 't-money', 'mobile_money', 'momo', 'moovmoney', 'orangemoney', 'wave'].includes(v)) return 'MOBILE_MONEY';
+
+  // déjà en format UI ?
+  if (['card', 'cash_on_delivery', 'mobile_money', 'other'].includes(v)) return v.toUpperCase();
+
+  return 'OTHER';
+};
+
+const PaymentMethodBadge = ({ method }) => {
+  const { t } = useTranslation();
+  const key = toUIMethod(method);
+
+  const methodConfig = {
+    CARD: { label: t('orders.paymentMethod.card'), icon: RiBankCardLine, className: 'method-card' },
+    CASH_ON_DELIVERY: { label: t('orders.paymentMethod.cashOnDelivery'), icon: RiCashLine, className: 'method-cash' },
+    MOBILE_MONEY: { label: t('orders.paymentMethod.mobileMoney'), icon: RiSmartphoneLine, className: 'method-mobile' },
+    OTHER: { label: t('orders.paymentMethod.other'), icon: RiMoneyDollarCircleLine, className: 'method-other' }
   };
 
-  const config = statusConfig[status] || statusConfig.PENDING;
+  const config = methodConfig[key] || methodConfig.OTHER;
   const Icon = config.icon;
 
   return (
-    <span className={`payment-badge ${config.className}`}>
+    <span className={`method-badge ${config.className}`}>
       <Icon className="badge-icon" />
       <span className="badge-label">{config.label}</span>
     </span>
   );
 };
 
-export default PaymentStatusBadge;
+export default PaymentMethodBadge;

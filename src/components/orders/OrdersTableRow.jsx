@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+// OrdersTableRow.jsx
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   RiCheckboxLine,
   RiCheckboxBlankLine,
   RiEyeLine,
@@ -15,19 +16,56 @@ import PaymentMethodBadge from './PaymentMethodBadge';
 import SourceBadge from './SourceBadge';
 import './css/OrdersTableRow.css';
 
-const OrdersTableRow = ({ 
-  order, 
-  isSelected, 
-  onSelect, 
+const OrdersTableRow = ({
+  order,
+  isSelected,
+  onSelect,
   onViewDetails,
-  onUpdateStatus 
+  onUpdateStatus,
+  isRestaurantMode = false,
 }) => {
   const { t } = useTranslation();
   const [showActions, setShowActions] = useState(false);
+  const dropdownRef = useRef(null);
 
-  // Formater la date
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowActions(false);
+    };
+    if (showActions) document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [showActions]);
+
+  const createdAt = order?.createdAt || order?.created_at || order?.raw?.createdAt;
+  const orderNumber =
+    order?.orderNumber || order?.order_number || (order?.id ? `ORD-${order.id}` : '-');
+
+  const customerName =
+    order?.customer?.name || order?.customerName || order?.customer_name || '-';
+  const customerPhone =
+    order?.customer?.phone || order?.customerPhone || order?.customer_phone || '';
+
+  // Backend liste ne donne pas le nom restaurant -> fallback sur id
+  const restaurantName =
+    order?.restaurant?.name ||
+    order?.restaurantName ||
+    order?.restaurantId ||
+    order?.raw?.restaurent ||
+    '-';
+
+  const itemsCount =
+    order?.itemsCount ??
+    order?.items_count ??
+    (Array.isArray(order?.items)
+      ? order.items.reduce((acc, it) => acc + (Number(it?.quantite) || 0), 0)
+      : 0);
+
+  const amount = order?.totalAmount ?? order?.total_amount ?? order?.total ?? 0;
+
   const formatDate = (dateString) => {
+    if (!dateString) return '-';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
     return new Intl.DateTimeFormat('fr-FR', {
       day: '2-digit',
       month: '2-digit',
@@ -37,114 +75,110 @@ const OrdersTableRow = ({
     }).format(date);
   };
 
-  // Formater le montant
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
+  const formatCurrency = (value) =>
+    new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0
-    }).format(amount);
-  };
+    }).format(Number(value) || 0);
 
   return (
     <tr className={`orders-table-row ${isSelected ? 'selected' : ''}`}>
-      {/* Checkbox */}
       <td className="orders-table-checkbox">
-        <button 
-          className="orders-checkbox-btn"
-          onClick={() => onSelect(order.id)}
-        >
-          {isSelected ? (
-            <RiCheckboxLine className="checked" />
-          ) : (
-            <RiCheckboxBlankLine />
-          )}
+        <button className="orders-checkbox-btn" onClick={() => onSelect(order.id)} type="button">
+          {isSelected ? <RiCheckboxLine className="checked" /> : <RiCheckboxBlankLine />}
         </button>
       </td>
 
-      {/* N° Commande */}
       <td className="orders-table-id">
-        <span className="order-id">{order.order_number || `ORD-${order.id}`}</span>
+        <span className="order-id">{orderNumber}</span>
       </td>
 
-      {/* Client */}
       <td className="orders-table-customer">
         <div className="customer-info">
-          <span className="customer-name">{order.customer?.name || '-'}</span>
-          <span className="customer-phone">{order.customer?.phone || ''}</span>
+          <span className="customer-name">{customerName}</span>
+          <span className="customer-phone">{customerPhone}</span>
         </div>
       </td>
 
-      {/* Restaurant */}
-      <td className="orders-table-restaurant">
-        <span>{order.restaurant?.name || '-'}</span>
+      {/* ✅ Colonne restaurant seulement en admin */}
+      {!isRestaurantMode && (
+        <td className="orders-table-restaurant">
+          <span>{restaurantName}</span>
+        </td>
+      )}
+
+      {/* ✅ Colonne items_count (sinon décalage) */}
+      <td className="orders-table-items">
+        <span>{itemsCount}</span>
       </td>
 
-      {/* Montant */}
       <td className="orders-table-amount">
-        <span className="amount">{formatCurrency(order.total_amount)}</span>
+        <span className="amount">{formatCurrency(amount)}</span>
       </td>
 
-      {/* Statut commande */}
       <td className="orders-table-status">
+        {/* ✅ status UI: PENDING | DELIVERED | CANCELLED | ... */}
         <OrderStatusBadge status={order.status} />
       </td>
 
-      {/* Statut paiement */}
       <td className="orders-table-payment-status">
+        {/* ✅ payment_status UI: PENDING | PAID | FAILED */}
         <PaymentStatusBadge status={order.payment_status} />
       </td>
 
-      {/* Méthode paiement */}
       <td className="orders-table-payment-method">
         <PaymentMethodBadge method={order.payment_method} />
       </td>
 
-      {/* Source */}
       <td className="orders-table-source">
         <SourceBadge source={order.source} />
       </td>
 
-      {/* Date */}
       <td className="orders-table-date">
-        <span>{formatDate(order.created_at)}</span>
+        <span>{formatDate(createdAt)}</span>
       </td>
 
-      {/* Actions */}
       <td className="orders-table-actions">
-        <div className="actions-wrapper">
-          <button 
+        <div className="actions-wrapper" ref={dropdownRef}>
+          <button
             className="action-btn action-btn-view"
             onClick={() => onViewDetails(order)}
             title={t('common.view')}
+            type="button"
           >
             <RiEyeLine />
           </button>
 
           <div className="actions-dropdown-wrapper">
-            <button 
+            <button
               className="action-btn action-btn-more"
-              onClick={() => setShowActions(!showActions)}
+              onClick={() => setShowActions((v) => !v)}
+              type="button"
             >
               <RiMoreLine />
             </button>
 
             {showActions && (
               <div className="actions-dropdown">
-                <button onClick={() => onViewDetails(order)}>
+                <button onClick={() => onViewDetails(order)} type="button">
                   <RiEyeLine />
                   <span>{t('common.view')}</span>
                 </button>
-                <button>
+
+                <button onClick={() => onUpdateStatus?.(order.id, order.status)} type="button">
                   <RiEditLine />
                   <span>{t('common.edit')}</span>
                 </button>
-                <button>
+
+                <button type="button">
                   <RiPrinterLine />
                   <span>{t('orders.details.print')}</span>
                 </button>
+
                 <div className="dropdown-divider"></div>
-                <button className="danger">
+
+                <button className="danger" type="button">
                   <RiDeleteBinLine />
                   <span>{t('common.delete')}</span>
                 </button>

@@ -1,0 +1,498 @@
+/* ========================================
+   ORDER CREATE FORM - Compact Version
+   ======================================== */
+
+.ocf {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Scrollbar personnalisée */
+.ocf::-webkit-scrollbar {
+  width: 4px;
+}
+
+.ocf::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ocf::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 4px;
+}
+
+.dark .ocf::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+}
+
+/* ========================================
+   ALERT / ERROR
+   ======================================== */
+.ocf-alert {
+  padding: 0.625rem 0.75rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--color-error);
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dark .ocf-alert {
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* ========================================
+   SECTIONS
+   ======================================== */
+.ocf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ocf-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .ocf-section-title {
+  color: var(--color-text-white);
+  border-bottom-color: var(--color-border-dark);
+}
+
+.ocf-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .ocf-section-header {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.ocf-section-header .ocf-section-title {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* ========================================
+   GRID LAYOUT
+   ======================================== */
+.ocf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+/* ========================================
+   FORM FIELD
+   ======================================== */
+.ocf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+}
+
+.ocf-field label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.dark .ocf-field label {
+  color: var(--color-text-white);
+}
+
+/* ========================================
+   INPUTS & SELECTS
+   ======================================== */
+.ocf-field input,
+.ocf-field select {
+  padding: 0.4375rem 0.625rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  background-color: var(--color-card-light);
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.dark .ocf-field input,
+.dark .ocf-field select {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+  color: var(--color-text-white);
+}
+
+.ocf-field input:focus,
+.ocf-field select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.ocf-field input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.ocf-field input:read-only {
+  background-color: var(--color-surface-light);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.dark .ocf-field input:read-only {
+  background-color: var(--color-surface-dark);
+}
+
+.ocf-field select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  padding-right: 1.75rem;
+}
+
+.ocf-field select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   ITEMS LIST
+   ======================================== */
+.ocf-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ocf-item {
+  background-color: var(--color-surface-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+}
+
+.dark .ocf-item {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+.ocf-item-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 0.75fr 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+/* Field sizes dans items */
+.ocf-field-repas {
+  grid-column: span 1;
+}
+
+.ocf-field-nom {
+  grid-column: span 1;
+}
+
+.ocf-field-prix,
+.ocf-field-qte {
+  min-width: 70px;
+}
+
+.ocf-field-total {
+  min-width: 80px;
+}
+
+.ocf-field-action {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Total value display */
+.ocf-total-value {
+  padding: 0.4375rem 0.625rem;
+  background-color: var(--color-primary-soft);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: right;
+}
+
+.dark .ocf-total-value {
+  background-color: rgba(99, 102, 241, 0.15);
+}
+
+/* ========================================
+   GRAND TOTAL
+   ======================================== */
+.ocf-grand-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-md);
+  margin-top: 0.5rem;
+}
+
+.ocf-grand-total span {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ocf-grand-total strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.ocf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.4375rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  white-space: nowrap;
+}
+
+.ocf-btn svg {
+  font-size: 0.875rem;
+}
+
+/* Add button */
+.ocf-btn-add {
+  background-color: var(--color-success-soft);
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+}
+
+.ocf-btn-add:hover {
+  background-color: var(--color-success);
+  color: #ffffff;
+}
+
+/* Delete button */
+.ocf-btn-delete {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-light);
+}
+
+.dark .ocf-btn-delete {
+  border-color: var(--color-border-dark);
+}
+
+.ocf-btn-delete:hover:not(:disabled) {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: #ffffff;
+}
+
+.ocf-btn-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   FORM ACTIONS
+   ======================================== */
+.ocf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-light);
+  margin-top: 0.25rem;
+}
+
+.dark .ocf-actions {
+  border-top-color: var(--color-border-dark);
+}
+
+.ocf-btn-cancel,
+.ocf-btn-submit {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: none;
+  min-width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+}
+
+.ocf-btn-cancel {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+}
+
+.dark .ocf-btn-cancel {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-white);
+}
+
+.ocf-btn-cancel:hover:not(:disabled) {
+  background-color: var(--color-border-light);
+}
+
+.dark .ocf-btn-cancel:hover:not(:disabled) {
+  background-color: var(--color-border-dark);
+}
+
+.ocf-btn-submit {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.ocf-btn-submit:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.ocf-btn-cancel:disabled,
+.ocf-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Spinner */
+.ocf-btn-submit .ocf-spinner {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: ocf-spin 0.8s linear infinite;
+}
+
+@keyframes ocf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   RESPONSIVE - TABLET
+   ======================================== */
+@media (max-width: 768px) {
+  .ocf-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ocf-item-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .ocf-field-repas {
+    grid-column: span 2;
+  }
+
+  .ocf-field-nom {
+    grid-column: span 2;
+  }
+
+  .ocf-field-prix,
+  .ocf-field-qte,
+  .ocf-field-total {
+    grid-column: span 1;
+  }
+
+  .ocf-field-action {
+    grid-column: span 2;
+    justify-content: flex-end;
+  }
+
+  .ocf-btn-delete {
+    width: 100%;
+    height: auto;
+    padding: 0.375rem;
+  }
+}
+
+/* ========================================
+   RESPONSIVE - MOBILE
+   ======================================== */
+@media (max-width: 480px) {
+  .ocf {
+    gap: 0.75rem;
+    padding-right: 0.25rem;
+  }
+
+  .ocf-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ocf-btn-add {
+    width: 100%;
+  }
+
+  .ocf-item {
+    padding: 0.625rem;
+  }
+
+  .ocf-item-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ocf-field-repas,
+  .ocf-field-nom,
+  .ocf-field-prix,
+  .ocf-field-qte,
+  .ocf-field-total,
+  .ocf-field-action {
+    grid-column: span 1;
+  }
+
+  .ocf-grand-total {
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+  }
+
+  .ocf-actions {
+    flex-direction: column-reverse;
+  }
+
+  .ocf-btn-cancel,
+  .ocf-btn-submit {
+    width: 100%;
+  }
+}

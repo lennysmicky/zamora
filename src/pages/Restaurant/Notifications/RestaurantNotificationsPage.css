@@ -1,408 +1,824 @@
-/* src/pages/Restaurant/Notifications/RestaurantNotificationsPage.css */
+/* src/pages/Notifications/NotificationsPage.css */
 
-/* ========== Container principal ========== */
-.restaurant-notifications-page {
-  padding: 24px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-/* ========== Header ========== */
-.restaurant-notifications-page .notifications-header {
-  margin-bottom: 24px;
-}
-
-.restaurant-notifications-page .notifications-header h1 {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin: 0 0 8px 0;
-}
-
-.notifications-subtitle {
-  font-size: 14px;
-  color: #64748b;
-  margin: 0;
-}
-
-/* ========== Messages ========== */
-.restaurant-notifications-page .notification-message {
-  padding: 12px 16px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.restaurant-notifications-page .notification-message.error {
-  background-color: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-.restaurant-notifications-page .notification-message.success {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-}
-
-/* ========== Tabs ========== */
-.restaurant-notifications-page .notifications-tabs {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.restaurant-notifications-page .tab-btn {
-  padding: 12px 24px;
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  font-weight: 500;
-  color: #64748b;
-  cursor: pointer;
-  position: relative;
-  transition: color 0.2s ease;
-}
-
-.restaurant-notifications-page .tab-btn:hover {
-  color: #f97316;
-}
-
-.restaurant-notifications-page .tab-btn.active {
-  color: #f97316;
-}
-
-.restaurant-notifications-page .tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: -1px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background-color: #f97316;
-  border-radius: 2px 2px 0 0;
-}
-
-/* ========== Contenu ========== */
-.restaurant-notifications-page .notifications-content {
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 24px;
-}
-
-/* ========== Section Paramètres ========== */
-.restaurant-notifications-page .settings-section {
+/* ========================================
+   NOTIFICATIONS PAGE
+   ======================================== */
+.notifications-page {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 0.75rem;
+  padding: 0.875rem;
 }
 
-.restaurant-notifications-page .settings-group {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.restaurant-notifications-page .settings-group h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin: 0;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-/* ========== Toggle Switch ========== */
-.restaurant-notifications-page .setting-item {
+/* ========================================
+   HEADER ROW
+   ======================================== */
+.notifications-header-row {
   display: flex;
   align-items: center;
-}
-
-.restaurant-notifications-page .toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.restaurant-notifications-page .toggle-label input[type="checkbox"] {
-  display: none;
-}
-
-.restaurant-notifications-page .toggle-slider {
-  position: relative;
-  width: 48px;
-  height: 26px;
-  background-color: #e2e8f0;
-  border-radius: 13px;
-  transition: background-color 0.2s ease;
-  flex-shrink: 0;
-}
-
-.restaurant-notifications-page .toggle-slider::before {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  background-color: #fff;
-  border-radius: 50%;
-  transition: transform 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.restaurant-notifications-page .toggle-label input:checked + .toggle-slider {
-  background-color: #f97316;
-}
-
-.restaurant-notifications-page .toggle-label input:checked + .toggle-slider::before {
-  transform: translateX(22px);
-}
-
-.restaurant-notifications-page .toggle-text {
-  font-size: 14px;
-  color: #374151;
-  line-height: 1.5;
-}
-
-/* Canaux */
-.restaurant-notifications-page .channels-container {
-  display: flex;
-  gap: 32px;
+  justify-content: space-between;
+  gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-/* ========== Actions ========== */
-.restaurant-notifications-page .settings-actions {
+.notifications-tabs {
   display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  gap: 0.25rem;
+  background-color: var(--color-surface-light);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
 }
 
-.restaurant-notifications-page .btn-save {
+.dark .notifications-tabs {
+  background-color: var(--color-surface-dark);
+}
+
+.notifications-tab {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 32px;
-  background-color: #f97316;
-  color: #fff;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: transparent;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: all var(--transition-fast);
 }
 
-.restaurant-notifications-page .btn-save:hover:not(:disabled) {
-  background-color: #ea580c;
+.notifications-tab svg {
+  font-size: 0.875rem;
 }
 
-.restaurant-notifications-page .btn-save:disabled {
-  background-color: #94a3b8;
+.notifications-tab:hover {
+  color: var(--color-primary);
+}
+
+.notifications-tab.active {
+  background-color: var(--color-card-light);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark .notifications-tab.active {
+  background-color: var(--color-card-dark);
+}
+
+.notifications-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.notifications-btn-primary,
+.notifications-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.notifications-btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-white);
+}
+
+.notifications-btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark);
+}
+
+.notifications-btn-secondary {
+  background-color: var(--color-surface-light);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border-light);
+}
+
+.dark .notifications-btn-secondary {
+  background-color: var(--color-surface-dark);
+  color: var(--color-text-white);
+  border-color: var(--color-border-dark);
+}
+
+.notifications-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-border-light);
+}
+
+.dark .notifications-btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-border-dark);
+}
+
+.notifications-btn-primary:disabled,
+.notifications-btn-secondary:disabled {
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
-/* ========== Section Journal (Cards) ========== */
-.restaurant-notifications-page .log-section {
-  min-height: 300px;
+.notifications-btn-primary svg,
+.notifications-btn-secondary svg {
+  font-size: 0.875rem;
 }
 
-.restaurant-notifications-page .empty-log {
+/* ========================================
+   TOAST MESSAGES
+   ======================================== */
+.notifications-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.notifications-toast.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .notifications-toast.success {
+  background-color: var(--color-success-dark);
+}
+
+.notifications-toast.error {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .notifications-toast.error {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-toast svg {
+  font-size: 0.875rem;
+}
+
+/* ========================================
+   LOADING
+   ======================================== */
+.notifications-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.notifications-loading-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* ========================================
+   SETTINGS TAB
+   ======================================== */
+.notifications-settings {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+.notifications-card {
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.dark .notifications-card {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.notifications-card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--color-surface-light);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.dark .notifications-card-header {
+  background-color: var(--color-surface-dark);
+  border-bottom-color: var(--color-border-dark);
+}
+
+.notifications-card-header svg {
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
+.notifications-card-header h3 {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.dark .notifications-card-header h3 {
+  color: var(--color-text-white);
+}
+
+.notifications-card-body {
+  padding: 0.75rem 1rem;
+}
+
+/* ========================================
+   TOGGLE ITEMS
+   ======================================== */
+.notifications-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+}
+
+.dark .notifications-toggle {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.notifications-toggle:last-child {
+  border-bottom: none;
+}
+
+.notifications-toggle-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.notifications-toggle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+.notifications-toggle-icon svg {
+  font-size: 0.875rem;
+}
+
+.notifications-toggle-text {
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+}
+
+.dark .notifications-toggle-text {
+  color: var(--color-text-white);
+}
+
+.notifications-toggle-switch-wrapper {
+  position: relative;
+}
+
+.notifications-toggle-switch-wrapper input {
+  display: none;
+}
+
+.notifications-toggle-switch {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 20px;
+  background-color: var(--color-border-light);
+  border-radius: 10px;
+  transition: all var(--transition-fast);
+}
+
+.dark .notifications-toggle-switch {
+  background-color: var(--color-border-dark);
+}
+
+.notifications-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+}
+
+.notifications-toggle-switch-wrapper input:checked + .notifications-toggle-switch {
+  background-color: var(--color-primary);
+}
+
+.notifications-toggle-switch-wrapper input:checked + .notifications-toggle-switch::after {
+  left: 18px;
+}
+
+/* ========================================
+   STATS
+   ======================================== */
+.notifications-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.notifications-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+
+.dark .notifications-stat-card {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.notifications-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.notifications-stat-icon svg {
+  font-size: 1rem;
+}
+
+.notifications-stat-icon.total {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+.notifications-stat-icon.success {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .notifications-stat-icon.success {
+  background-color: var(--color-success-dark);
+}
+
+.notifications-stat-icon.warning {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.dark .notifications-stat-icon.warning {
+  background-color: var(--color-warning-dark);
+}
+
+.notifications-stat-icon.error {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .notifications-stat-icon.error {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.notifications-stat-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.dark .notifications-stat-value {
+  color: var(--color-text-white);
+}
+
+.notifications-stat-label {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+}
+
+/* ========================================
+   LOGS TAB
+   ======================================== */
+.notifications-logs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notifications-logs-card {
+  flex: 1;
+}
+
+.notifications-logs-card .notifications-card-body {
+  padding: 0;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* ========================================
+   EMPTY STATE
+   ======================================== */
+.notifications-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 64px 24px;
-  color: #64748b;
+  padding: 3rem 1.5rem;
+  text-align: center;
 }
 
-.restaurant-notifications-page .empty-icon {
-  font-size: 48px;
-  margin-bottom: 16px;
+.notifications-empty-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 1rem;
+  background-color: var(--color-surface-light);
+  border-radius: var(--radius-full);
 }
 
-.restaurant-notifications-page .empty-log p {
-  font-size: 16px;
+.dark .notifications-empty-icon {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.notifications-empty-icon svg {
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+}
+
+.notifications-empty h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
-/* ========== Log Cards ========== */
-.log-list {
+.dark .notifications-empty h4 {
+  color: var(--color-text-white);
+}
+
+/* ========================================
+   LOG LIST
+   ======================================== */
+.notifications-log-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
 }
 
-.log-card {
-  background-color: #f8fafc;
-  border-radius: 10px;
-  padding: 16px;
-  border-left: 4px solid #e2e8f0;
-  transition: box-shadow 0.2s ease;
-}
-
-.log-card:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.log-card.sent {
-  border-left-color: #16a34a;
-}
-
-.log-card.pending {
-  border-left-color: #f59e0b;
-}
-
-.log-card.failed {
-  border-left-color: #dc2626;
-}
-
-.log-card-header {
+.notifications-log-item {
   display: flex;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border-light);
+  transition: background-color var(--transition-fast);
+}
+
+.dark .notifications-log-item {
+  border-bottom-color: var(--color-border-dark);
+}
+
+.notifications-log-item:last-child {
+  border-bottom: none;
+}
+
+.notifications-log-item:hover {
+  background-color: var(--color-surface-light);
+}
+
+.dark .notifications-log-item:hover {
+  background-color: var(--color-surface-dark);
+}
+
+.notifications-log-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.notifications-log-icon svg {
+  font-size: 1rem;
+}
+
+.notifications-log-item.sent .notifications-log-icon {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
+}
+
+.dark .notifications-log-item.sent .notifications-log-icon {
+  background-color: var(--color-success-dark);
+}
+
+.notifications-log-item.pending .notifications-log-icon {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.dark .notifications-log-item.pending .notifications-log-icon {
+  background-color: var(--color-warning-dark);
+}
+
+.notifications-log-item.failed .notifications-log-icon {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .notifications-log-item.failed .notifications-log-icon {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-log-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notifications-log-header {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.notifications-log-type {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 12px;
-}
-
-.log-card .log-type {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.log-card .log-type.new_order {
-  background-color: #dbeafe;
-  color: #1d4ed8;
-}
-
-.log-card .log-type.status_change {
-  background-color: #fef3c7;
-  color: #b45309;
-}
-
-.log-card .log-type.promotion {
-  background-color: #f3e8ff;
-  color: #7c3aed;
-}
-
-.log-card .log-date {
-  font-size: 12px;
-  color: #94a3b8;
-}
-
-.log-card-body {
-  margin-bottom: 12px;
-}
-
-.log-card-body h4 {
-  font-size: 15px;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.5625rem;
   font-weight: 600;
-  color: #1a1a2e;
-  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: var(--radius-xs);
+  background-color: var(--color-surface-light);
+  color: var(--color-text-muted);
 }
 
-.log-card-body p {
-  font-size: 13px;
-  color: #64748b;
-  margin: 0;
-  line-height: 1.5;
+.dark .notifications-log-type {
+  background-color: var(--color-surface-dark);
 }
 
-.log-card-footer {
+.notifications-log-type.new_order {
+  background-color: var(--color-primary-lighter);
+  color: var(--color-primary);
+}
+
+.notifications-log-type.status_change {
+  background-color: #e0f2fe;
+  color: #0ea5e9;
+}
+
+.dark .notifications-log-type.status_change {
+  background-color: rgba(14, 165, 233, 0.2);
+}
+
+.notifications-log-type.promotion {
+  background-color: #fae8ff;
+  color: #d946ef;
+}
+
+.dark .notifications-log-type.promotion {
+  background-color: rgba(217, 70, 239, 0.2);
+}
+
+.notifications-log-date {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+.notifications-log-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dark .notifications-log-title {
+  color: var(--color-text-white);
+}
+
+.notifications-log-message {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notifications-log-footer {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
-.log-channel {
-  font-size: 12px;
-  color: #64748b;
+.notifications-log-channel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  color: var(--color-text-secondary);
 }
 
-.log-card .log-status {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 11px;
+.dark .notifications-log-channel {
+  color: var(--color-text-muted);
+}
+
+.notifications-log-channel svg {
+  font-size: 0.75rem;
+}
+
+.notifications-log-recipient {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+.notifications-log-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.5625rem;
   font-weight: 500;
+  border-radius: var(--radius-full);
 }
 
-.log-card .log-status.sent {
-  background-color: #dcfce7;
-  color: #16a34a;
+.notifications-log-status svg {
+  font-size: 0.625rem;
 }
 
-.log-card .log-status.pending {
-  background-color: #fef3c7;
-  color: #b45309;
+.notifications-log-status.sent {
+  background-color: var(--color-success-light);
+  color: var(--color-success);
 }
 
-.log-card .log-status.failed {
-  background-color: #fef2f2;
-  color: #dc2626;
+.dark .notifications-log-status.sent {
+  background-color: var(--color-success-dark);
 }
 
-.log-card .btn-delete-log {
-  margin-left: auto;
-  background: transparent;
+.notifications-log-status.pending {
+  background-color: var(--color-warning-light);
+  color: var(--color-warning);
+}
+
+.dark .notifications-log-status.pending {
+  background-color: var(--color-warning-dark);
+}
+
+.notifications-log-status.failed {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+}
+
+.dark .notifications-log-status.failed {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-log-delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
   border: none;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 14px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  align-self: flex-start;
 }
 
-.log-card .btn-delete-log:hover {
-  background-color: #fef2f2;
+.notifications-log-delete:hover {
+  background-color: var(--color-error-light);
+  color: var(--color-error);
 }
 
-/* ========== Responsive ========== */
+.dark .notifications-log-delete:hover {
+  background-color: var(--color-error-dark);
+}
+
+.notifications-log-delete svg {
+  font-size: 0.875rem;
+}
+
+/* ========================================
+   SPIN ANIMATION
+   ======================================== */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 1024px) {
+  .notifications-settings {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
-  .restaurant-notifications-page {
-    padding: 16px;
+  .notifications-page {
+    padding: 0.75rem;
   }
 
-  .restaurant-notifications-page .notifications-tabs {
-    width: 100%;
+  .notifications-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
 
-  .restaurant-notifications-page .tab-btn {
-    flex: 1;
-    text-align: center;
-    padding: 12px 16px;
+  .notifications-stat-card {
+    padding: 0.5rem;
   }
 
-  .restaurant-notifications-page .channels-container {
+  .notifications-stat-value {
+    font-size: 0.75rem;
+  }
+
+  .notifications-log-item {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .notifications-header-row {
     flex-direction: column;
-    gap: 16px;
+    align-items: stretch;
   }
 
-  .restaurant-notifications-page .settings-actions {
-    justify-content: stretch;
-  }
-
-  .restaurant-notifications-page .btn-save {
+  .notifications-tabs {
     width: 100%;
+  }
+
+  .notifications-tab {
+    flex: 1;
     justify-content: center;
   }
 
-  .log-card-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .notifications-header-actions {
+    justify-content: flex-end;
   }
 
-  .log-card-footer {
-    flex-wrap: wrap;
+  .notifications-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .notifications-stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+  }
+
+  .notifications-log-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
   }
 }

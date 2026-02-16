@@ -9,7 +9,7 @@ export const authAPI = {
     client.post('/login', { ...credentials, userType: 'restaurant' }),
   
   loginAdmin: (credentials) => 
-    client.post('/login', { ...credentials, userType: 'admin' }),
+    client.post('/admin/login', { ...credentials, userType: 'admin' }),
 
   // ========================================
   // REGISTER

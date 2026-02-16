@@ -12,10 +12,9 @@ import './css/OrderDetailsModal.css';
 const OrderDetailsModal = ({ order, isOpen, onClose, onUpdateStatus }) => {
   const { t } = useTranslation();
 
-  // Fermer avec Escape
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') onClose?.();
     };
 
     if (isOpen) {
@@ -31,55 +30,58 @@ const OrderDetailsModal = ({ order, isOpen, onClose, onUpdateStatus }) => {
 
   if (!isOpen || !order) return null;
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
+
+  // ✅ Fallbacks robustes (si un jour tu ouvres ce modal depuis un autre endpoint)
+  const customer =
+    order.customer ??
+    {
+      name: order.customer_name ?? order.customerName ?? '',
+      phone: order.customer_phone ?? order.customerPhone ?? '',
+    };
+
+  const items = Array.isArray(order.items) ? order.items : [];
+  const history = Array.isArray(order.history) ? order.history : [];
 
   return (
     <div className="order-modal-overlay" onClick={onClose}>
       <div className="order-modal" onClick={(e) => e.stopPropagation()}>
-        {/* Header du modal */}
         <div className="order-modal-header">
           <h2>{t('orders.details.title')}</h2>
-          <button className="order-modal-close" onClick={onClose}>
+          <button className="order-modal-close" onClick={onClose} type="button">
             <RiCloseLine />
           </button>
         </div>
 
-        {/* Contenu */}
         <div className="order-modal-content">
-          {/* En-tête commande */}
           <OrderDetailsHeader order={order} />
 
-          {/* Infos client */}
-          <OrderDetailsCustomer customer={order.customer} />
+          <OrderDetailsCustomer customer={customer} />
 
-          {/* Articles commandés */}
-          <OrderDetailsItems items={order.items} order={order} />
+          <OrderDetailsItems items={items} order={order} />
 
-          {/* Changer le statut */}
-          <div className="order-details-section">
-            <h3>{t('orders.details.statusUpdate')}</h3>
-            <OrderStatusSelect 
-              currentStatus={order.status}
-              onStatusChange={(newStatus) => onUpdateStatus(order.id, newStatus)}
-            />
-          </div>
+          {/* Changer le statut (guard si handler absent) */}
+          {typeof onUpdateStatus === 'function' && (
+            <div className="order-details-section">
+              <h3>{t('orders.details.statusUpdate')}</h3>
+              <OrderStatusSelect
+                currentStatus={order.status}
+                onStatusChange={(newStatus) => onUpdateStatus(order.id, newStatus)}
+              />
+            </div>
+          )}
 
-          {/* Paiement */}
           <OrderDetailsPayment order={order} />
 
-          {/* Historique */}
-          <OrderDetailsHistory history={order.history} />
+          <OrderDetailsHistory history={history} />
         </div>
 
-        {/* Footer */}
         <div className="order-modal-footer">
-          <button className="order-modal-btn secondary" onClick={handlePrint}>
+          <button className="order-modal-btn secondary" onClick={handlePrint} type="button">
             <RiPrinterLine />
             <span>{t('orders.details.print')}</span>
           </button>
-          <button className="order-modal-btn primary" onClick={onClose}>
+          <button className="order-modal-btn primary" onClick={onClose} type="button">
             {t('common.close')}
           </button>
         </div>

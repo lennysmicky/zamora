@@ -1,0 +1,122 @@
+/* src/components/specialOffers/css/SpecialOfferCard.css */
+
+.offer-preview-card {
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  max-width: 280px;
+}
+
+.dark .offer-preview-card {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* Image */
+.preview-image {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  background-color: var(--color-surface-light);
+}
+
+.dark .preview-image {
+  background-color: var(--color-surface-dark);
+}
+
+.preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-image.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+}
+
+.preview-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-error);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+}
+
+.preview-badge.large {
+  position: static;
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+}
+
+/* Content */
+.preview-content {
+  padding: 0.75rem;
+}
+
+.preview-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.dark .preview-title {
+  color: var(--color-text-white);
+}
+
+.preview-description {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.preview-code {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-surface-light);
+  border: 1px dashed var(--color-border-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem;
+}
+
+.dark .preview-code {
+  background-color: var(--color-surface-dark);
+  border-color: var(--color-border-dark);
+}
+
+.code-label {
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+.code-value {
+  font-size: 0.75rem;
+  font-family: monospace;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.preview-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.625rem;
+  color: var(--color-text-muted);
+}
+
+.preview-meta svg {
+  font-size: 0.75rem;
+}

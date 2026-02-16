@@ -1,11 +1,11 @@
 {
   "header": {
-    "toggleMenu": "Toggle menu",
+    "toggleMenu": "Open menu",
     "notifications": "Notifications",
     "messages": "Messages",
     "filters": {
       "allRestaurants": "All restaurants",
-      "thisMonth": "This Month"
+      "thisMonth": "This month"
     },
     "pages": {
       "menu": {
@@ -18,7 +18,7 @@
       "restaurant": {
         "dashboardSubtitle": "Overview of your restaurant",
         "ordersSubtitle": "Manage your orders",
-        "menuSubtitle": "Manage your dishes and categories",
+        "menuSubtitle": "Manage your meals and categories",
         "promotionsSubtitle": "Your active promotions",
         "specialOffersSubtitle": "Your special offers",
         "paymentsSubtitle": "Your payment history",
@@ -40,7 +40,7 @@
       },
       "menus": {
         "title": "Menus",
-        "subtitle": "Manage your dishes"
+        "subtitle": "Manage your meals"
       },
       "orders": {
         "title": "Orders",
@@ -71,7 +71,7 @@
         "subtitle": "Configure your preferences"
       },
       "specialOffers": {
-        "title": "Special Offers",
+        "title": "Special offers",
         "subtitle": "Manage special offers"
       }
     }
@@ -90,7 +90,7 @@
     "messages": "Messages",
     "notifications": "Notifications",
     "settings": "Settings",
-    "brandSubtitle": "Admin Dashboard",
+    "brandSubtitle": "Admin dashboard",
     "restaurantDashboard": "Restaurant Dashboard"
   },
   "theme": {
@@ -99,12 +99,12 @@
     "system": "System"
   },
   "language": {
-    "fr": "Français",
+    "fr": "French",
     "en": "English"
   },
   "user": {
     "notConnected": "Not connected",
-    "logout": "Logout"
+    "logout": "Log out"
   },
   "auth": {
     "email": "Email",
@@ -113,14 +113,14 @@
     "passwordPlaceholder": "••••••••",
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
-    "loading": "Logging in...",
+    "loading": "Signing in...",
     "backToLogin": "Back to login",
     "copyright": "© 2025 Zamora. All rights reserved.",
     "choice": {
       "title": "Welcome to Zamora",
-      "subtitle": "The delivery platform that connects restaurants and food lovers",
+      "subtitle": "The delivery platform connecting restaurants and food lovers",
       "restaurant": {
-        "title": "I am a Restaurant",
+        "title": "I’m a Restaurant",
         "description": "Manage your orders, menus and grow your business",
         "button": "Access",
         "features": {
@@ -130,7 +130,7 @@
         }
       },
       "client": {
-        "title": "I am a Customer",
+        "title": "I’m a Customer",
         "description": "Discover the best restaurants and order in a few clicks",
         "button": "Order",
         "features": {
@@ -139,11 +139,11 @@
           "delivery": "🚀 Delivery"
         }
       },
-      "adminAccess": "Admin Access",
+      "adminAccess": "Administrator Access",
       "copyright": "© 2025 Zamora. All rights reserved."
     },
     "login": {
-      "title": "Login",
+      "title": "Sign in",
       "welcomeBack": "Welcome back!",
       "email": "Email address",
       "emailPlaceholder": "your@email.com",
@@ -151,8 +151,8 @@
       "passwordPlaceholder": "Enter your password",
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
-      "button": "Log in",
-      "noAccount": "Don't have an account?",
+      "button": "Sign in",
+      "noAccount": "Don’t have an account yet?",
       "register": "Sign up",
       "or": "or",
       "continueWith": "Continue with"
@@ -167,29 +167,29 @@
       "email": "Email address",
       "emailPlaceholder": "your@email.com",
       "phone": "Phone number",
-      "phonePlaceholder": "+1 234 567 8900",
+      "phonePlaceholder": "+33 6 12 34 56 78",
       "password": "Password",
       "passwordPlaceholder": "Create a password",
       "confirmPassword": "Confirm password",
       "confirmPasswordPlaceholder": "Confirm your password",
-      "address": "Address",
-      "addressPlaceholder": "Restaurant address",
+      "address": "Restaurant address",
+      "addressPlaceholder": "EX: Lomé, Agoè, Street 123",
       "cuisineType": "Cuisine type",
       "cuisineTypePlaceholder": "Select cuisine type",
       "terms": "I accept the",
-      "termsLink": "Terms of Service",
+      "termsLink": "Terms of Use",
       "and": "and the",
       "privacyLink": "Privacy Policy",
       "button": "Create my account",
       "hasAccount": "Already have an account?",
-      "login": "Log in"
+      "login": "Sign in"
     },
     "admin": {
       "badge": "Administration",
       "title": "Admin Login",
-      "subtitle": "Access the admin dashboard",
+      "subtitle": "Access the administrator dashboard",
       "restricted": "Restricted access",
-      "loginBtn": "Log in"
+      "loginBtn": "Sign in"
     },
     "restaurant": {
       "loginTitle": "Restaurant Space",
@@ -199,7 +199,7 @@
     },
     "client": {
       "loginTitle": "Customer Login",
-      "loginSubtitle": "Order your favorite dishes",
+      "loginSubtitle": "Order your favorite meals",
       "registerTitle": "Create your account",
       "registerSubtitle": "Join Zamora and discover the best restaurants"
     },
@@ -215,11 +215,11 @@
       "invalidPassword": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords do not match",
       "invalidPhone": "Please enter a valid phone number",
-      "termsRequired": "You must accept the terms of service",
+      "termsRequired": "You must accept the terms of use",
       "loginFailed": "Login failed. Please check your credentials.",
       "registerFailed": "Registration failed. Please try again.",
       "invalidRestaurantName": "Name must be at least 2 characters",
-      "invalidCredentials": "Invalid email or password",
+      "invalidCredentials": "Incorrect email or password",
       "accountDisabled": "Your account has been disabled",
       "accountNotFound": "No account found with this email",
       "serverError": "Server error, please try again",
@@ -227,7 +227,7 @@
       "emailAlreadyExists": "This email is already in use",
       "phoneAlreadyExists": "This phone number is already in use",
       "restaurantNameAlreadyExists": "This restaurant name is already taken",
-      "tokenExpired": "Your session has expired, please log in again",
+      "tokenExpired": "Your session has expired, please sign in again",
       "unauthorized": "You are not authorized to access this resource",
       "tooShort": "Minimum 2 characters",
       "invalid": "Invalid value",
@@ -237,23 +237,24 @@
       "invalidToken": "Invalid token",
       "invalidRefreshToken": "Session expired",
       "registrationFailed": "Registration failed",
-      "forgotPasswordFailed": "Failed to send",
+      "forgotPasswordFailed": "Send failed",
       "resetPasswordFailed": "Reset failed",
       "sessionExpired": "Your session has expired",
-      "addressRequired": "The address is required",
+      "addressRequired": "Address is required",
       "invalidResponse": "Invalid server response",
       "invalidData": "Invalid data",
       "accessDenied": "Access denied. You are not an administrator.",
-      "userNotFound": "Administrator account not found",
+      "userNotFound": "Admin account not found",
       "network": "Unable to reach the server",
-      "tooManyAttempts": "Too many attempts. Please try again later.",
-      "unknown": "An unexpected error occurred"
+      "tooManyAttempts": "Too many attempts. Try again later.",
+      "unknown": "An error occurred",
+      "invalidAddress": "Invalid address"
     },
     "success": {
       "loginSuccess": "Login successful!",
       "registerSuccess": "Account created successfully!",
       "welcomeBack": "Welcome back!",
-      "logoutSuccess": "Logout successful",
+      "logoutSuccess": "Logged out successfully",
       "passwordResetSent": "Password reset email sent",
       "passwordChanged": "Password changed successfully",
       "profileUpdated": "Profile updated successfully"
@@ -297,7 +298,7 @@
     "loading": "Loading...",
     "kpi": {
       "totalOrders": "Total Orders",
-      "totalRevenue": "Total Revenue",
+      "totalRevenue": "Revenue",
       "averageBasket": "Average Basket",
       "uniqueCustomers": "Unique Customers",
       "pendingOrders": "Pending Orders",
@@ -320,8 +321,8 @@
     "itemPlural": "items",
     "newOrder": "New order",
     "export": "Export",
-    "exportCSV": "Export to CSV",
-    "exportPDF": "Export to PDF",
+    "exportCSV": "Export as CSV",
+    "exportPDF": "Export as PDF",
     "selected": "selected",
     "bulkActions": "Bulk actions",
     "bulkMarkDelivered": "Mark as delivered",
@@ -336,7 +337,7 @@
     "filters": {
       "allStatus": "All statuses",
       "allPaymentStatus": "All payments",
-      "searchRestaurant": "Search restaurant...",
+      "searchRestaurant": "Search a restaurant...",
       "noResults": "No results",
       "allMethods": "All methods",
       "allSources": "All sources",
@@ -344,11 +345,11 @@
       "today": "Today",
       "yesterday": "Yesterday",
       "thisMonth": "This month",
+      "all": "All",
       "thisYear": "This year",
       "last7Days": "Last 7 days",
       "last30Days": "Last 30 days",
       "custom": "Custom",
-      "all": "all",
       "advanced": "Advanced filters",
       "reset": "Reset"
     },
@@ -378,7 +379,7 @@
       "refunded": "Refunded"
     },
     "paymentMethod": {
-      "card": "Credit card",
+      "card": "Card",
       "cashOnDelivery": "Cash on delivery",
       "mobileMoney": "Mobile Money",
       "other": "Other"
@@ -446,6 +447,7 @@
     "loading": "Loading...",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "submit": "Submit",
     "close": "Close",
     "actions": "Actions",
@@ -458,43 +460,35 @@
     "refresh": "Refresh",
     "retry": "Retry",
     "required": "This field is required",
-    "invalidEmail": "Invalid email"
+    "invalidEmail": "Invalid email",
+    "reset": "Reset",
+    "duplicate": "Duplicate",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "saving": "Saving..."
   },
   "confirm": {
     "title": "Are you sure?",
     "message": "This action cannot be undone.",
     "deleteTitle": "Delete this item?",
     "deleteMessage": "This deletion is permanent.",
-    "logoutTitle": "Logout",
+    "logoutTitle": "Log out",
     "logoutMessage": "Are you sure you want to log out?",
     "cancelOrderTitle": "Cancel this order?",
     "cancelOrderMessage": "This action cannot be undone."
   },
-  "payments": {
-    "title": "Payments",
-    "revenue": "Monthly revenue",
-    "commission": "Zamora Commission",
-    "net": "Net to receive",
-    "history": "Transfer history",
-    "date": "Date",
-    "amount": "Amount",
-    "status": "Status",
-    "paid": "Paid",
-    "pending": "Pending",
-    "processing": "Processing"
-  },
   "menu": {
     "title": "Menus & Meals",
-    "subtitle": "Manage your categories and dishes",
+    "subtitle": "Manage your categories and meals",
     "categories": {
       "title": "Categories",
-      "add": "Add category",
+      "add": "Add a category",
       "edit": "Edit category",
       "delete": "Delete category",
       "empty": "No categories",
       "emptyDesc": "Create your first category to get started.",
       "name": "Category name",
-      "namePlaceholder": "E.g.: Desserts",
+      "namePlaceholder": "e.g. Desserts",
       "description": "Description",
       "descriptionPlaceholder": "Category description",
       "order": "Display order",
@@ -507,15 +501,15 @@
     },
     "meals": {
       "title": "Meals",
-      "add": "Add meal",
+      "add": "Add a meal",
       "edit": "Edit meal",
       "delete": "Delete meal",
       "empty": "No meals",
       "emptyDesc": "Add meals to this category.",
       "selectCategory": "Select a category",
-      "selectCategoryDesc": "Choose a category on the left to see its meals.",
+      "selectCategoryDesc": "Choose a category on the left to view its meals.",
       "name": "Meal name",
-      "namePlaceholder": "E.g.: Tiramisu",
+      "namePlaceholder": "e.g. Tiramisu",
       "description": "Description",
       "descriptionPlaceholder": "Meal description",
       "category": "Category",
@@ -523,7 +517,7 @@
       "pricePlaceholder": "0.00",
       "currency": "CFA",
       "image": "Image",
-      "imageUpload": "Upload image",
+      "imageUpload": "Upload an image",
       "imageUrl": "Image URL",
       "available": "Available",
       "unavailable": "Unavailable",
@@ -545,13 +539,13 @@
       "mealAdded": "Meal added successfully",
       "mealUpdated": "Meal updated successfully",
       "mealDeleted": "Meal deleted successfully",
-      "availabilityChanged": "Availability changed",
+      "availabilityChanged": "Availability updated",
       "error": "An error occurred"
     }
   },
   "promotions": {
     "title": "Promotions",
-    "addPromotion": "Add promotion",
+    "addPromotion": "Add a promotion",
     "editPromotion": "Edit promotion",
     "deletePromotion": "Delete promotion",
     "name": "Name",
@@ -563,12 +557,24 @@
     "code": "Promo code",
     "usageLimit": "Usage limit",
     "usageCount": "Uses",
-    "subtitle": "Manage the promotions displayed on the mobile app",
-    "addNew": "New Promotion",
-    "allRestaurants": "All Restaurants",
-    "searchPlaceholder": "Search for a promotion...",
+    "confirmDelete": "Delete this promotion?",
+    "confirmDeleteMessage": "This action is irreversible.",
+    "addNew": "New promotion",
+    "allRestaurants": "All restaurants",
+    "searchPlaceholder": "Search a promotion...",
     "activate": "Activate",
     "deactivate": "Deactivate",
+    "subtitle": "Manage your promotions and offers",
+    "add": "Add",
+    "search": "Search...",
+    "createTitle": "New promotion",
+    "editTitle": "Edit promotion",
+    "deleteTitle": "Delete promotion",
+    "deleteMessage": "Delete this promotion?",
+    "noResults": "No results",
+    "noResultsDesc": "Adjust your filters",
+    "noPromotions": "No promotions",
+    "noPromotionsDesc": "Create your first promotion",
     "stats": {
       "total": "Total",
       "active": "Active",
@@ -596,38 +602,38 @@
       "actions": "Actions"
     },
     "form": {
-      "createTitle": "New Promotion",
-      "editTitle": "Edit Promotion",
+      "createTitle": "New promotion",
+      "editTitle": "Edit promotion",
       "title": "Title",
-      "titlePlaceholder": "Ex: 20% off pizzas",
+      "titlePlaceholder": "e.g. -20% on pizzas",
       "description": "Description",
       "descriptionPlaceholder": "Describe the promotion...",
-      "code": "Promo Code",
-      "codePlaceholder": "Ex: PIZZA20",
-      "discountType": "Discount Type",
+      "code": "Promo code",
+      "codePlaceholder": "e.g. PIZZA20",
+      "discountType": "Discount type",
       "percentage": "Percentage",
-      "fixedAmount": "Fixed Amount",
+      "fixedAmount": "Fixed amount",
       "discountValue": "Value",
-      "minOrderAmount": "Minimum Order",
+      "minOrderAmount": "Minimum order",
       "restaurant": "Restaurant",
-      "allRestaurants": "All Restaurants",
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "isActive": "Active Promotion"
+      "allRestaurants": "All restaurants",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "isActive": "Promotion active"
     },
     "empty": {
-      "title": "No Promotions",
+      "title": "No promotions",
       "description": "Create your first promotion to attract more customers"
     },
     "deleteDialog": {
-      "title": "Delete Promotion",
-      "message": "Are you sure you want to delete the promotion \"{{title}}\"? This action cannot be undone."
+      "title": "Delete promotion",
+      "message": "Are you sure you want to delete the promotion \"{{title}}\"? This action is irreversible."
     },
     "errors": {
       "fetchFailed": "Error loading promotions",
-      "createFailed": "Error creating promotion",
-      "updateFailed": "Error updating promotion",
-      "deleteFailed": "Error deleting promotion",
+      "createFailed": "Error creating",
+      "updateFailed": "Error updating",
+      "deleteFailed": "Error deleting",
       "toggleFailed": "Error changing status",
       "titleRequired": "Title is required",
       "discountRequired": "Discount value is required",
@@ -636,16 +642,6 @@
       "endDateRequired": "End date is required",
       "endDateInvalid": "End date must be after start date"
     }
-  },
-  "specialOffers": {
-    "title": "Special Offers",
-    "addOffer": "Add offer",
-    "editOffer": "Edit offer",
-    "deleteOffer": "Delete offer",
-    "offerName": "Offer name",
-    "description": "Description",
-    "discount": "Discount",
-    "validUntil": "Valid until"
   },
   "notifications": {
     "title": "Notifications",
@@ -657,10 +653,10 @@
     "systemAlert": "System alert",
     "settings": "Settings",
     "save": "Save",
-    "ownerNewOrder": "Notify restaurant owner on new order",
-    "clientOrderCreated": "Notify customer on order creation",
-    "clientStatusChange": "Notify customer on status change",
-    "clientNewPromotion": "Notify customers of new promotions",
+    "ownerNewOrder": "Notify the owner for each new order",
+    "clientOrderCreated": "Notify the customer when an order is created",
+    "clientStatusChange": "Notify the customer on status change",
+    "clientNewPromotion": "Notify customers about new promotions",
     "channelEmail": "Email",
     "channelPush": "Push",
     "channels": "Notification channels",
@@ -692,6 +688,12 @@
       "sent": "Sent",
       "pending": "Pending",
       "failed": "Failed"
+    },
+    "statsLabels": {
+      "total": "Total",
+      "sent": "Sent",
+      "pending": "Pending",
+      "failed": "Failures"
     }
   },
   "messages": {
@@ -707,16 +709,16 @@
     "noMessages": "No messages in this conversation",
     "selectConversation": "Select a conversation",
     "selectConversationDesc": "Choose a conversation from the list to view messages",
-    "selectAnnouncement":" Select a announcement",
-    "selectAnnouncementDesc": "Choose a announcement from the list to view announcement",
     "announcementsTitle": "Announcements",
+    "selectAnnouncement": "Select an announcement",
+    "selectAnnouncementDesc": "Choose an announcement from the list to view details",
     "announcementsDesc": "Create announcements to inform all restaurants",
-    "announcementsRestaurantDesc": "View important announcements from administration",
-    "typeMessage": "Type a message...",
+    "announcementsRestaurantDesc": "View important announcements from the administration",
+    "typeMessage": "Write a message...",
     "send": "Send",
     "sending": "Sending...",
     "conversationClosed": "This conversation is closed",
-    "attachFile": "Attach file",
+    "attachFile": "Attach a file",
     "emoji": "Emoji",
     "yesterday": "Yesterday",
     "time": {
@@ -759,7 +761,7 @@
     "moreOptions": "More options",
     "close": "Close",
     "deleteTitle": "Confirm deletion",
-    "deleteConversationConfirm": "Are you sure you want to delete this conversation? This action cannot be undone.",
+    "deleteConversationConfirm": "Are you sure you want to delete this conversation? This action is irreversible.",
     "deleteAnnouncementConfirm": "Are you sure you want to delete this announcement?",
     "deleteMessageConfirm": "Are you sure you want to delete this message?",
     "delete": "Delete",
@@ -827,23 +829,23 @@
     }
   },
   "logout": {
-    "title": "Logout",
-    "confirmMessage": "Are you sure you want to log out?"
+    "title": "Log out",
+    "confirmMessage": "Do you really want to log out?"
   },
   "landing": {
     "nav": {
       "features": "Features",
       "benefits": "Benefits",
       "contact": "Contact",
-      "login": "Login",
+      "login": "Sign in",
       "register": "Create my restaurant"
     },
     "hero": {
-      "badge": "The #1 Restaurant Management Platform",
+      "badge": "#1 restaurant management platform",
       "title1": "Manage your restaurant",
       "titleHighlight": "The real taste",
-      "subtitle": "Complete management solution from order taking to sales tracking. Your customers order via QR code, pay online, and you gain efficiency.",
-      "getStarted": "Get started for free",
+      "subtitle": "Complete management solution from ordering to sales tracking. Customers order via QR code, pay online, and you gain efficiency.",
+      "getStarted": "Start for free",
       "watchDemo": "Watch demo",
       "orderNow": "Order now",
       "stats": {
@@ -855,37 +857,37 @@
         "newOrder": "New order",
         "items": "items",
         "payment": "Payment received",
-        "ready": "Order ready",
+        "ready": "Ready",
         "orderReady": "Table 3 - Ready to serve"
       }
     },
     "features": {
       "badge": "Features",
       "title": "Everything you need",
-      "subtitle": "A complete solution to modernize your restaurant and improve customer experience",
+      "subtitle": "A complete solution to modernize your restaurant and improve the customer experience",
       "qrCode": {
-        "title": "QR Code Orders",
-        "description": "Each table has a unique QR code. Customers access the menu, order, and pay without waiting."
+        "title": "QR Code Ordering",
+        "description": "Each table has a unique QR code. Customers access the menu, order and pay without waiting."
       },
       "realtime": {
         "title": "Real-time tracking",
-        "description": "Orders appear instantly on the kitchen interface and server app."
+        "description": "Orders instantly appear on the kitchen interface and the waiter app."
       },
       "payment": {
         "title": "Integrated payment",
-        "description": "Credit card, mobile money, or e-wallet. All accepted."
+        "description": "Card, mobile money or e-wallet. Everything is accepted."
       },
       "analytics": {
-        "title": "Statistics & Reports",
-        "description": "Analyze your sales, popular dishes, and performance with intuitive dashboards."
+        "title": "Analytics & Reports",
+        "description": "Analyze sales, popular meals and performance with intuitive dashboards."
       },
       "tables": {
         "title": "Table management",
-        "description": "Visualize table availability and manage reservations easily."
+        "description": "View table availability and manage reservations easily."
       },
       "multiuser": {
         "title": "Multi-users",
-        "description": "Create accounts for servers, cooks, and managers with personalized access."
+        "description": "Create accounts for waiters, cooks and managers with customized access."
       }
     },
     "howItWorks": {
@@ -893,11 +895,11 @@
       "title": "As simple as 1, 2, 3",
       "step1": {
         "title": "Scan the QR Code",
-        "description": "The customer scans the code on their table using their phone"
+        "description": "The customer scans the code on their table with their phone"
       },
       "step2": {
         "title": "Order online",
-        "description": "They browse the menu, choose dishes, and confirm the order"
+        "description": "They browse the menu, choose meals and confirm the order"
       },
       "step3": {
         "title": "Pay and enjoy",
@@ -907,12 +909,12 @@
     "benefits": {
       "badge": "Benefits",
       "title": "Why choose Zamora?",
-      "subtitle": "Increase your revenue and improve your customers' experience",
+      "subtitle": "Increase revenue and improve your customers’ experience",
       "cta": "Join Zamora",
       "list": {
-        "waitTime": "Reduced waiting time",
-        "sales": "Increased sales through promotions",
-        "organization": "Optimal organization of dining area and kitchen",
+        "waitTime": "Reduced wait time",
+        "sales": "Increased sales with promotions",
+        "organization": "Optimal dining room & kitchen organization",
         "realtime": "Real-time performance tracking",
         "experience": "Better customer experience",
         "automation": "Operations automation"
@@ -924,12 +926,12 @@
     },
     "cta": {
       "title": "Ready to revolutionize your restaurant?",
-      "subtitle": "Join the hundreds of restaurants already using Zamora",
+      "subtitle": "Join hundreds of restaurants already using Zamora",
       "register": "Create my restaurant",
       "login": "I already have an account"
     },
     "footer": {
-      "tagline": "The real taste - The modern solution to automate operations and provide a smooth experience.",
+      "tagline": "The real taste - The modern solution to automate operations and deliver a smooth experience.",
       "product": "Product",
       "features": "Features",
       "benefits": "Benefits",
@@ -940,7 +942,7 @@
       "careers": "Careers",
       "legal": "Legal",
       "privacy": "Privacy",
-      "terms": "Terms of Service",
+      "terms": "Terms",
       "rights": "All rights reserved."
     }
   },
@@ -957,7 +959,7 @@
     "deleteTitle": "Delete restaurant",
     "deleteMessage": "Delete this restaurant?",
     "noResults": "No results",
-    "noResultsDesc": "Try adjusting your filters",
+    "noResultsDesc": "Adjust your filters",
     "noRestaurants": "No restaurants",
     "noRestaurantsDesc": "Create your first restaurant",
     "stats": {
@@ -978,7 +980,7 @@
       "name": "Restaurant",
       "address": "Address",
       "contact": "Contact",
-      "hours": "Opening hours",
+      "hours": "Hours",
       "status": "Status",
       "actions": "Actions"
     },
@@ -1004,7 +1006,7 @@
       "email": "Email",
       "emailPlaceholder": "e.g. contact@restaurant.com",
       "hours": "Opening hours",
-      "hoursPlaceholder": "e.g. 10:00 AM – 11:00 PM",
+      "hoursPlaceholder": "e.g. 10:00 - 23:00",
       "logo": "Logo URL",
       "logoPlaceholder": "https://...",
       "status": "Status",
@@ -1017,16 +1019,16 @@
     },
     "delete": {
       "title": "Delete restaurant",
-      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
+      "message": "Are you sure you want to delete \"{{name}}\"? This action is irreversible."
     },
     "empty": {
       "title": "No restaurants",
       "message": "Start by creating your first restaurant"
     },
     "errors": {
-      "loadFailed": "Failed to load restaurants",
-      "saveFailed": "Failed to save",
-      "deleteFailed": "Failed to delete"
+      "loadFailed": "Error loading restaurants",
+      "saveFailed": "Error saving",
+      "deleteFailed": "Error deleting"
     }
   },
   "table": {
@@ -1037,31 +1039,38 @@
   },
   "form": {
     "name": "Restaurant name",
-    "namePlaceholder": "Ex: Pizza Palace",
+    "namePlaceholder": "e.g. Pizza Palace",
     "address": "Address",
-    "addressPlaceholder": "Ex: 123 Main Street",
+    "addressPlaceholder": "e.g. 123 Paris Street",
     "phone": "Phone",
     "phonePlaceholder": "0612345678",
     "email": "Email",
     "emailPlaceholder": "contact@restaurant.com",
-    "activeStatus": "Active restaurant"
+    "activeStatus": "Restaurant active"
   },
   "errors": {
     "load": "Loading error",
-    "save": "Save error",
-    "delete": "Delete error"
+    "save": "Error while saving",
+    "delete": "Error while deleting"
   },
   "payments": {
     "title": "Payments",
     "subtitle": "Manage your payments and transactions",
-    
+    "revenue": "Monthly revenue",
+    "commission": "Zamora commission",
+    "net": "Net to receive",
+    "history": "Payout history",
+    "date": "Date",
+    "amount": "Amount",
+    "paid": "Paid",
+    "pending": "Pending",
+    "processing": "Processing",
     "tabs": {
       "transactions": "Transactions",
       "config": "Configuration",
       "overview": "Overview",
       "restaurants": "By restaurant"
     },
-    
     "stats": {
       "total": "Total",
       "paid": "Paid",
@@ -1072,7 +1081,6 @@
       "weekAmount": "This week",
       "monthAmount": "This month"
     },
-    
     "status": {
       "paid": "Paid",
       "cashPaid": "Collected",
@@ -1082,7 +1090,6 @@
       "refunded": "Refunded",
       "cancelled": "Cancelled"
     },
-    
     "methods": {
       "cash": "Cash",
       "mobileMoney": "Mobile Money",
@@ -1091,7 +1098,6 @@
       "moovMoney": "Moov Money",
       "wave": "Wave"
     },
-    
     "filters": {
       "7days": "7 days",
       "30days": "30 days",
@@ -1104,7 +1110,6 @@
       "dateFrom": "Start date",
       "dateTo": "End date"
     },
-    
     "table": {
       "date": "Date",
       "order": "Order",
@@ -1117,9 +1122,8 @@
       "reference": "Reference",
       "fee": "Fee"
     },
-    
     "detail": {
-      "title": "Transaction detail",
+      "title": "Transaction details",
       "order": "Order",
       "date": "Date",
       "customer": "Customer",
@@ -1135,23 +1139,19 @@
       "phone": "Phone",
       "provider": "Provider"
     },
-    
     "markPaid": {
       "title": "Mark as collected",
       "message": "Confirm collection of this payment?",
       "button": "Mark as collected",
       "success": "Payment marked as collected"
     },
-    
     "export": "Export",
     "exportSuccess": "Export successful",
     "exportError": "Export error",
-    
     "empty": {
       "title": "No transactions",
       "message": "Transactions will appear here"
     },
-    
     "config": {
       "title": "Payment configuration",
       "methods": "Payment methods",
@@ -1159,7 +1159,7 @@
       "mobileMoney": "Mobile Money",
       "card": "Card payment",
       "currency": "Currency",
-      "apiSettings": "API Settings",
+      "apiSettings": "API settings",
       "mode": "Mode",
       "testMode": "Test",
       "prodMode": "Production",
@@ -1170,12 +1170,11 @@
       "connectionOk": "Connection OK",
       "connectionError": "Connection error",
       "saveSuccess": "Configuration saved",
-      "saveError": "Error saving configuration"
+      "saveError": "Error saving"
     },
-    
     "admin": {
-      "title": "Payment management",
-      "subtitle": "Supervise all platform payments",
+      "title": "Payments management",
+      "subtitle": "Oversee all platform payments",
       "globalStats": "Global statistics",
       "byRestaurant": "By restaurant",
       "recentTransactions": "Recent transactions",
@@ -1187,13 +1186,190 @@
       "pendingPayouts": "Pending payouts",
       "completedPayouts": "Completed payouts"
     },
-    
     "errors": {
-      "loadFailed": "Failed to load transactions",
-      "saveFailed": "Failed to save",
+      "loadFailed": "Error loading transactions",
+      "saveFailed": "Error saving",
       "connectionFailed": "Connection failed",
       "exportFailed": "Export failed",
-      "markPaidFailed": "Failed to mark as paid"
+      "markPaidFailed": "Error while marking"
     }
+  },
+  "specialOffers": {
+    "title": "Special offers",
+    "subtitle": "Manage your offers and promotions",
+    "newOffer": "New offer",
+    "addOffer": "Add an offer",
+    "editOffer": "Edit offer",
+    "deleteOffer": "Delete offer",
+    "offerName": "Offer name",
+    "description": "Description",
+    "discount": "Discount",
+    "validUntil": "Valid until",
+    "tabs": {
+      "list": "Offers",
+      "templates": "Templates",
+      "analytics": "Analytics"
+    },
+    "stats": {
+      "total": "Total offers",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "views": "Views",
+      "redemptions": "Redemptions",
+      "revenue": "Revenue generated",
+      "conversion": "Conversion",
+      "restaurants": "Restaurants"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "scheduled": "Scheduled",
+      "ended": "Ended",
+      "paused": "Paused"
+    },
+    "types": {
+      "percentage": "% Discount",
+      "fixed": "Fixed amount",
+      "specialPrice": "Special price",
+      "bundle": "Bundle",
+      "bogo": "Buy 1 Get 1",
+      "freeDelivery": "Free delivery"
+    },
+    "channels": {
+      "dineIn": "Dine-in",
+      "takeaway": "Takeaway",
+      "delivery": "Delivery"
+    },
+    "target": {
+      "all": "Entire menu",
+      "category": "Category",
+      "items": "Specific items"
+    },
+    "filters": {
+      "search": "Search an offer...",
+      "allStatus": "All statuses",
+      "allTypes": "All types",
+      "allChannels": "All channels",
+      "allRestaurants": "All restaurants",
+      "7days": "7 days",
+      "30days": "30 days",
+      "90days": "90 days",
+      "all": "All"
+    },
+    "table": {
+      "title": "Title",
+      "type": "Type",
+      "value": "Value",
+      "period": "Period",
+      "target": "Target",
+      "status": "Status",
+      "usage": "Usage",
+      "actions": "Actions",
+      "restaurant": "Restaurant"
+    },
+    "form": {
+      "createTitle": "New special offer",
+      "editTitle": "Edit offer",
+      "basicInfo": "Basic information",
+      "title": "Title",
+      "titlePlaceholder": "e.g. Happy Hour -20%",
+      "description": "Short description",
+      "descriptionPlaceholder": "Describe your offer...",
+      "image": "Image (optional)",
+      "uploadImage": "Add an image",
+      "offerType": "Offer type",
+      "percentage": "Percentage discount",
+      "fixedAmount": "Discount amount",
+      "specialPrice": "Special price",
+      "target": "Offer target",
+      "targetType": "Apply to",
+      "period": "Validity period",
+      "startDate": "Start date",
+      "endDate": "End date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "daysOfWeek": "Days of the week",
+      "daysHint": "Leave empty for all days",
+      "conditions": "Conditions",
+      "minOrder": "Minimum order",
+      "channels": "Channels",
+      "channelsHint": "Leave empty for all channels",
+      "limits": "Usage limits",
+      "maxRedemptions": "Max total redemptions",
+      "maxPerCustomer": "Max per customer",
+      "unlimited": "Unlimited",
+      "promoCode": "Promo code (optional)",
+      "code": "Code",
+      "generate": "Generate",
+      "create": "Create offer"
+    },
+    "detail": {
+      "title": "Offer details",
+      "preview": "Customer preview",
+      "info": "Information",
+      "status": "Status",
+      "type": "Type",
+      "value": "Value",
+      "promoCode": "Promo code",
+      "period": "Period",
+      "startDate": "Start",
+      "endDate": "End",
+      "timeSlot": "Time slot",
+      "days": "Days",
+      "stats": "Statistics",
+      "history": "History"
+    },
+    "delete": {
+      "title": "Delete offer",
+      "message": "Are you sure you want to delete this offer?"
+    },
+    "toggle": {
+      "title": "Change status",
+      "activate": "Do you want to activate this offer?",
+      "deactivate": "Do you want to deactivate this offer?"
+    },
+    "empty": {
+      "title": "No offers",
+      "message": "Create your first special offer"
+    },
+    "templates": {
+      "title": "Offer templates",
+      "subtitle": "Use these templates to quickly create offers",
+      "use": "Use",
+      "happyHour": "Happy Hour",
+      "happyHourDesc": "Discount on drinks from 4pm to 7pm",
+      "lunchMenu": "Lunch menu",
+      "lunchMenuDesc": "Special price for lunch",
+      "freeDelivery": "Free delivery",
+      "freeDeliveryDesc": "Free delivery from 10,000 CFA",
+      "buyOneGetOne": "Buy 1 Get 1",
+      "buyOneGetOneDesc": "Second identical item free",
+      "weekendBundle": "Weekend bundle",
+      "weekendBundleDesc": "Menu + drink + dessert at a discounted price",
+      "firstOrder": "First order",
+      "firstOrderDesc": "Discount for new customers"
+    },
+    "analytics": {
+      "topOffers": "Top performing offers",
+      "byRestaurant": "By restaurant",
+      "summary": "Global summary",
+      "restaurant": "Restaurant",
+      "activeOffers": "Active offers",
+      "totalRevenue": "Total revenue generated",
+      "totalRedemptions": "Total redemptions",
+      "avgConversion": "Average conversion"
+    }
+  },
+  "days": {
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat",
+    "sun": "Sun"
+  },
+  "validation": {
+    "required": "Required field"
   }
 }

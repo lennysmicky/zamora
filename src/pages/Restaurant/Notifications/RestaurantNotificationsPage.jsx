@@ -1,20 +1,37 @@
 // src/pages/Restaurant/Notifications/RestaurantNotificationsPage.jsx
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import {
+  RiSettings4Line,
+  RiFileList3Line,
+  RiRefreshLine,
+  RiSave3Line,
+  RiLoader4Line,
+  RiNotification3Line,
+  RiMailLine,
+  RiNotification4Line,
+  RiShoppingBag3Line,
+  RiExchangeLine,
+  RiMegaphoneLine,
+  RiCheckboxCircleLine,
+  RiTimeLine,
+  RiCloseCircleLine,
+  RiDeleteBinLine,
+  RiMailSendLine,
+  RiSmartphoneLine
+} from 'react-icons/ri';
 import useNotifications from '../../../hooks/useNotifications';
 import ConfirmDialog from '../../../components/common/ConfirmDialog';
 import LoadingSpinner from '../../../components/common/LoadingSpinner';
-import '../../Notifications/NotificationsPage.css';
+import './RestaurantNotificationsPage.css';
 
 const RestaurantNotificationsPage = () => {
   const { t } = useTranslation();
   
-  // Hook notifications → Auto-détecte restaurantId via authStore
-  // Restaurant voit UNIQUEMENT ses propres notifications
   const {
     settings,
     logs,
+    stats,
     loading,
     saving,
     error,
@@ -22,33 +39,30 @@ const RestaurantNotificationsPage = () => {
     saveSettings,
     updateSetting,
     fetchLogs,
-    removeLog,
-    clearMessages
-  } = useNotifications(); // ← Pas besoin de passer l'ID, le hook le détecte
+    removeLog
+  } = useNotifications();
 
-  // États locaux
+  // Local states
+  const [activeTab, setActiveTab] = useState('settings');
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState(null);
-  const [activeTab, setActiveTab] = useState('settings');
 
-  // Charger les logs quand on change d'onglet
+  // Fetch logs when tab changes
   useEffect(() => {
     if (activeTab === 'log') {
       fetchLogs();
     }
   }, [activeTab, fetchLogs]);
 
-  // Effacer les messages après 3 secondes
-  useEffect(() => {
-    if (success || error) {
-      const timer = setTimeout(() => clearMessages(), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [success, error, clearMessages]);
-
   // Handlers
   const handleSave = async () => {
     await saveSettings(settings);
+  };
+
+  const handleRefresh = () => {
+    if (activeTab === 'log') {
+      fetchLogs();
+    }
   };
 
   const handleDeleteLog = (id) => {
@@ -64,198 +78,162 @@ const RestaurantNotificationsPage = () => {
     }
   };
 
+  const getEventIcon = (eventType) => {
+    switch (eventType) {
+      case 'new_order':
+        return <RiShoppingBag3Line />;
+      case 'status_change':
+        return <RiExchangeLine />;
+      case 'promotion':
+        return <RiMegaphoneLine />;
+      default:
+        return <RiNotification3Line />;
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'sent':
+        return <RiCheckboxCircleLine />;
+      case 'pending':
+        return <RiTimeLine />;
+      case 'failed':
+        return <RiCloseCircleLine />;
+      default:
+        return <RiTimeLine />;
+    }
+  };
+
+  const getChannelIcon = (channel) => {
+    switch (channel) {
+      case 'email':
+        return <RiMailLine />;
+      case 'push':
+        return <RiNotification4Line />;
+      case 'sms':
+        return <RiSmartphoneLine />;
+      default:
+        return <RiMailLine />;
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Loading state
   if (loading && !settings) {
     return (
       <div className="notifications-page">
-        <LoadingSpinner />
+        <div className="notifications-loading">
+          <LoadingSpinner />
+        </div>
       </div>
     );
   }
 
+  // Safe stats with default values
+  const safeStats = {
+    total: stats?.total ?? 0,
+    sent: stats?.sent ?? 0,
+    pending: stats?.pending ?? 0,
+    failed: stats?.failed ?? 0
+  };
+
+  // Safe settings with default values
+  const safeSettings = {
+    notify_owner_new_order: settings?.notify_owner_new_order ?? true,
+    notify_client_order_created: settings?.notify_client_order_created ?? true,
+    notify_client_status_change: settings?.notify_client_status_change ?? true,
+    notify_client_new_promotion: settings?.notify_client_new_promotion ?? false,
+    channel_email: settings?.channel_email ?? true,
+    channel_push: settings?.channel_push ?? false
+  };
+
   return (
     <div className="notifications-page">
-      
-      {/* Messages */}
-      {error && <div className="notifications-message error">{error}</div>}
-      {success && <div className="notifications-message success">{success}</div>}
+      {/* Header Row */}
+      <div className="notifications-header-row">
+        <div className="notifications-tabs">
+          <button
+            className={`notifications-tab ${activeTab === 'settings' ? 'active' : ''}`}
+            onClick={() => setActiveTab('settings')}
+          >
+            <RiSettings4Line />
+            <span>{t('notifications.settings')}</span>
+          </button>
+          <button
+            className={`notifications-tab ${activeTab === 'log' ? 'active' : ''}`}
+            onClick={() => setActiveTab('log')}
+          >
+            <RiFileList3Line />
+            <span>{t('notifications.log')}</span>
+          </button>
+        </div>
 
-      {/* Tabs */}
-      <div className="notifications-tabs">
-        <button
-          className={`notifications-tab ${activeTab === 'settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('settings')}
-        >
-          {t('notifications.settings')}
-        </button>
-        <button
-          className={`notifications-tab ${activeTab === 'log' ? 'active' : ''}`}
-          onClick={() => setActiveTab('log')}
-        >
-          {t('notifications.log')}
-        </button>
+        <div className="notifications-header-actions">
+          {activeTab === 'log' && (
+            <button
+              className="notifications-btn-secondary"
+              onClick={handleRefresh}
+              disabled={loading}
+              title={t('common.refresh')}
+            >
+              <RiRefreshLine className={loading ? 'spin' : ''} />
+            </button>
+          )}
+          {activeTab === 'settings' && (
+            <button
+              className="notifications-btn-primary"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? <RiLoader4Line className="spin" /> : <RiSave3Line />}
+              <span>{saving ? t('notifications.saving') : t('notifications.save')}</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Contenu */}
-      {activeTab === 'settings' ? (
-        <div className="notifications-grid">
-          
-          {/* Card Événements */}
-          <div className="card notifications-card">
-            <div className="notifications-card-header">
-              <h2>{t('notifications.events')}</h2>
-            </div>
-            <div className="notifications-card-body">
-              
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_owner_new_order}
-                  onChange={(e) => updateSetting('notify_owner_new_order', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  {t('notifications.ownerNewOrder')}
-                </span>
-              </label>
-
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_client_order_created}
-                  onChange={(e) => updateSetting('notify_client_order_created', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  {t('notifications.clientOrderCreated')}
-                </span>
-              </label>
-
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_client_status_change}
-                  onChange={(e) => updateSetting('notify_client_status_change', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  {t('notifications.clientStatusChange')}
-                </span>
-              </label>
-
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.notify_client_new_promotion}
-                  onChange={(e) => updateSetting('notify_client_new_promotion', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  {t('notifications.clientNewPromotion')}
-                </span>
-              </label>
-
-            </div>
-          </div>
-
-          {/* Card Canaux */}
-          <div className="card notifications-card">
-            <div className="notifications-card-header">
-              <h2>{t('notifications.channels')}</h2>
-            </div>
-            <div className="notifications-card-body">
-              
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.channel_email}
-                  onChange={(e) => updateSetting('channel_email', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  📧 {t('notifications.channelEmail')}
-                </span>
-              </label>
-
-              <label className="notifications-toggle">
-                <input
-                  type="checkbox"
-                  checked={settings.channel_push}
-                  onChange={(e) => updateSetting('channel_push', e.target.checked)}
-                />
-                <span className="notifications-toggle-slider"></span>
-                <span className="notifications-toggle-text">
-                  🔔 {t('notifications.channelPush')}
-                </span>
-              </label>
-
-            </div>
-          </div>
-
+      {/* Messages */}
+      {success && (
+        <div className="notifications-toast success">
+          <RiCheckboxCircleLine />
+          <span>{success}</span>
         </div>
-      ) : (
-        /* Journal */
-        <div className="card notifications-card notifications-log-card">
-          <div className="notifications-card-header">
-            <h2>{t('notifications.log')}</h2>
-          </div>
-          <div className="notifications-card-body">
-            {loading ? (
-              <LoadingSpinner />
-            ) : logs.length === 0 ? (
-              <div className="notifications-empty">
-                <span className="notifications-empty-icon">📭</span>
-                <p>{t('notifications.noLogs')}</p>
-              </div>
-            ) : (
-              <div className="notifications-log-list">
-                {logs.map((log) => (
-                  <div key={log.id} className={`notifications-log-item ${log.status}`}>
-                    <div className="notifications-log-item-header">
-                      <span className={`notifications-log-type ${log.event_type}`}>
-                        {t(`notifications.eventType.${log.event_type}`)}
-                      </span>
-                      <span className="notifications-log-date">
-                        {new Date(log.created_at).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="notifications-log-item-body">
-                      <h4>{log.title}</h4>
-                      <p>{log.message}</p>
-                    </div>
-                    <div className="notifications-log-item-footer">
-                      <span className="notifications-log-channel">
-                        {log.channel === 'email' ? '📧' : '🔔'} {log.channel}
-                      </span>
-                      <span className={`notifications-log-status ${log.status}`}>
-                        {t(`notifications.status.${log.status}`)}
-                      </span>
-                      <button
-                        className="notifications-log-delete"
-                        onClick={() => handleDeleteLog(log.id)}
-                        title={t('notifications.delete')}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+      )}
+      {error && (
+        <div className="notifications-toast error">
+          <RiCloseCircleLine />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Bouton Sauvegarder */}
-      {activeTab === 'settings' && (
-        <div className="notifications-actions">
-          <button
-            className="btn btn-primary"
-            onClick={handleSave}
-            disabled={saving}
-          >
-            {saving ? t('notifications.saving') : t('notifications.save')}
-          </button>
-        </div>
+      {/* Content */}
+      {activeTab === 'settings' ? (
+        <SettingsTab
+          settings={safeSettings}
+          updateSetting={updateSetting}
+          t={t}
+        />
+      ) : (
+        <LogsTab
+          logs={logs || []}
+          stats={safeStats}
+          loading={loading}
+          onDelete={handleDeleteLog}
+          getEventIcon={getEventIcon}
+          getStatusIcon={getStatusIcon}
+          getChannelIcon={getChannelIcon}
+          formatDate={formatDate}
+          t={t}
+        />
       )}
 
       {/* Confirm Dialog */}
@@ -267,7 +245,220 @@ const RestaurantNotificationsPage = () => {
         message={t('notifications.deleteConfirm')}
         confirmText={t('notifications.delete')}
         cancelText={t('notifications.cancel')}
+        variant="danger"
       />
+    </div>
+  );
+};
+
+// ============================================
+// SETTINGS TAB
+// ============================================
+const SettingsTab = ({ settings, updateSetting, t }) => {
+  return (
+    <div className="notifications-settings">
+      {/* Events Card */}
+      <div className="notifications-card">
+        <div className="notifications-card-header">
+          <RiNotification3Line />
+          <h3>{t('notifications.events')}</h3>
+        </div>
+        <div className="notifications-card-body">
+          <ToggleItem
+            icon={<RiShoppingBag3Line />}
+            label={t('notifications.ownerNewOrder')}
+            checked={settings.notify_owner_new_order}
+            onChange={(value) => updateSetting('notify_owner_new_order', value)}
+          />
+          <ToggleItem
+            icon={<RiMailSendLine />}
+            label={t('notifications.clientOrderCreated')}
+            checked={settings.notify_client_order_created}
+            onChange={(value) => updateSetting('notify_client_order_created', value)}
+          />
+          <ToggleItem
+            icon={<RiExchangeLine />}
+            label={t('notifications.clientStatusChange')}
+            checked={settings.notify_client_status_change}
+            onChange={(value) => updateSetting('notify_client_status_change', value)}
+          />
+          <ToggleItem
+            icon={<RiMegaphoneLine />}
+            label={t('notifications.clientNewPromotion')}
+            checked={settings.notify_client_new_promotion}
+            onChange={(value) => updateSetting('notify_client_new_promotion', value)}
+          />
+        </div>
+      </div>
+
+      {/* Channels Card */}
+      <div className="notifications-card">
+        <div className="notifications-card-header">
+          <RiMailLine />
+          <h3>{t('notifications.channels')}</h3>
+        </div>
+        <div className="notifications-card-body">
+          <ToggleItem
+            icon={<RiMailLine />}
+            label={t('notifications.channelEmail')}
+            checked={settings.channel_email}
+            onChange={(value) => updateSetting('channel_email', value)}
+          />
+          <ToggleItem
+            icon={<RiNotification4Line />}
+            label={t('notifications.channelPush')}
+            checked={settings.channel_push}
+            onChange={(value) => updateSetting('channel_push', value)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// TOGGLE ITEM
+// ============================================
+const ToggleItem = ({ icon, label, checked = false, onChange }) => {
+  return (
+    <label className="notifications-toggle">
+      <div className="notifications-toggle-info">
+        <span className="notifications-toggle-icon">{icon}</span>
+        <span className="notifications-toggle-text">{label}</span>
+      </div>
+      <div className="notifications-toggle-switch-wrapper">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className="notifications-toggle-switch"></span>
+      </div>
+    </label>
+  );
+};
+
+// ============================================
+// LOGS TAB
+// ============================================
+const LogsTab = ({ 
+  logs = [], 
+  stats = { total: 0, sent: 0, pending: 0, failed: 0 },
+  loading = false, 
+  onDelete, 
+  getEventIcon, 
+  getStatusIcon, 
+  getChannelIcon,
+  formatDate,
+  t 
+}) => {
+  return (
+    <div className="notifications-logs">
+      {/* Stats */}
+      <div className="notifications-stats">
+        <div className="notifications-stat-card">
+          <div className="notifications-stat-icon total">
+            <RiNotification3Line />
+          </div>
+          <div className="notifications-stat-content">
+            <span className="notifications-stat-value">{stats.total}</span>
+            <span className="notifications-stat-label">Total</span>
+          </div>
+        </div>
+        <div className="notifications-stat-card">
+          <div className="notifications-stat-icon success">
+            <RiCheckboxCircleLine />
+          </div>
+          <div className="notifications-stat-content">
+            <span className="notifications-stat-value">{stats.sent}</span>
+            <span className="notifications-stat-label">{t('notifications.status.sent')}</span>
+          </div>
+        </div>
+        <div className="notifications-stat-card">
+          <div className="notifications-stat-icon warning">
+            <RiTimeLine />
+          </div>
+          <div className="notifications-stat-content">
+            <span className="notifications-stat-value">{stats.pending}</span>
+            <span className="notifications-stat-label">{t('notifications.status.pending')}</span>
+          </div>
+        </div>
+        <div className="notifications-stat-card">
+          <div className="notifications-stat-icon error">
+            <RiCloseCircleLine />
+          </div>
+          <div className="notifications-stat-content">
+            <span className="notifications-stat-value">{stats.failed}</span>
+            <span className="notifications-stat-label">{t('notifications.status.failed')}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Logs List */}
+      <div className="notifications-card notifications-logs-card">
+        <div className="notifications-card-header">
+          <RiFileList3Line />
+          <h3>{t('notifications.log')}</h3>
+        </div>
+        <div className="notifications-card-body">
+          {loading ? (
+            <div className="notifications-loading-inline">
+              <LoadingSpinner />
+            </div>
+          ) : logs.length === 0 ? (
+            <div className="notifications-empty">
+              <div className="notifications-empty-icon">
+                <RiNotification3Line />
+              </div>
+              <h4>{t('notifications.noLogs')}</h4>
+            </div>
+          ) : (
+            <div className="notifications-log-list">
+              {logs.map((log) => (
+                <div key={log.id} className={`notifications-log-item ${log.status}`}>
+                  <div className="notifications-log-icon">
+                    {getEventIcon(log.event_type)}
+                  </div>
+                  <div className="notifications-log-content">
+                    <div className="notifications-log-header">
+                      <span className={`notifications-log-type ${log.event_type}`}>
+                        {t(`notifications.eventType.${log.event_type}`)}
+                      </span>
+                      <span className="notifications-log-date">
+                        {formatDate(log.created_at)}
+                      </span>
+                    </div>
+                    <h4 className="notifications-log-title">{log.title}</h4>
+                    <p className="notifications-log-message">{log.message}</p>
+                    <div className="notifications-log-footer">
+                      <span className="notifications-log-channel">
+                        {getChannelIcon(log.channel)}
+                        <span>{log.channel}</span>
+                      </span>
+                      {log.recipient && (
+                        <span className="notifications-log-recipient">
+                          {log.recipient}
+                        </span>
+                      )}
+                      <span className={`notifications-log-status ${log.status}`}>
+                        {getStatusIcon(log.status)}
+                        <span>{t(`notifications.status.${log.status}`)}</span>
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    className="notifications-log-delete"
+                    onClick={() => onDelete(log.id)}
+                    title={t('notifications.delete')}
+                  >
+                    <RiDeleteBinLine />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
