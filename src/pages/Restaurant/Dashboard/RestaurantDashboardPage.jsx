@@ -1,35 +1,40 @@
 // src/pages/Restaurant/Dashboard/RestaurantDashboardPage.jsx
-import { useTranslation } from 'react-i18next';
-import useAuthStore from '../../../stores/authStore';
+import React from "react";
+import useAuthStore from "../../../stores/authStore";
 
-// Composants existants
-import KpiGrid from '../../../components/kpi/KpiGrid';
-import RevenueChart from '../../../components/charts/RevenueChart';
-import OrdersStatusChart from '../../../components/charts/OrdersStatusChart';
-import TopSellingItems from '../../../components/dashboard/TopSellingItems';
-import RecentOrdersTable from '../../../components/dashboard/RecentOrdersTable';
+// Components
+import KpiGrid from "../../../components/kpi/KpiGrid";
+import RevenueChart from "../../../components/charts/RevenueChart";
+import OrdersStatusChart from "../../../components/charts/OrdersStatusChart";
+import TopSellingItems from "../../../components/dashboard/TopSellingItems";
+import RecentOrdersTable from "../../../components/dashboard/RecentOrdersTable";
 
-// Hook Dashboard
-import useDashboardData from '../../../hooks/useDashboardData';
+// Hook
+import useDashboardData from "../../../hooks/useDashboardData";
 
-import './restaurant.css'; 
+// Styles
+import "./restaurant.css";
 
 const RestaurantDashboardPage = () => {
-  const { t } = useTranslation();
-  const { restaurantId } = useAuthStore();
+  const restaurantId = useAuthStore((s) => s.restaurantId);
 
-  //  Passer restaurantId sous forme d'objet
-  const { kpis, charts, recentOrders, isLoading } = useDashboardData({ restaurantId });
-
-  // Extraire les datas depuis charts
-  const revenueData = charts?.revenue || [];
-  const ordersStatusData = charts?.ordersStatus || [];
-  const topSellingItems = charts?.topSellingItems || [];
+  const {
+    kpis,
+    revenueData,
+    ordersStatusData,
+    topSellingItems,
+    recentOrders,
+    isLoading,
+    error,
+    refresh,
+  } = useDashboardData({ restaurantId });
 
   return (
     <div className="dashboard-page">
+      {error && <div style={{ marginBottom: 12 }}>{error}</div>}
+
       {/* KPI */}
-      <KpiGrid kpis={kpis} isLoading={isLoading} />
+      <KpiGrid data={kpis} isLoading={isLoading} onRefresh={refresh} />
 
       {/* Graphiques */}
       <div className="dashboard-charts">
@@ -39,8 +44,8 @@ const RestaurantDashboardPage = () => {
 
       {/* Listes */}
       <div className="dashboard-bottom">
-        <TopSellingItems items={topSellingItems} isLoading={isLoading} />
-        <RecentOrdersTable orders={recentOrders} isLoading={isLoading} />
+        <TopSellingItems data={topSellingItems} isLoading={isLoading} />
+        <RecentOrdersTable data={recentOrders} isLoading={isLoading} />
       </div>
     </div>
   );

@@ -13,8 +13,9 @@ const stripIds = (args = {}) => {
   return rest;
 };
 
-// ✅ ton baseURL = .../api/ donc ici PAS de /api
-const base = (restuarentId) => `/commande/${encodeURIComponent(restuarentId)}`;
+// Ton client a déjà baseURL = .../api/  => ici PAS de "/api" au début
+const restoBase = (id) => `/commande/${encodeURIComponent(id)}`;
+const adminBase = () => `/commande/admin`;
 
 const unwrap = (x) => {
   let v = x;
@@ -76,16 +77,29 @@ const mapStatsToKpis = (raw) => {
     growthOrders: num(pick(s, ["growthOrders", "ordersGrowth"])),
     totalRevenue: num(pick(s, ["totalRevenue", "totalRevenu", "revenue", "revenu"])),
     growthRevenue: num(pick(s, ["growthRevenue", "revenueGrowth"])),
-    averageOrderValue: num(pick(s, ["averageOrderValue", "avgOrderValue", "panierMoyen", "averageBasket"])),
+    averageOrderValue: num(
+      pick(s, ["averageOrderValue", "avgOrderValue", "panierMoyen", "averageBasket"])
+    ),
     growthBasket: num(pick(s, ["growthBasket", "basketGrowth"])),
     totalCustomers: num(pick(s, ["totalCustomers", "customers", "clients"])),
     growthCustomers: num(pick(s, ["growthCustomers", "customersGrowth"])),
   };
 };
 
+// Admin n’a pas de route /status => on dérive depuis listcommande/recent_order
+const statusFromOrders = (orders = []) => {
+  const m = new Map();
+  for (const o of orders) {
+    const s = o?.status ?? o?.etat ?? o?.state ?? "unknown";
+    m.set(s, (m.get(s) ?? 0) + 1);
+  }
+  return Array.from(m.entries()).map(([label, value]) => ({ label, value }));
+};
+
 const normalizeDashboard = (maybeDashboard, parts) => {
   const d = unwrap(maybeDashboard);
 
+  // Si le backend renvoie déjà {kpis, charts, ...}
   if (d?.kpis || d?.charts) {
     return {
       kpis: mapStatsToKpis(d.kpis ?? d.stats ?? {}),
@@ -100,6 +114,7 @@ const normalizeDashboard = (maybeDashboard, parts) => {
     };
   }
 
+  // Sinon on construit depuis les endpoints
   const { stats, revenus, status, topSellingItems, recentOrders } = parts;
   return {
     kpis: mapStatsToKpis(stats),
@@ -111,20 +126,23 @@ const normalizeDashboard = (maybeDashboard, parts) => {
   };
 };
 
-// ---------------- De-dupe / cache ----------------
-const INFLIGHT = new Map();
-const CACHE = new Map();
-const TTL_MS = 8000; // suffit pour éviter les rafales React/StrictMode
-
-const keyOf = (rid, params) => `${rid}:${JSON.stringify(params ?? {})}`;
+// helper: tolerant fetch + timeout dashboard
+const DASH_TIMEOUT = 30000;
+const safeGet = async (url, params) => {
+  const r = await client.get(url, { params, timeout: DASH_TIMEOUT });
+  return r.data;
+};
 
 // ---------------- API ----------------
 const dashboardAPI = {
+  /**
+   * ADMIN:
+   * - si restaurantId fourni => dashboard du resto (routes /commande/:id/*)
+   * - sinon => dashboard global (routes /commande/admin/*)
+   */
   getAdminDashboard: async (args = {}) => {
-    const restuarentId = pickId(args);
-    if (!restuarentId) throw new Error("restuarentId requis");
-
     const src = args.filters ?? args;
+
     const params = clean({
       ...stripIds(src),
       from: src.from ?? src.startDate,
@@ -132,49 +150,72 @@ const dashboardAPI = {
       period: src.period,
     });
 
-    const key = keyOf(restuarentId, params);
+    const restuarentId = pickId(args); // optionnel en admin
 
-    const cached = CACHE.get(key);
-    if (cached && Date.now() - cached.ts < TTL_MS) return cached.data;
-
-    const existing = INFLIGHT.get(key);
-    if (existing) return existing;
-
-    const p = (async () => {
-      const settled = await Promise.allSettled([
-        client.get(`${base(restuarentId)}/stats`, { params, timeout: 25000 }).then((r) => r.data),
-        client.get(`${base(restuarentId)}/revenus`, { params, timeout: 25000 }).then((r) => r.data),
-        client.get(`${base(restuarentId)}/status`, { params, timeout: 25000 }).then((r) => r.data),
-        client.get(`${base(restuarentId)}/meilleurs_ventes`, { params, timeout: 25000 }).then((r) => r.data),
-        client.get(`${base(restuarentId)}/commandes_recente`, { params, timeout: 25000 }).then((r) => r.data),
+    // ===== Admin par restaurant (si un resto est sélectionné) =====
+    if (restuarentId) {
+      const results = await Promise.allSettled([
+        safeGet(`${restoBase(restuarentId)}/stats`, params),
+        safeGet(`${restoBase(restuarentId)}/revenus`, params),
+        safeGet(`${restoBase(restuarentId)}/status`, params),
+        safeGet(`${restoBase(restuarentId)}/meilleurs_ventes`, params),
+        safeGet(`${restoBase(restuarentId)}/commandes_recente`, params),
       ]);
 
-      const [stats, revenus, status, topSellingItems, recentOrders] = settled.map((s) =>
-        s.status === "fulfilled" ? s.value : null
+      const [stats, revenus, status, topSellingItems, recentOrders] = results.map((x) =>
+        x.status === "fulfilled" ? x.value : null
       );
 
-      const data = normalizeDashboard(null, { stats, revenus, status, topSellingItems, recentOrders });
-      CACHE.set(key, { ts: Date.now(), data });
-      return data;
-    })().finally(() => INFLIGHT.delete(key));
+      return normalizeDashboard(null, { stats, revenus, status, topSellingItems, recentOrders });
+    }
 
-    INFLIGHT.set(key, p);
-    return p;
+    // ===== Admin global =====
+    const results = await Promise.allSettled([
+      safeGet(`${adminBase()}/statorder`, params),
+      safeGet(`${adminBase()}/revenuchart`, params),
+      safeGet(`${adminBase()}/recent_order`, params),
+      safeGet(`${adminBase()}/top_sell`, params),
+      safeGet(`${adminBase()}/listcommande`, params),
+    ]);
+
+    const [stats, revenus, recentOrders, topSellingItems, ordersList] = results.map((x) =>
+      x.status === "fulfilled" ? x.value : null
+    );
+
+    const ordersForStatus = arr(ordersList).length ? arr(ordersList) : arr(recentOrders);
+
+    return {
+      kpis: mapStatsToKpis(stats),
+      charts: {
+        revenue: normalizeRevenus(revenus),
+        ordersStatus: statusFromOrders(ordersForStatus),
+      },
+      topSellingItems: arr(topSellingItems),
+      recentOrders: arr(recentOrders).length ? arr(recentOrders) : arr(ordersList),
+      topRestaurants: [],
+      hourlyOrders: [],
+    };
   },
 
   getRestaurantDashboard: (args = {}) => dashboardAPI.getAdminDashboard(args),
 
-  // unitaires (inchangé)
+  // ----- unitaires resto (inchangé) -----
   getStats: (restuarentId, params = {}) =>
-    client.get(`${base(restuarentId)}/stats`, { params: clean(params) }).then((r) => r.data),
+    client.get(`${restoBase(restuarentId)}/stats`, { params: clean(params) }).then((r) => r.data),
+
   getRevenus: (restuarentId, params = {}) =>
-    client.get(`${base(restuarentId)}/revenus`, { params: clean(params) }).then((r) => r.data),
+    client.get(`${restoBase(restuarentId)}/revenus`, { params: clean(params) }).then((r) => r.data),
+
   getStatus: (restuarentId, params = {}) =>
-    client.get(`${base(restuarentId)}/status`, { params: clean(params) }).then((r) => r.data),
+    client.get(`${restoBase(restuarentId)}/status`, { params: clean(params) }).then((r) => r.data),
+
   getTopSellingItems: (restuarentId, params = {}) =>
-    client.get(`${base(restuarentId)}/meilleurs_ventes`, { params: clean(params) }).then((r) => r.data),
+    client.get(`${restoBase(restuarentId)}/meilleurs_ventes`, { params: clean(params) }).then((r) => r.data),
+
   getRecentOrders: (restuarentId, params = {}) =>
-    client.get(`${base(restuarentId)}/commandes_recente`, { params: clean(params) }).then((r) => r.data),
+    client.get(`${restoBase(restuarentId)}/commandes_recente`, { params: clean(params) }).then((r) => r.data),
+
+  // ----- stubs pour éviter crash si appelés par le hook -----
   getTopRestaurants: async () => [],
   getHourlyOrders: async () => [],
 };

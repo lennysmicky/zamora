@@ -13,37 +13,62 @@ const RestaurantSelector = ({ selectedRestaurant, onSelectRestaurant, className 
   const [isLoading, setIsLoading] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Charger les restaurants (anti double-call DEV + abort + timeout local)
   useEffect(() => {
+    const controller = new AbortController();
+    let mounted = true;
+
     const fetchRestaurants = async () => {
       setIsLoading(true);
       try {
-        const { data } = await client.get("/restaurent");
+        const { data } = await client.get("/restaurent", {
+          signal: controller.signal,
+          timeout: 30000, // évite le 10s si backend lent (Render cold start)
+        });
 
         // unwrap (supporte: array direct, {data:[]}, {restaurants:[]}, {results:[]})
         const list = data?.restaurants ?? data?.data ?? data?.results ?? data;
 
-        // normalize (supporte: id/_id/restaurantId + name/restaurantName/nom)
+        // normalize (supporte: id/_id/restaurantId/restaurentId/restuarentId + name/restaurantName/nom)
         const normalize = (r) => ({
-          id: r?.id ?? r?._id ?? r?.restaurantId ?? r?.restuarentId ?? null,
+          id:
+            r?.id ??
+            r?._id ??
+            r?.restaurantId ??
+            r?.restaurentId ??
+            r?.restuarentId ??
+            null,
           name: r?.name ?? r?.restaurantName ?? r?.nom ?? "Restaurant",
           raw: r,
         });
+
+        if (!mounted) return;
 
         setRestaurants([
           { id: null, name: t("filters.allRestaurants") },
           ...(Array.isArray(list) ? list.map(normalize) : []),
         ]);
       } catch (error) {
+        // axios v1 => CanceledError si abort
+        if (error?.name === "CanceledError") return;
+        if (!mounted) return;
+
         console.error("Erreur chargement restaurants:", error);
         setRestaurants([{ id: null, name: t("filters.allRestaurants") }]);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
     fetchRestaurants();
+
+    return () => {
+      mounted = false;
+      controller.abort();
+    };
   }, [t]);
 
+  // Fermer dropdown si clic extérieur
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -65,7 +90,6 @@ const RestaurantSelector = ({ selectedRestaurant, onSelectRestaurant, className 
   };
 
   const displayLabel = selectedRestaurant?.name || t("filters.allRestaurants");
-
   const isSelected = (a, b) => String(a ?? "") === String(b ?? "");
 
   return (
