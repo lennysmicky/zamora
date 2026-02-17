@@ -38,7 +38,7 @@ export const useOrders = (opts) => {
 
   const abortRef = useRef(null);
 
-  // ✅ restaurant scope
+  //  restaurant scope
   // - restaurant mode => id obligatoire
   // - admin mode => id optionnel (liste globale) + filtre "restaurant" si fourni
   const effectiveRestaurantId = useMemo(() => {
@@ -65,7 +65,7 @@ export const useOrders = (opts) => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // ✅ guard UNIQUEMENT en restaurant
+    //  guard UNIQUEMENT en restaurant
     if (mode === "restaurant" && !effectiveRestaurantId) {
       setOrders([]);
       setStats(EMPTY_STATS);
@@ -77,10 +77,10 @@ export const useOrders = (opts) => {
     try {
       const res = await ordersApi.getOrders(
         {
-          mode, // ✅ indispensable pour router admin/restaurant
+          mode, //  indispensable pour router admin/restaurant
           // restaurant: obligatoire en restaurant, optionnel en admin
           restaurantId: effectiveRestaurantId ?? undefined,
-          // ⚠️ en admin, on garde filters.restaurant pour filtrer côté backend si supporté
+          // en admin, on garde filters.restaurant pour filtrer côté backend si supporté
           ...filters,
           page: pagination.currentPage,
           limit: pagination.itemsPerPage,

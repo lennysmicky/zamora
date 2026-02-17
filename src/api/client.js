@@ -15,9 +15,10 @@ const client = axios.create({
 // Request interceptor
 client.interceptors.request.use(
   (config) => {
-    const { token } = useAuthStore.getState();
+    const storeToken = useAuthStore.getState()?.token;
+    const lsToken = localStorage.getItem("auth_token");
+    const token = storeToken || lsToken;
 
-    // axios peut avoir headers undefined selon config
     config.headers = config.headers ?? {};
 
     if (token) {
@@ -42,16 +43,12 @@ client.interceptors.response.use(
     return response;
   },
   async (error) => {
-    // --- Ignore cancellations (AbortController / StrictMode DEV) ---
     const isCanceled =
       error?.name === "CanceledError" ||
       error?.code === "ERR_CANCELED" ||
       axios.isCancel?.(error);
 
-    if (isCanceled) {
-      // pas un vrai problème, on évite le bruit console
-      return Promise.reject(error);
-    }
+    if (isCanceled) return Promise.reject(error);
 
     const originalRequest = error.config ?? {};
     const status = error.response?.status;
@@ -60,7 +57,6 @@ client.interceptors.response.use(
       console.error(`[${status}] ${originalRequest?.url}`, error.message);
     }
 
-    // 401 + pas encore retry + pas refresh route = tenter refresh token
     const isRefreshCall = (originalRequest?.url || "").includes("/auth/refresh");
     if (status === 401 && !originalRequest._retry && !isRefreshCall) {
       originalRequest._retry = true;
@@ -76,14 +72,22 @@ client.interceptors.response.use(
         if (!token) throw new Error("Refresh token response missing token");
 
         useAuthStore.getState().setToken(token);
+        localStorage.setItem("auth_token", token);
 
         originalRequest.headers = originalRequest.headers ?? {};
         originalRequest.headers.Authorization = `Bearer ${token}`;
 
         return client(originalRequest);
       } catch (refreshError) {
+        const role = localStorage.getItem("user_role");
+
         useAuthStore.getState().logout();
-        window.location.href = "/login";
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user_role");
+        localStorage.removeItem("zamora-auth");
+
+        window.location.href = role === "admin" ? "/admin/login" : "/login";
         return Promise.reject(refreshError);
       }
     }

@@ -243,7 +243,7 @@
       "addressRequired": "L'adresse est obligatoire",
       "invalidResponse": "Réponse invalide du serveur",
       "invalidData": "Données invalides",
-      "accessDenied": "Accès refusé. Vous n'êtes pas administrateur.",
+      "accessDenied": "Accès refusé. .",
       "userNotFound": "Compte administrateur non trouvé",
       "network": "Impossible de contacter le serveur",
       "tooManyAttempts": "Trop de tentatives. Réessayez plus tard.",

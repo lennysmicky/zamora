@@ -1,4 +1,3 @@
-// src/pages/Auth/Restaurant/RestaurantLoginPage.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -15,14 +14,14 @@ import restaurantBg from '../../../assets/images/restaurant.png';
 const RestaurantLoginPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginRestaurant } = useAuthStore();
-  
+  const loginRestaurant = useAuthStore((s) => s.loginRestaurant);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     rememberMe: true
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -33,15 +32,12 @@ const RestaurantLoginPage = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
-    }
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validation côté client
     const validation = validateLoginForm(formData.email, formData.password);
     if (!validation.isValid) {
       setErrors(validation.errors);
@@ -52,38 +48,52 @@ const RestaurantLoginPage = () => {
     setErrors({});
 
     try {
+      const emailInput = formData.email.trim().toLowerCase();
+
       const response = await authAPI.loginRestaurant({
-        email: formData.email,
+        email: emailInput,
         password: formData.password
       });
 
-      const { user, token } = response.data;
+      const { user, token, refreshToken } = response.data || {};
+      if (!user || !token) {
+        setErrors({ general: 'serverError' });
+        setIsLoading(false);
+        return;
+      }
 
-      // Mettre à jour le store
+      // ✅ Bloque un ADMIN qui tenterait le login Restaurant
+      const role = String(user.role ?? user.userType ?? '').toLowerCase();
+      if (role && role !== 'restaurant') {
+        setErrors({ general: 'accessDenied' });
+        setIsLoading(false);
+        return;
+      }
+
+      // Persist session (cohérent avec initAuth)
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_role', 'restaurant');
+      if (formData.rememberMe && refreshToken) localStorage.setItem('refresh_token', refreshToken);
+
+      // Store
       loginRestaurant({
         user: {
           ...user,
-          restaurantId: user.id,
-          restaurantName: user.name
+          restaurantId: user.restaurantId ?? user.restaurant_id ?? user.id,
+          restaurantName: user.restaurantName ?? user.name
         },
         token
       });
 
-      // Redirection vers le dashboard
       navigate('/restaurant/dashboard', { replace: true });
 
     } catch (error) {
       if (error.response) {
         const status = error.response.status;
-        if (status === 401) {
-          setErrors({ general: 'invalidCredentials' });
-        } else if (status === 403) {
-          setErrors({ general: 'accountDisabled' });
-        } else if (status === 404) {
-          setErrors({ general: 'accountNotFound' });
-        } else {
-          setErrors({ general: 'serverError' });
-        }
+        if (status === 401) setErrors({ general: 'invalidCredentials' });
+        else if (status === 403) setErrors({ general: 'accountDisabled' });
+        else if (status === 404) setErrors({ general: 'accountNotFound' });
+        else setErrors({ general: 'serverError' });
       } else {
         setErrors({ general: 'networkError' });
       }
@@ -188,8 +198,8 @@ const RestaurantLoginPage = () => {
               </Link>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className={`auth-submit-btn ${isLoading ? 'loading' : ''}`}
               disabled={isLoading}
             >

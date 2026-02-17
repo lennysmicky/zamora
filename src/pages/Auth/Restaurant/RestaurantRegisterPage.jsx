@@ -22,7 +22,7 @@ import './RestaurantAuth.css';
 const RestaurantRegisterPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { loginRestaurant } = useAuthStore();
+  const loginRestaurant = useAuthStore((s) => s.loginRestaurant);
 
   const [formData, setFormData] = useState({
     restaurantName: '',
@@ -47,6 +47,7 @@ const RestaurantRegisterPage = () => {
 
     if (name === 'password') setPasswordStrength(getPasswordStrength(value));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+    if (errors.general) setErrors(prev => ({ ...prev, general: null }));
   };
 
   const handleSubmit = async (e) => {
@@ -59,14 +60,12 @@ const RestaurantRegisterPage = () => {
       return;
     }
 
-    // Vérification confirm password
     if (formData.password !== formData.confirmPassword) {
       setErrors(prev => ({ ...prev, confirmPassword: 'passwordMismatch' }));
       return;
     }
 
-    // Nettoyage et conversion du phone en Number
-    const cleanPhone = formData.phone.replace(/\D/g, '');
+    const cleanPhone = String(formData.phone || '').replace(/\D/g, '');
     const phoneNumber = cleanPhone ? Number(cleanPhone) : null;
     if (!phoneNumber) {
       setErrors(prev => ({ ...prev, phone: 'required' }));
@@ -76,41 +75,82 @@ const RestaurantRegisterPage = () => {
     setIsLoading(true);
 
     try {
-      // Payload backend
+      const emailInput = formData.email.trim().toLowerCase();
+
+      // (Optionnel) check email exist — selon ton backend, ça peut renvoyer {exists, userType/role}
+      // Si l’endpoint n’est pas fiable, cette étape ne casse rien (catch).
+      try {
+        const chk = await authAPI.checkEmailExists(emailInput);
+        const exists = !!(chk?.data?.exists ?? chk?.data?.isUsed ?? chk?.data?.found);
+        const who = String(chk?.data?.userType ?? chk?.data?.role ?? '').toLowerCase();
+
+        if (exists && who && who !== 'restaurant') {
+          setErrors({ general: t('auth.errors.accessDenied', 'Accès refusé') });
+          setIsLoading(false);
+          return;
+        }
+        if (exists && !who) {
+          setErrors({ general: t('auth.errors.emailAlreadyUsed', 'Email déjà utilisé') });
+          setIsLoading(false);
+          return;
+        }
+      } catch (_) {
+        // ignore : on laisse le backend trancher
+      }
+
       const payload = {
         name: formData.restaurantName.trim(),
         address: formData.address.trim(),
         phone: phoneNumber,
-        email: formData.email.trim().toLowerCase(),
+        email: emailInput,
         password: formData.password,
-
       };
-
-      console.log("Payload envoyé au backend:", payload);
 
       const response = await authAPI.registerRestaurant(payload);
 
-      console.log("Réponse backend:", response.data);
+      if (response.status === 201 || response.data?.user) {
+        const { user, token, refreshToken } = response.data || {};
 
-      // Gestion de la réponse backend
-      if (response.status === 201 || response.data.user) {
-        // Si token fourni, connexion auto
-        if (response.data.token && response.data.user) {
-          loginRestaurant({ user: response.data.user, token: response.data.token });
+        // Si le backend renvoie un token + user => auto-login
+        if (token && user) {
+          const role = String(user.role ?? user.userType ?? '').toLowerCase();
+          if (role && role !== 'restaurant') {
+            setErrors({ general: t('auth.errors.accessDenied', 'Accès refusé') });
+            setIsLoading(false);
+            return;
+          }
+
+          localStorage.setItem('auth_token', token);
           localStorage.setItem('user_role', 'restaurant');
+          if (refreshToken) localStorage.setItem('refresh_token', refreshToken);
+
+          loginRestaurant({
+            user: {
+              ...user,
+              restaurantId: user.restaurantId ?? user.restaurant_id ?? user.id,
+              restaurantName: user.restaurantName ?? user.name
+            },
+            token
+          });
+
           navigate('/restaurant/dashboard', { replace: true });
-        } else {
-          // Sinon, redirection vers login avec succès
-          navigate('/login', { replace: true });
+          return;
         }
-      } else {
-        const message = response.data?.message || t('auth.errors.registerFailed', 'Inscription échouée');
-        setErrors({ general: message });
+
+        // Sinon, redirection vers login
+        navigate('/login', { replace: true });
+        return;
       }
 
+      const message =
+        response.data?.message ||
+        t('auth.errors.registerFailed', 'Inscription échouée');
+      setErrors({ general: message });
+
     } catch (err) {
-      console.error("Erreur backend:", err.response?.data);
-      const message = err.response?.data?.message || t('auth.errors.unknown', 'Une erreur est survenue');
+      const message =
+        err?.response?.data?.message ||
+        t('auth.errors.unknown', 'Une erreur est survenue');
       setErrors({ general: message });
     } finally {
       setIsLoading(false);
@@ -121,7 +161,6 @@ const RestaurantRegisterPage = () => {
 
   return (
     <div className="auth-container">
-      {/* Left - Image */}
       <div className="auth-image-side">
         <img src={restaurantBg} alt="" className="auth-image-bg" />
         <div className="auth-image-overlay"></div>
@@ -132,7 +171,6 @@ const RestaurantRegisterPage = () => {
         </div>
       </div>
 
-      {/* Right - Form */}
       <div className="auth-form-side">
         <div className="auth-form-container">
           <div className="auth-form-logo">
@@ -150,7 +188,6 @@ const RestaurantRegisterPage = () => {
               <div className="auth-error-banner">{errors.general}</div>
             )}
 
-            {/* Restaurant Name */}
             <div className={`auth-input-group ${errors.restaurantName ? 'error' : ''}`}>
               <label>{t('auth.register.restaurantName')}</label>
               <div className="auth-input-wrapper">
@@ -169,7 +206,6 @@ const RestaurantRegisterPage = () => {
               )}
             </div>
 
-            {/* Email */}
             <div className={`auth-input-group ${errors.email ? 'error' : ''}`}>
               <label>{t('auth.register.email')}</label>
               <div className="auth-input-wrapper">
@@ -188,7 +224,6 @@ const RestaurantRegisterPage = () => {
               )}
             </div>
 
-            {/* Phone */}
             <div className={`auth-input-group ${errors.phone ? 'error' : ''}`}>
               <label>{t('auth.register.phone')}</label>
               <div className="auth-input-wrapper">
@@ -207,7 +242,6 @@ const RestaurantRegisterPage = () => {
               )}
             </div>
 
-            {/* Address */}
             <div className={`auth-input-group ${errors.address ? 'error' : ''}`}>
               <label>{t('auth.register.address')}</label>
               <div className="auth-input-wrapper">
@@ -226,7 +260,6 @@ const RestaurantRegisterPage = () => {
               )}
             </div>
 
-            {/* Password */}
             <div className={`auth-input-group ${errors.password ? 'error' : ''}`}>
               <label>{t('auth.register.password')}</label>
               <div className="auth-input-wrapper">
@@ -247,6 +280,7 @@ const RestaurantRegisterPage = () => {
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
+
               {formData.password && (
                 <div className="auth-password-strength">
                   <div className={`strength-bar ${passwordStrength}`}>
@@ -257,12 +291,12 @@ const RestaurantRegisterPage = () => {
                   </span>
                 </div>
               )}
+
               {errors.password && (
                 <span className="auth-input-error">{t(`auth.errors.${errors.password}`)}</span>
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className={`auth-input-group ${errors.confirmPassword ? 'error' : ''}`}>
               <label>{t('auth.register.confirmPassword')}</label>
               <div className="auth-input-wrapper">
@@ -288,7 +322,6 @@ const RestaurantRegisterPage = () => {
               )}
             </div>
 
-            {/* Terms */}
             <div className={`auth-terms ${errors.acceptTerms ? 'error' : ''}`}>
               <label className="auth-checkbox">
                 <input
@@ -332,7 +365,9 @@ const RestaurantRegisterPage = () => {
           </p>
         </div>
 
-        <p className="auth-footer-text">{t('auth.copyright', '© 2025 Zamora. Tous droits réservés.')}</p>
+        <p className="auth-footer-text">
+          {t('auth.copyright', '© 2025 Zamora. Tous droits réservés.')}
+        </p>
       </div>
     </div>
   );

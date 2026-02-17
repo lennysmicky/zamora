@@ -1,18 +1,15 @@
 // components/tables/OrdersTable.jsx
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  RiArrowUpLine,
-  RiArrowDownLine,
-  RiCheckboxLine,
-  RiCheckboxBlankLine
-} from 'react-icons/ri';
+import { RiArrowUpLine, RiArrowDownLine, RiCheckboxLine, RiCheckboxBlankLine } from 'react-icons/ri';
 import OrdersTableRow from '../orders/OrdersTableRow';
 import './css/OrdersTable.css';
 
+const getOrderId = (o) => o?.id ?? o?._id ?? null;
+
 const OrdersTable = ({
-  orders,
-  selectedOrders,
+  orders = [],
+  selectedOrders = [],
   onSelectOrder,
   onSelectAll,
   onViewDetails,
@@ -22,21 +19,28 @@ const OrdersTable = ({
   const { t } = useTranslation();
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
 
+  const safeSelected = Array.isArray(selectedOrders) ? selectedOrders : [];
+
+  const pageIds = useMemo(
+    () => orders.map(getOrderId).filter(Boolean),
+    [orders]
+  );
+
+  const isAllSelected = pageIds.length > 0 && pageIds.every((id) => safeSelected.includes(id));
+  const isSomeSelected = pageIds.some((id) => safeSelected.includes(id)) && !isAllSelected;
+
   const getColumns = () => {
-    const baseColumns = [
+    const base = [
       { key: 'id', label: t('orders.table.orderId'), sortable: true },
-      { key: 'customer', label: t('orders.table.customer'), sortable: true }
+      { key: 'customer', label: t('orders.table.customer'), sortable: true },
     ];
 
     if (!isRestaurantMode) {
-      baseColumns.push({
-        key: 'restaurant',
-        label: t('orders.table.restaurant'),
-        sortable: true
-      });
+      base.push({ key: 'restaurant', label: t('orders.table.restaurant'), sortable: true });
     }
 
-    const commonColumns = [
+    return [
+      ...base,
       { key: 'items_count', label: t('orders.table.items'), sortable: true },
       { key: 'total_amount', label: t('orders.table.amount'), sortable: true },
       { key: 'status', label: t('orders.table.orderStatus'), sortable: true },
@@ -44,24 +48,21 @@ const OrdersTable = ({
       { key: 'payment_method', label: t('orders.table.paymentMethod'), sortable: false },
       { key: 'source', label: t('orders.table.source'), sortable: true },
       { key: 'created_at', label: t('orders.table.date'), sortable: true },
-      { key: 'actions', label: t('orders.table.actions'), sortable: false }
+      { key: 'actions', label: t('orders.table.actions'), sortable: false },
     ];
-
-    return [...baseColumns, ...commonColumns];
   };
 
   const columns = getColumns();
 
   const handleSort = (key) => {
-    setSortConfig(prev => ({
+    setSortConfig((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
     }));
   };
 
   const getSortValue = (o, key) => {
     if (!o) return '';
-
     if (key === 'created_at') return new Date(o.created_at || o.createdAt || 0).getTime();
     if (key === 'total_amount') return Number(o.total_amount ?? o.totalAmount ?? o.total ?? 0);
 
@@ -81,19 +82,18 @@ const OrdersTable = ({
     return String(o[key] ?? '').toLowerCase();
   };
 
-  const sortedOrders = [...orders].sort((a, b) => {
-    if (!sortConfig.key) return 0;
-
-    const aVal = getSortValue(a, sortConfig.key);
-    const bVal = getSortValue(b, sortConfig.key);
-
-    if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
-    return 0;
-  });
-
-  const isAllSelected = orders.length > 0 && selectedOrders.length === orders.length;
-  const isSomeSelected = selectedOrders.length > 0 && selectedOrders.length < orders.length;
+  const sortedOrders = useMemo(() => {
+    const arr = [...orders];
+    if (!sortConfig.key) return arr;
+    arr.sort((a, b) => {
+      const aVal = getSortValue(a, sortConfig.key);
+      const bVal = getSortValue(b, sortConfig.key);
+      if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [orders, sortConfig]);
 
   return (
     <div className="orders-table-wrapper">
@@ -101,7 +101,11 @@ const OrdersTable = ({
         <thead>
           <tr>
             <th className="orders-table-checkbox">
-              <button className="orders-checkbox-btn" onClick={onSelectAll} type="button">
+              <button
+                className="orders-checkbox-btn"
+                onClick={() => onSelectAll?.(pageIds)}
+                type="button"
+              >
                 {isAllSelected ? (
                   <RiCheckboxLine className="checked" />
                 ) : isSomeSelected ? (
@@ -112,7 +116,7 @@ const OrdersTable = ({
               </button>
             </th>
 
-            {columns.map(column => (
+            {columns.map((column) => (
               <th
                 key={column.key}
                 className={`orders-table-th ${column.sortable ? 'sortable' : ''}`}
@@ -132,17 +136,20 @@ const OrdersTable = ({
         </thead>
 
         <tbody>
-          {sortedOrders.map(order => (
-            <OrdersTableRow
-              key={order.id}
-              order={order}
-              isSelected={selectedOrders.includes(order.id)}
-              onSelect={onSelectOrder}
-              onViewDetails={onViewDetails}
-              onUpdateStatus={onUpdateStatus}
-              isRestaurantMode={isRestaurantMode}
-            />
-          ))}
+          {sortedOrders.map((order) => {
+            const orderId = getOrderId(order);
+            return (
+              <OrdersTableRow
+                key={orderId ?? `${order?.created_at ?? ''}-${Math.random()}`}
+                order={order}
+                isSelected={orderId ? safeSelected.includes(orderId) : false}
+                onSelect={() => orderId && onSelectOrder?.(orderId)}
+                onViewDetails={onViewDetails}
+                onUpdateStatus={onUpdateStatus}
+                isRestaurantMode={isRestaurantMode}
+              />
+            );
+          })}
         </tbody>
       </table>
     </div>

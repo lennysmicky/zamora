@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  RiMailLine, 
+import {
+  RiMailLine,
   RiLockPasswordLine,
   RiEyeLine,
   RiEyeOffLine,
@@ -12,7 +12,6 @@ import {
 } from 'react-icons/ri';
 
 import { authAPI } from '../../../api/auth';
-import env from '../../../config/env';
 import useAuthStore from '../../../stores/authStore';
 import Logo from '../../../assets/images/logo.png';
 import './AdminLoginPage.css';
@@ -50,35 +49,39 @@ const AdminLoginPage = () => {
 
     try {
       const response = await authAPI.loginAdmin({ email: emailInput, password: passwordInput });
-      const { user, token } = response.data;
+      const { user, token, refreshToken } = response.data || {};
 
       if (!token || !user) {
-        throw new Error(t('auth.errors.invalidResponse'));
+        throw new Error('auth.errors.invalidResponse');
       }
 
-      if (!user.role || user.role.toLowerCase() !== 'admin') {
+      const role = String(user.role ?? user.userType ?? '').toLowerCase();
+      if (role !== 'admin') {
         setError(t('auth.errors.accessDenied'));
         setLoading(false);
         return;
       }
 
+      // Persist session for initAuth + client
+      localStorage.setItem('auth_token', token);
+      localStorage.setItem('user_role', 'admin');
+      if (rememberMe && refreshToken) localStorage.setItem('refresh_token', refreshToken);
+
       loginAdmin({ user, token });
       navigate('/dashboard', { replace: true });
 
     } catch (err) {
-      // Connexion locale fallback
-      const localUser = {
-        id: 'admin-local-001',
-        name: 'Admin ',
-        email: env.ADMIN_EMAIL,
-        role: 'admin',
-        isVerified: true,
-        isActive: true
-      };
-      const localToken = 'local-admin-token-' + Date.now();
+      const status = err?.response?.status;
 
-      loginAdmin({ user: localUser, token: localToken });
-      navigate('/dashboard', { replace: true });
+      // Mapping minimal (ne touche pas i18n)
+      const key =
+        status === 401 ? 'auth.errors.invalidCredentials' :
+        status === 403 ? 'auth.errors.accessDenied' :
+        status === 404 ? 'auth.errors.accountNotFound' :
+        err?.message === 'auth.errors.invalidResponse' ? 'auth.errors.invalidResponse' :
+        'auth.errors.loginFailed';
+
+      setError(t(key));
     } finally {
       setLoading(false);
     }

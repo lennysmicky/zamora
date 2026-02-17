@@ -1,17 +1,29 @@
+/* KpiGrid.css */
+
+/* utilise les tokens si tu as ajouté density.css */
 .kpi-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.75rem;
+  gap: var(--ui-gap, 0.75rem);
 }
 
+/* sm */
 @media (min-width: 640px) {
   .kpi-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/* lg */
 @media (min-width: 1024px) {
   .kpi-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* optionnel: éviter l’étirement vertical moche si cards ont du contenu variable */
+.kpi-grid > * {
+  min-width: 0;
+}
+ .kpi-grid { gap: var(--ui-gap, 0.75rem); }
+.density-compact .kpi-grid { gap: 0.5rem; }

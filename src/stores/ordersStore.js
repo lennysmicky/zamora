@@ -11,7 +11,7 @@ const createOrdersStore = () => {
       onNewOrder: () => {},
       onClearSelection: () => {}
     },
-    // ✅ NOUVEAU : état du modal création
+    //  NOUVEAU : état du modal création
     isCreateModalOpen: false
   };
 
@@ -55,13 +55,13 @@ const createOrdersStore = () => {
       notify();
     },
 
-    // ✅ NOUVEAU : ouvrir le modal création
+    // NOUVEAU : ouvrir le modal création
     openCreateModal: () => {
       state = { ...state, isCreateModalOpen: true };
       notify();
     },
 
-    // ✅ NOUVEAU : fermer le modal création
+    // NOUVEAU : fermer le modal création
     closeCreateModal: () => {
       state = { ...state, isCreateModalOpen: false };
       notify();
