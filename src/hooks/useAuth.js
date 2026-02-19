@@ -1,280 +1,314 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import useAuthStore from "../stores/authStore";
-import authAPI from "../api/auth";
+// src/stores/authStore.js
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-const normRole = (u) =>
-  String(u?.role ?? u?.userType ?? u?.type ?? "").toLowerCase();
+const initialState = {
+  user: null,
+  token: null,
+  userType: null, // "admin" | "restaurant" | null
+  restaurantId: null,
+  restaurantName: null,
+  isAuthenticated: false,
+  isLoading: false,
 
-const inferPortal = () =>
-  window.location.pathname.startsWith("/admin") ? "admin" : "restaurant";
-
-export const useAuth = () => {
-  const navigate = useNavigate();
-  const { t } = useTranslation();
-
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [modal, setModal] = useState({
-    isOpen: false,
-    type: "info",
-    title: "",
-    message: "",
-    onConfirm: null,
-  });
-
-  const [confirmDialog, setConfirmDialog] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    onConfirm: null,
-    onCancel: null,
-  });
-
-  const showModal = useCallback(
-    (type, titleKey, messageKey, onConfirm = null) => {
-      setModal({
-        isOpen: true,
-        type,
-        title: t(titleKey),
-        message: t(messageKey),
-        onConfirm,
-      });
-    },
-    [t]
-  );
-
-  const closeModal = useCallback(
-    () => setModal((prev) => ({ ...prev, isOpen: false })),
-    []
-  );
-
-  const showSuccess = useCallback(
-    (msg) => showModal("success", "common.success", msg),
-    [showModal]
-  );
-
-  const showError = useCallback(
-    (msg) => showModal("error", "common.error", msg),
-    [showModal]
-  );
-
-  const showConfirmDialog = useCallback(
-    (titleKey, messageKey) => {
-      return new Promise((resolve) => {
-        setConfirmDialog({
-          isOpen: true,
-          title: t(titleKey),
-          message: t(messageKey),
-          onConfirm: () => {
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            resolve(true);
-          },
-          onCancel: () => {
-            setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
-            resolve(false);
-          },
-        });
-      });
-    },
-    [t]
-  );
-
-  const closeConfirmDialog = useCallback(
-    () => setConfirmDialog((prev) => ({ ...prev, isOpen: false })),
-    []
-  );
-
-  // INIT AUTH
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        const userRole = localStorage.getItem("user_role");
-
-        if (!token || !userRole) {
-          setIsLoading(false);
-          return;
-        }
-
-        const response = await authAPI.getProfile();
-        const loggedUser = response.data?.user;
-        if (!loggedUser) {
-          throw new Error("No user profile");
-        }
-
-        setUser(loggedUser);
-
-        // Sync Zustand (token+type via localStorage role)
-        if (userRole === "admin") {
-          useAuthStore.getState().loginAdmin({ user: loggedUser, token });
-        } else {
-          useAuthStore.getState().loginRestaurant({ user: loggedUser, token });
-        }
-
-        const p = window.location.pathname;
-        if (["/", "/login", "/admin/login"].includes(p)) {
-          navigate(userRole === "admin" ? "/dashboard" : "/restaurant/dashboard", {
-            replace: true,
-          });
-        }
-      } catch (err) {
-        console.error("Init auth error:", err);
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user_role");
-        localStorage.removeItem("zamora-auth");
-        useAuthStore.getState().clear();
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-  }, [navigate]);
-
-  // LOGIN (portal-aware)
-  const login = useCallback(
-    async (email, password, rememberMe = false, expectedType) => {
-      setIsAuthenticating(true);
-      setError(null);
-
-      const portal = expectedType ?? inferPortal();
-
-      try {
-        const response =
-          portal === "admin"
-            ? await authAPI.loginAdmin({ email, password })
-            : await authAPI.loginRestaurant({ email, password });
-
-        const { user: loggedUser, token, refreshToken } = response.data || {};
-        if (!loggedUser || !token) throw new Error("auth.errors.loginFailed");
-
-        const actual = normRole(loggedUser);
-        if (actual && actual !== portal) {
-          // ✅ bloque admin->restaurant ou restaurant->admin
-          throw new Error(portal === "admin" ? "Compte non admin" : "Compte non restaurant");
-        }
-
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_role", portal);
-        if (rememberMe && refreshToken) localStorage.setItem("refresh_token", refreshToken);
-
-        if (portal === "admin") useAuthStore.getState().loginAdmin({ user: loggedUser, token });
-        else useAuthStore.getState().loginRestaurant({ user: loggedUser, token });
-
-        setUser(loggedUser);
-        showSuccess("auth.messages.loginSuccess");
-
-        navigate(portal === "admin" ? "/dashboard" : "/restaurant/dashboard", {
-          replace: true,
-        });
-
-        return { success: true, user: loggedUser };
-      } catch (err) {
-        const msg = err.message || "auth.errors.loginFailed";
-        setError(t(msg));
-        showError(msg);
-        return { success: false, error: t(msg) };
-      } finally {
-        setIsAuthenticating(false);
-      }
-    },
-    [navigate, t, showSuccess, showError]
-  );
-
-  // LOGOUT
-  const logout = useCallback(
-    async (showConfirm = true) => {
-      const currentRole = user?.role || localStorage.getItem("user_role");
-
-      if (showConfirm) {
-        const confirmed = await showConfirmDialog(
-          "auth.logout.title",
-          "auth.logout.confirmMessage"
-        );
-        if (!confirmed) return;
-      }
-
-      try {
-        await authAPI.logout();
-        showSuccess("auth.messages.logoutSuccess");
-      } catch (err) {
-        console.error("Logout error:", err);
-      } finally {
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("refresh_token");
-        localStorage.removeItem("user_role");
-        localStorage.removeItem("zamora-auth");
-        useAuthStore.getState().clear();
-        setUser(null);
-
-        navigate(currentRole === "admin" ? "/admin/login" : "/login", {
-          replace: true,
-        });
-      }
-    },
-    [user, navigate, showConfirmDialog, showSuccess]
-  );
-
-  // REGISTER RESTAURANT
-  const registerRestaurant = useCallback(
-    async (data) => {
-      setIsAuthenticating(true);
-      setError(null);
-
-      try {
-        const response = await authAPI.registerRestaurant(data);
-        const { user: newUser, token } = response.data || {};
-        if (!newUser || !token) throw new Error("auth.errors.registrationFailed");
-
-        useAuthStore.getState().loginRestaurant({ user: newUser, token });
-        setUser(newUser);
-        localStorage.setItem("auth_token", token);
-        localStorage.setItem("user_role", "restaurant");
-
-        navigate("/restaurant/dashboard", { replace: true });
-        return { success: true, user: newUser };
-      } catch (err) {
-        const msg = err.message || "auth.errors.registrationFailed";
-        setError(t(msg));
-        showError(msg);
-        return { success: false, error: t(msg) };
-      } finally {
-        setIsAuthenticating(false);
-      }
-    },
-    [navigate, t, showError]
-  );
-
-  const isAdmin = normRole(user) === "admin";
-  const isRestaurant = normRole(user) === "restaurant";
-  const isAuthenticated = !!user;
-
-  return {
-    user,
-    isLoading,
-    isAuthenticating,
-    error,
-    isAuthenticated,
-    isAdmin,
-    isRestaurant,
-    login,
-    logout,
-    registerRestaurant,
-    modal,
-    closeModal,
-    showModal,
-    showSuccess,
-    showError,
-    confirmDialog,
-    closeConfirmDialog,
-    showConfirmDialog,
-  };
+  // ✅ important: persist hydrate async
+  hasHydrated: false,
 };
 
-export default useAuth;
+const norm = (v) => String(v ?? "").trim().toLowerCase();
+
+const normType = (u) => norm(u?.role ?? u?.userType ?? u?.type ?? "");
+
+// -------- JWT decode (sans lib) --------
+const base64UrlToJson = (base64Url) => {
+  try {
+    const b64 = String(base64Url).replace(/-/g, "+").replace(/_/g, "/");
+    const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+
+    const bin = atob(b64 + pad);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const jsonStr =
+      typeof TextDecoder !== "undefined"
+        ? new TextDecoder("utf-8").decode(bytes)
+        : bin;
+
+    return JSON.parse(jsonStr);
+  } catch {
+    return null;
+  }
+};
+
+const decodeJwtPayload = (token) => {
+  if (!token || typeof token !== "string") return null;
+  const parts = token.split(".");
+  if (parts.length < 2) return null;
+  return base64UrlToJson(parts[1]);
+};
+
+const pickRestaurantIdFromUser = (u) =>
+  u?.restaurantId ??
+  u?.restaurant_id ??
+  u?.restaurentId ??
+  u?.restaurent_id ??
+  u?.restuarentId ??
+  u?.restuarent_id ??
+  u?.restaurant?._id ??
+  u?.restaurant?.id ??
+  null;
+
+const pickRestaurantIdFromToken = (token) => {
+  const p = decodeJwtPayload(token);
+  return (
+    p?.restaurantId ??
+    p?.restaurant_id ??
+    p?.restaurentId ?? // ✅ ton backend (JWT)
+    p?.restaurent_id ??
+    p?.restuarentId ??
+    p?.restuarent_id ??
+    p?.idRestaurant ??
+    p?.id_restaurant ??
+    null
+  );
+};
+
+const pickRoleFromToken = (token) => {
+  const p = decodeJwtPayload(token);
+  return norm(p?.role ?? p?.userType ?? p?.type ?? "");
+};
+
+const pickRestaurantName = (u) =>
+  u?.restaurantName ??
+  u?.restaurant_name ??
+  u?.restaurentName ??
+  u?.restaurent_name ??
+  u?.restaurant?.name ??
+  u?.name ??
+  "";
+
+const resolveRestaurantId = ({ user, token, currentRid }) => {
+  const uid = user?.id ?? user?._id ?? null;
+  const fromUser = pickRestaurantIdFromUser(user);
+  const fromToken = pickRestaurantIdFromToken(token);
+
+  let rid = currentRid ?? fromUser ?? fromToken ?? null;
+
+  // ✅ self-heal: si rid == uid mais token contient un vrai restaurentId différent
+  if (
+    uid &&
+    rid &&
+    String(rid) === String(uid) &&
+    fromToken &&
+    String(fromToken) !== String(uid)
+  ) {
+    rid = fromToken;
+  }
+
+  return rid ?? null;
+};
+
+const resolveUserType = ({ user, token, currentType }) => {
+  const t = norm(currentType) || normType(user) || pickRoleFromToken(token);
+  if (t === "admin") return "admin";
+  if (t === "restaurant") return "restaurant";
+  return null;
+};
+
+/**
+ * migrate / self-heal persisted state
+ * - corrige restaurantId invalide (uid) ou manquant
+ * - corrige userType manquant si token/user indique "restaurant" ou "admin"
+ */
+const healPersisted = (s) => {
+  if (!s) return s;
+
+  const userType = resolveUserType({ user: s.user, token: s.token, currentType: s.userType });
+
+  // si pas authentifié mais token existe, on peut reconstruire isAuthenticated
+  const isAuthenticated = Boolean(s.isAuthenticated || (s.token && s.user));
+
+  let next = { ...s, userType, isAuthenticated };
+
+  if (userType === "restaurant") {
+    const rid = resolveRestaurantId({
+      user: next.user,
+      token: next.token,
+      currentRid: next.restaurantId,
+    });
+    if (rid && String(rid) !== String(next.restaurantId ?? "")) {
+      next.restaurantId = rid;
+    }
+  } else {
+    // admin => pas de scope resto
+    next.restaurantId = null;
+    next.restaurantName = next.restaurantName ?? null;
+  }
+
+  return next;
+};
+
+const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      ...initialState,
+
+      // ✅ internal
+      setHydrated: (v) => set({ hasHydrated: Boolean(v) }),
+
+      loginAdmin: ({ user, token }) => {
+        if (!token || !user) return;
+        const uid = user.id ?? user._id ?? null;
+
+        set({
+          user: {
+            id: uid,
+            name: user.name ?? "",
+            email: user.email ?? "",
+            avatar: user.avatar || null,
+            role: normType(user) || "admin",
+          },
+          token,
+          userType: "admin",
+          restaurantId: null,
+          restaurantName: null,
+          isAuthenticated: true,
+        });
+      },
+
+      loginRestaurant: ({ user, token }) => {
+        if (!token || !user) return;
+
+        const uid = user.id ?? user._id ?? null;
+        const rid = resolveRestaurantId({ user, token, currentRid: null });
+        const rname = pickRestaurantName(user);
+
+        set({
+          user: {
+            id: uid,
+            name: user.name ?? user.restaurantName ?? rname ?? "",
+            email: user.email ?? "",
+            avatar: user.avatar || null,
+            role: normType(user) || "restaurant",
+          },
+          token,
+          userType: "restaurant",
+          restaurantId: rid,
+          restaurantName: rname,
+          isAuthenticated: true,
+        });
+      },
+
+      setUser: (userData) =>
+        set((s) => {
+          const nextUser = s.user ? { ...s.user, ...userData } : userData;
+
+          const nextType = resolveUserType({
+            user: nextUser,
+            token: s.token,
+            currentType: s.userType,
+          });
+
+          if (nextType !== "restaurant") return { user: nextUser, userType: nextType };
+
+          const rid = resolveRestaurantId({
+            user: nextUser,
+            token: s.token,
+            currentRid: s.restaurantId,
+          });
+
+          return { user: nextUser, userType: "restaurant", restaurantId: rid };
+        }),
+
+      setToken: (token) => {
+        if (!token) return;
+        set((s) => {
+          const nextType = resolveUserType({
+            user: s.user,
+            token,
+            currentType: s.userType,
+          });
+
+          if (nextType !== "restaurant") return { token, userType: nextType };
+
+          const rid = resolveRestaurantId({
+            user: s.user,
+            token,
+            currentRid: s.restaurantId,
+          });
+
+          return { token, userType: "restaurant", restaurantId: rid };
+        });
+      },
+
+      updateUser: (userData) =>
+        set((s) => {
+          const nextUser = { ...(s.user ?? {}), ...userData };
+
+          const nextType = resolveUserType({
+            user: nextUser,
+            token: s.token,
+            currentType: s.userType,
+          });
+
+          if (nextType !== "restaurant") return { user: nextUser, userType: nextType };
+
+          const rid = resolveRestaurantId({
+            user: nextUser,
+            token: s.token,
+            currentRid: s.restaurantId,
+          });
+
+          return { user: nextUser, userType: "restaurant", restaurantId: rid };
+        }),
+
+      setLoading: (v) => set({ isLoading: Boolean(v) }),
+
+      clear: () => set({ ...initialState, hasHydrated: true }),
+      logout: () => set({ ...initialState, hasHydrated: true }),
+
+      // getters
+      isAdmin: () => get().userType === "admin",
+      isRestaurant: () => get().userType === "restaurant",
+      getToken: () => get().token,
+      getUser: () => get().user,
+      getUserType: () => get().userType,
+      getRestaurantId: () => get().restaurantId,
+    }),
+    {
+      name: "zamora-auth",
+      version: 4, // ✅ bump pour forcer migrate
+      migrate: (persisted) => healPersisted(persisted),
+      partialize: (s) => ({
+        user: s.user,
+        token: s.token,
+        userType: s.userType,
+        restaurantId: s.restaurantId,
+        restaurantName: s.restaurantName,
+        isAuthenticated: s.isAuthenticated,
+      }),
+      // ✅ marque l’hydration + self-heal post-hydrate
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          // évite un blocage UI si storage corrompu
+          state?.setHydrated?.(true);
+          return;
+        }
+        // après rehydrate, corrige si besoin
+        const s = state;
+        if (s?.userType === "restaurant") {
+          const fixedRid = resolveRestaurantId({
+            user: s.user,
+            token: s.token,
+            currentRid: s.restaurantId,
+          });
+          if (fixedRid && String(fixedRid) !== String(s.restaurantId ?? "")) {
+            // set via store API
+            useAuthStore.setState({ restaurantId: fixedRid });
+          }
+        }
+        state?.setHydrated?.(true);
+      },
+    }
+  )
+);
+
+export default useAuthStore;

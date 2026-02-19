@@ -1,3 +1,4 @@
+// src/api/orders.js
 import client from "./client";
 
 // ---------------- utils ----------------
@@ -32,8 +33,8 @@ const num = (v) => {
 const normalizeOrderStatus = (s) => {
   const v = String(s ?? "").toLowerCase();
   if (["en_attente", "pending"].includes(v)) return "PENDING";
-  if (["livres", "livré", "delivered"].includes(v)) return "DELIVERED";
-  if (["annules", "annulé", "cancelled", "canceled"].includes(v)) return "CANCELLED";
+  if (["livres", "livré", "livree", "delivered"].includes(v)) return "DELIVERED";
+  if (["annules", "annulé", "annule", "cancelled", "canceled"].includes(v)) return "CANCELLED";
   if (["in_preparation", "en_preparation", "preparing", "préparation"].includes(v)) return "IN_PREPARATION";
   if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) return "OUT_FOR_DELIVERY";
   return "PENDING";
@@ -72,7 +73,8 @@ const denormalizePaymentStatus = (s) => {
 const normalizePaymentMethod = (m) => {
   const v = String(m ?? "").toLowerCase();
   if (["espece", "espèce", "cash", "cash_on_delivery"].includes(v)) return "CASH_ON_DELIVERY";
-  if (["tmoney", "t-money", "t_money", "orange_money", "moov_money", "wave", "mobile_money"].includes(v)) return "MOBILE_MONEY";
+  if (["tmoney", "t-money", "t_money", "orange_money", "moov_money", "wave", "mobile_money"].includes(v))
+    return "MOBILE_MONEY";
   if (["card", "carte", "visa", "mastercard"].includes(v)) return "CARD";
   if (["virement", "transfer", "bank_transfer"].includes(v)) return "OTHER";
   return "OTHER";
@@ -83,7 +85,7 @@ const denormalizePaymentMethod = (m) => {
   if (v === "CASH_ON_DELIVERY") return "espece";
   if (v === "MOBILE_MONEY") return "tmoney";
   if (v === "OTHER") return "virement";
-  if (v === "CARD") return undefined; // backend actuel ne gère pas card dans ton modèle
+  if (v === "CARD") return undefined; // backend actuel ne gère pas card
   const low = String(m ?? "").toLowerCase();
   if (["espece", "virement", "tmoney"].includes(low)) return low;
   return undefined;
@@ -117,16 +119,20 @@ const normalizeOrder = (raw) => {
 
   const createdAt = o.createdAt ?? o.created_at ?? null;
 
-  // restaurent peut être string (restaurant mode) OU objet populate (admin)
-  const resto = o.restaurent;
-  const restaurantId = typeof resto === "object" && resto ? (resto._id ?? resto.id) : (resto ?? o.restaurantId ?? null);
-  const restaurantName = typeof resto === "object" && resto ? (resto.name ?? resto.nom ?? "-") : undefined;
+  // "restaurent" peut être string OU objet populate
+  const resto = o.restaurent ?? o.restaurant;
+  const restaurantId =
+    typeof resto === "object" && resto
+      ? (resto._id ?? resto.id ?? resto.restaurantId ?? resto.restaurentId)
+      : (resto ?? o.restaurantId ?? o.restaurentId ?? null);
+
+  const restaurantName =
+    typeof resto === "object" && resto ? (resto.name ?? resto.nom ?? "-") : undefined;
 
   return {
     id: o._id ?? o.id ?? "",
     restaurantId,
 
-    // utilisé partout
     order_number: o.order_number ?? "",
     customer: {
       name: o.customer_name ?? "",
@@ -144,19 +150,16 @@ const normalizeOrder = (raw) => {
 
     items,
     itemsCount,
-    items_count: itemsCount, // utile pour sorting/colonnes
+    items_count: itemsCount,
     tableId: o.table ?? null,
 
-    // pour admin table (si populate)
     restaurant: restaurantName ? { name: restaurantName } : undefined,
-
     raw: o,
   };
 };
 
 const normalizeStats = (statsRaw) => {
   const s = statsRaw ?? {};
-  // supporte plusieurs formes possibles
   return {
     total: num(s.total ?? s.count),
     pending: num(s.en_attente ?? s.pending),
@@ -170,7 +173,7 @@ const normalizeStats = (statsRaw) => {
 const restoListUrl = (rid) => `/commande/${encodeURIComponent(rid)}`;
 const restoStatsUrl = (rid) => `/commande/${encodeURIComponent(rid)}/stats`;
 
-// Admin (selon ce que tu as reçu)
+// Admin
 const adminListUrl = () => `/admin/commandes`;
 const adminStatsUrl = () => `/admin/commandes/stats`;
 
@@ -183,11 +186,21 @@ const pickListAndStats = (a, b) => {
   const aList = arr(va);
   const bList = arr(vb);
 
-  // heuristique : la "liste" est celle qui contient un array non-vide OU qui est array
-  const list = aList.length || Array.isArray(va) ? va : bList.length || Array.isArray(vb) ? vb : va;
+  const list =
+    aList.length || Array.isArray(va) ? va : bList.length || Array.isArray(vb) ? vb : va;
   const stats = list === va ? vb : va;
 
   return { list: unwrap(list), stats: unwrap(stats) };
+};
+
+const toAxiosErrorMessage = (err) => {
+  const status = err?.response?.status;
+  const msg =
+    err?.response?.data?.message ??
+    err?.response?.data?.error ??
+    err?.message ??
+    "Request failed";
+  return status ? `${status} - ${msg}` : msg;
 };
 
 export const ordersApi = {
@@ -203,7 +216,7 @@ export const ordersApi = {
 
       restaurantId,
       restaurentId,
-      restaurant, // filtre admin (id resto)
+      restaurant, // filtre admin
 
       page = 1,
       limit = 10,
@@ -221,7 +234,8 @@ export const ordersApi = {
       ...rest
     } = params;
 
-    const query = clean({
+    // Base query (filtres)
+    const baseQuery = clean({
       ...rest,
       page,
       limit,
@@ -237,17 +251,18 @@ export const ordersApi = {
       search,
       q: search,
       customer_name: search,
-
-      // filtre resto pour admin (best-effort)
-      restaurent: restaurant ?? restaurantId ?? restaurentId ?? undefined,
-      restaurentId: restaurant ?? restaurantId ?? restaurentId ?? undefined,
-      restaurantId: restaurant ?? restaurantId ?? restaurentId ?? undefined,
     });
-
-    const axiosCfg = { params: query, timeout: TIMEOUT, signal: options.signal };
 
     // ---------- ADMIN ----------
     if (mode === "admin") {
+      const adminQuery = clean({
+        ...baseQuery,
+        restaurent: restaurant ?? restaurentId ?? restaurantId ?? undefined,
+        restaurentId: restaurant ?? restaurentId ?? restaurantId ?? undefined,
+      });
+
+      const axiosCfg = { params: adminQuery, timeout: TIMEOUT, signal: options.signal };
+
       const [r1, r2] = await Promise.allSettled([
         client.get(adminListUrl(), axiosCfg),
         client.get(adminStatsUrl(), axiosCfg),
@@ -256,69 +271,94 @@ export const ordersApi = {
       const d1 = r1.status === "fulfilled" ? r1.value?.data : null;
       const d2 = r2.status === "fulfilled" ? r2.value?.data : null;
 
-      // fallback si backend a inversé list/stats
+      if (r1.status === "rejected" && r2.status === "rejected") {
+        throw new Error(toAxiosErrorMessage(r1.reason) || toAxiosErrorMessage(r2.reason));
+      }
+      if (r1.status === "rejected") {
+        throw new Error(toAxiosErrorMessage(r1.reason));
+      }
+
       const { list, stats } = pickListAndStats(d1, d2);
 
       const listArr = arr(list);
       const orders = listArr.map(normalizeOrder);
 
-      const totalItems =
-        num(list?.totalItems ?? list?.total ?? list?.count) || orders.length;
+      const totalItems = num(list?.totalItems ?? list?.total ?? list?.count) || orders.length;
       const totalPages =
         num(list?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
 
-      const normalizedStats = stats ? normalizeStats(stats) : {
-        total: totalItems,
-        pending: orders.filter((o) => o.status === "PENDING").length,
-        delivered: orders.filter((o) => o.status === "DELIVERED").length,
-        cancelled: orders.filter((o) => o.status === "CANCELLED").length,
-      };
+      const normalizedStats = stats
+        ? normalizeStats(stats)
+        : {
+            total: totalItems,
+            pending: orders.filter((o) => o.status === "PENDING").length,
+            delivered: orders.filter((o) => o.status === "DELIVERED").length,
+            cancelled: orders.filter((o) => o.status === "CANCELLED").length,
+          };
 
       return { data: orders, totalPages, totalItems, stats: normalizedStats };
     }
 
     // ---------- RESTAURANT ----------
-    const rid = restaurentId ?? restaurantId ?? restaurant ?? null;
+    // ✅ IMPORTANT: ne JAMAIS fallback sur "restaurant" (admin filter) en mode restaurant
+    const rid = restaurentId ?? restaurantId ?? null;
+
     if (!rid) {
-      return { data: [], totalPages: 1, totalItems: 0, stats: { total: 0, pending: 0, delivered: 0, cancelled: 0 } };
+      return {
+        data: [],
+        totalPages: 1,
+        totalItems: 0,
+        stats: { total: 0, pending: 0, delivered: 0, cancelled: 0 },
+      };
     }
+
+    // ✅ en restaurant: ID dans le PATH uniquement
+    const axiosCfg = { params: baseQuery, timeout: TIMEOUT, signal: options.signal };
 
     const [listRes, statsRes] = await Promise.allSettled([
       client.get(restoListUrl(rid), axiosCfg),
       client.get(restoStatsUrl(rid), axiosCfg),
     ]);
 
-    const listData = listRes.status === "fulfilled" ? unwrap(listRes.value?.data) : [];
+    if (listRes.status === "rejected") {
+      throw new Error(toAxiosErrorMessage(listRes.reason));
+    }
+
+    const listData = unwrap(listRes.value?.data);
     const statsData = statsRes.status === "fulfilled" ? unwrap(statsRes.value?.data) : null;
 
     const listArr = arr(listData);
     const orders = listArr.map(normalizeOrder);
 
-    const totalItems =
-      num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
+    const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
     const totalPages =
       num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
 
-    const normalizedStats = statsData ? normalizeStats(statsData) : {
-      total: totalItems,
-      pending: orders.filter((o) => o.status === "PENDING").length,
-      delivered: orders.filter((o) => o.status === "DELIVERED").length,
-      cancelled: orders.filter((o) => o.status === "CANCELLED").length,
-    };
+    const normalizedStats = statsData
+      ? normalizeStats(statsData)
+      : {
+          total: totalItems,
+          pending: orders.filter((o) => o.status === "PENDING").length,
+          delivered: orders.filter((o) => o.status === "DELIVERED").length,
+          cancelled: orders.filter((o) => o.status === "CANCELLED").length,
+        };
 
     return { data: orders, totalPages, totalItems, stats: normalizedStats };
   },
 
-  // endpoints à confirmer côté backend
   updateStatus: async (orderId, status) => {
     const payload = { status: denormalizeOrderStatus(status) };
-    const res = await client.patch(`/commande/${encodeURIComponent(orderId)}/status`, payload, { timeout: TIMEOUT });
+    const res = await client.patch(`/commande/${encodeURIComponent(orderId)}/status`, payload, {
+      timeout: TIMEOUT,
+    });
     return unwrap(res.data);
   },
 
   updatePaymentStatus: async (orderId, payment_status) => {
     const payload = { payment_status: denormalizePaymentStatus(payment_status) };
-    const res = await client.patch(`/commande/${encodeURIComponent(orderId)}/payment`, payload, { timeout: TIMEOUT });
+    const res = await client.patch(`/commande/${encodeURIComponent(orderId)}/payment`, payload, {
+      timeout: TIMEOUT,
+    });
     return unwrap(res.data);
   },
 };

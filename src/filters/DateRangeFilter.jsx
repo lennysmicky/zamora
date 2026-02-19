@@ -1,61 +1,54 @@
 // src/filters/DateRangeFilter.jsx
-import { useState, useRef, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { RiCalendarLine, RiArrowDownSLine, RiCheckLine } from 'react-icons/ri';
-import './Filters.css';
+import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
+import { RiCalendarLine, RiArrowDownSLine, RiCheckLine } from "react-icons/ri";
+import "./Filters.css";
 
-const DateRangeFilter = ({ 
-  selectedRange, 
-  onSelectRange,
-  className = ''
-}) => {
+const DateRangeFilter = ({ selectedRange, onSelectRange, className = "" }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Options de période
   const dateRanges = [
-    { id: 'today', labelKey: 'filters.today' },
-    { id: 'yesterday', labelKey: 'filters.yesterday' },
-    { id: 'last7days', labelKey: 'filters.last7Days' },
-    { id: 'last30days', labelKey: 'filters.last30Days' },
-    { id: 'thisMonth', labelKey: 'filters.thisMonth' },
-    { id: 'lastMonth', labelKey: 'filters.lastMonth' },
-    { id: 'thisYear', labelKey: 'filters.thisYear' },
-    { id: 'custom', labelKey: 'filters.custom' },
-    { id: 'all', labelKey: 'filters.all' }
+    { id: "today", labelKey: "filters.today" },
+    { id: "yesterday", labelKey: "filters.yesterday" },
+    { id: "last7days", labelKey: "filters.last7Days" },
+    { id: "last30days", labelKey: "filters.last30Days" },
+    { id: "thisMonth", labelKey: "filters.thisMonth" },
+    { id: "lastMonth", labelKey: "filters.lastMonth" },
+    { id: "thisYear", labelKey: "filters.thisYear" },
+    { id: "custom", labelKey: "filters.custom" },
+    { id: "all", labelKey: "filters.all" },
   ];
 
-  // Fermer dropdown si clic extérieur
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Sélectionner une période
   const handleSelect = (range) => {
-    onSelectRange(range);
+    onSelectRange?.(range);
     setIsOpen(false);
   };
 
-  // Label affiché avec sécurité
-  const currentRange = dateRanges.find(r => r.id === selectedRange?.id) || dateRanges.find(r => r.id === 'all');
-  const displayLabel = t(currentRange?.labelKey || 'filters.all');
+  const currentRange =
+    dateRanges.find((r) => r.id === selectedRange?.id) || dateRanges.find((r) => r.id === "all");
 
   return (
     <div className={`filter-dropdown ${className}`} ref={dropdownRef}>
-      <button 
-        className={`filter-trigger ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
+      <button
+        className={`filter-trigger ${isOpen ? "active" : ""}`}
+        onClick={() => setIsOpen((v) => !v)}
+        type="button"
       >
         <RiCalendarLine className="filter-icon" />
-        <span className="filter-label">{displayLabel}</span>
-        <RiArrowDownSLine className={`filter-arrow ${isOpen ? 'rotate' : ''}`} />
+        <span className="filter-label">{t(currentRange?.labelKey || "filters.all")}</span>
+        <RiArrowDownSLine className={`filter-arrow ${isOpen ? "rotate" : ""}`} />
       </button>
 
       {isOpen && (
@@ -64,13 +57,12 @@ const DateRangeFilter = ({
             {dateRanges.map((range) => (
               <button
                 key={range.id}
-                className={`filter-item ${selectedRange?.id === range.id ? 'selected' : ''}`}
+                className={`filter-item ${selectedRange?.id === range.id ? "selected" : ""}`}
                 onClick={() => handleSelect(range)}
+                type="button"
               >
                 <span>{t(range.labelKey)}</span>
-                {selectedRange?.id === range.id && (
-                  <RiCheckLine className="filter-check" />
-                )}
+                {selectedRange?.id === range.id && <RiCheckLine className="filter-check" />}
               </button>
             ))}
           </div>

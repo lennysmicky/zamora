@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
-import { MdRestaurant } from 'react-icons/md';
-import { validateLoginForm } from '../../../utils/validators';
-import useAuthStore from '../../../stores/authStore';
-import { authAPI } from '../../../api/auth';
-import './RestaurantAuth.css';
+// src/pages/Auth/Restaurant/RestaurantLoginPage.jsx
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from "react-icons/fi";
+import { MdRestaurant } from "react-icons/md";
+import { validateLoginForm } from "../../../utils/validators";
+import useAuthStore from "../../../stores/authStore";
+import { authAPI } from "../../../api/auth";
+import "./RestaurantAuth.css";
 
-import logoImage from '../../../assets/images/logo.png';
-import restaurantBg from '../../../assets/images/restaurant.png';
+import logoImage from "../../../assets/images/logo.png";
+import restaurantBg from "../../../assets/images/restaurant.png";
 
 const RestaurantLoginPage = () => {
   const { t } = useTranslation();
@@ -17,9 +18,9 @@ const RestaurantLoginPage = () => {
   const loginRestaurant = useAuthStore((s) => s.loginRestaurant);
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    rememberMe: true
+    email: "",
+    password: "",
+    rememberMe: true,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -28,11 +29,8 @@ const RestaurantLoginPage = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
   const handleSubmit = async (e) => {
@@ -52,51 +50,54 @@ const RestaurantLoginPage = () => {
 
       const response = await authAPI.loginRestaurant({
         email: emailInput,
-        password: formData.password
+        password: formData.password,
       });
 
-      const { user, token, refreshToken } = response.data || {};
+      const payload = response?.data ?? response; // support si authAPI unwrap déjà
+      const { user, token, refreshToken } = payload || {};
+
       if (!user || !token) {
-        setErrors({ general: 'serverError' });
-        setIsLoading(false);
+        setErrors({ general: "serverError" });
         return;
       }
 
       // ✅ Bloque un ADMIN qui tenterait le login Restaurant
-      const role = String(user.role ?? user.userType ?? '').toLowerCase();
-      if (role && role !== 'restaurant') {
-        setErrors({ general: 'accessDenied' });
-        setIsLoading(false);
+      const role = String(user.role ?? user.userType ?? user.type ?? "").toLowerCase();
+      if (role && role !== "restaurant") {
+        setErrors({ general: "accessDenied" });
         return;
       }
 
-      // Persist session (cohérent avec initAuth)
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('user_role', 'restaurant');
-      if (formData.rememberMe && refreshToken) localStorage.setItem('refresh_token', refreshToken);
+      // ✅ Persist session (ne touche pas restaurantId ici)
+      localStorage.setItem("auth_token", token);
+      localStorage.setItem("user_role", "restaurant");
 
-      // Store
-      loginRestaurant({
-        user: {
-          ...user,
-          restaurantId: user.restaurantId ?? user.restaurant_id ?? user.id,
-          restaurantName: user.restaurantName ?? user.name
-        },
-        token
-      });
-
-      navigate('/restaurant/dashboard', { replace: true });
-
-    } catch (error) {
-      if (error.response) {
-        const status = error.response.status;
-        if (status === 401) setErrors({ general: 'invalidCredentials' });
-        else if (status === 403) setErrors({ general: 'accountDisabled' });
-        else if (status === 404) setErrors({ general: 'accountNotFound' });
-        else setErrors({ general: 'serverError' });
+      if (formData.rememberMe && refreshToken) {
+        localStorage.setItem("refresh_token", refreshToken);
       } else {
-        setErrors({ general: 'networkError' });
+        localStorage.removeItem("refresh_token");
       }
+
+      /**
+       * ✅ IMPORTANT:
+       * On passe le user brut + token.
+       * L'authStore déduit restaurantId depuis user ou JWT (restaurentId).
+       */
+      loginRestaurant({ user, token });
+
+      // ✅ Debug minimal (à retirer plus tard)
+      const rid = useAuthStore.getState().restaurantId;
+      console.log("[AUTH] restaurantId resolved =", rid);
+
+      navigate("/restaurant/dashboard", { replace: true });
+    } catch (error) {
+      const status = error?.response?.status;
+
+      if (status === 401) setErrors({ general: "invalidCredentials" });
+      else if (status === 403) setErrors({ general: "accountDisabled" });
+      else if (status === 404) setErrors({ general: "accountNotFound" });
+      else if (error?.response) setErrors({ general: "serverError" });
+      else setErrors({ general: "networkError" });
     } finally {
       setIsLoading(false);
     }
@@ -109,8 +110,8 @@ const RestaurantLoginPage = () => {
         <div className="auth-image-overlay"></div>
         <div className="auth-image-content">
           <MdRestaurant className="auth-image-icon" />
-          <h2>{t('auth.restaurant.loginTitle', 'Espace Restaurant')}</h2>
-          <p>{t('auth.restaurant.loginSubtitle', 'Gérez votre restaurant facilement')}</p>
+          <h2>{t("auth.restaurant.loginTitle", "Espace Restaurant")}</h2>
+          <p>{t("auth.restaurant.loginSubtitle", "Gérez votre restaurant facilement")}</p>
         </div>
       </div>
 
@@ -122,19 +123,19 @@ const RestaurantLoginPage = () => {
           </div>
 
           <div className="auth-form-header">
-            <h1>{t('auth.login.title', 'Connexion')}</h1>
-            <p>{t('auth.login.welcomeBack', 'Bienvenue ! Connectez-vous à votre compte.')}</p>
+            <h1>{t("auth.login.title", "Connexion")}</h1>
+            <p>{t("auth.login.welcomeBack", "Bienvenue ! Connectez-vous à votre compte.")}</p>
           </div>
 
           <form className="auth-form" onSubmit={handleSubmit}>
             {errors.general && (
               <div className="auth-error-banner">
-                {t(`auth.errors.${errors.general}`, 'Une erreur est survenue')}
+                {t(`auth.errors.${errors.general}`, "Une erreur est survenue")}
               </div>
             )}
 
-            <div className={`auth-input-group ${errors.email ? 'error' : ''}`}>
-              <label htmlFor="email">{t('auth.login.email', 'Email')}</label>
+            <div className={`auth-input-group ${errors.email ? "error" : ""}`}>
+              <label htmlFor="email">{t("auth.login.email", "Email")}</label>
               <div className="auth-input-wrapper">
                 <FiMail className="auth-input-icon" />
                 <input
@@ -143,41 +144,41 @@ const RestaurantLoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder={t('auth.login.emailPlaceholder', 'votre@email.com')}
+                  placeholder={t("auth.login.emailPlaceholder", "votre@email.com")}
                   autoComplete="email"
                 />
               </div>
               {errors.email && (
                 <span className="auth-input-error">
-                  {t(`auth.errors.${errors.email}`, 'Email invalide')}
+                  {t(`auth.errors.${errors.email}`, "Email invalide")}
                 </span>
               )}
             </div>
 
-            <div className={`auth-input-group ${errors.password ? 'error' : ''}`}>
-              <label htmlFor="password">{t('auth.login.password', 'Mot de passe')}</label>
+            <div className={`auth-input-group ${errors.password ? "error" : ""}`}>
+              <label htmlFor="password">{t("auth.login.password", "Mot de passe")}</label>
               <div className="auth-input-wrapper">
                 <FiLock className="auth-input-icon" />
                 <input
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder={t('auth.login.passwordPlaceholder', '••••••••')}
+                  placeholder={t("auth.login.passwordPlaceholder", "••••••••")}
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   className="auth-password-toggle"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((v) => !v)}
                 >
                   {showPassword ? <FiEyeOff /> : <FiEye />}
                 </button>
               </div>
               {errors.password && (
                 <span className="auth-input-error">
-                  {t(`auth.errors.${errors.password}`, 'Mot de passe invalide')}
+                  {t(`auth.errors.${errors.password}`, "Mot de passe invalide")}
                 </span>
               )}
             </div>
@@ -191,23 +192,24 @@ const RestaurantLoginPage = () => {
                   onChange={handleChange}
                 />
                 <span className="checkmark"></span>
-                <span>{t('auth.login.rememberMe', 'Se souvenir de moi')}</span>
+                <span>{t("auth.login.rememberMe", "Se souvenir de moi")}</span>
               </label>
+
               <Link to="/auth/forgot-password" className="auth-link">
-                {t('auth.login.forgotPassword', 'Mot de passe oublié ?')}
+                {t("auth.login.forgotPassword", "Mot de passe oublié ?")}
               </Link>
             </div>
 
             <button
               type="submit"
-              className={`auth-submit-btn ${isLoading ? 'loading' : ''}`}
+              className={`auth-submit-btn ${isLoading ? "loading" : ""}`}
               disabled={isLoading}
             >
               {isLoading ? (
                 <span className="auth-spinner"></span>
               ) : (
                 <>
-                  <span>{t('auth.login.button', 'Se connecter')}</span>
+                  <span>{t("auth.login.button", "Se connecter")}</span>
                   <FiArrowRight />
                 </>
               )}
@@ -215,15 +217,13 @@ const RestaurantLoginPage = () => {
           </form>
 
           <p className="auth-switch">
-            {t('auth.login.noAccount', "Pas encore de compte ?")}{' '}
-            <Link to="/register">
-              {t('auth.login.register', "S'inscrire")}
-            </Link>
+            {t("auth.login.noAccount", "Pas encore de compte ?")}{" "}
+            <Link to="/register">{t("auth.login.register", "S'inscrire")}</Link>
           </p>
         </div>
 
         <p className="auth-footer-text">
-          {t('auth.copyright', '© 2025 Zamora. Tous droits réservés.')}
+          {t("auth.copyright", "© 2025 Zamora. Tous droits réservés.")}
         </p>
       </div>
     </div>

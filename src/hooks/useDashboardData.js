@@ -1,29 +1,66 @@
 // src/hooks/useDashboardData.js
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "../stores/authStore";
+import { useDashboardFiltersStore } from "../stores/dashboardFiltersStore";
 import dashboardAPI from "../api/dashboard";
 import { onDashboardRefresh } from "../utils/dashboardEvents";
 
+const toYmdUtc = (d) => {
+  if (!(d instanceof Date) || Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+};
+
+const addDaysUtcYmd = (ymd, days) => {
+  if (!ymd) return null;
+  // force UTC to avoid timezone shifts
+  const d = new Date(`${ymd}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return ymd;
+  d.setUTCDate(d.getUTCDate() + days);
+  return toYmdUtc(d) ?? ymd;
+};
 
 const useDashboardData = ({
-  restaurantId: restaurantIdParam = null,
+  restaurantId: restaurantIdParam = null, // override (rare)
   startDate = null,
   endDate = null,
   period = null,
   allowGlobalAdminDashboard = true,
 } = {}) => {
   const { t } = useTranslation();
-  const { userType, restaurantId: storeRestaurantId } = useAuthStore();
 
+  // normalize type (robuste si "ADMIN"/"Restaurant")
+  const userType = useAuthStore((s) => String(s.userType ?? "").trim().toLowerCase());
+  const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
-  const restaurantId = restaurantIdParam || storeRestaurantId || null;
   const isAdminMode = userType === "admin";
   const isRestaurantMode = userType === "restaurant";
 
-  // ===============================
-  // STATES
-  // ===============================
+  // ✅ Dashboard filters store (source of truth UI)
+  const dashRestaurant = useDashboardFiltersStore((s) => s.restaurant); // {id|_id,name}|string|null
+  const dashPeriod = useDashboardFiltersStore((s) => s.period); // "30days" | "7days" | "today" | "custom" | ""
+  const dashFrom = useDashboardFiltersStore((s) => s.from);
+  const dashTo = useDashboardFiltersStore((s) => s.to);
+
+  /**
+   * ✅ restaurantId effectif:
+   * - restaurant mode: PRIORITÉ AU STORE (JWT restaurantId), puis param en fallback
+   * - admin mode: param override, sinon selector (id/_id/string)
+   */
+  const restaurantId = useMemo(() => {
+    if (isRestaurantMode) return storeRestaurantId || restaurantIdParam || null;
+
+    // admin
+    if (restaurantIdParam) return restaurantIdParam;
+
+    const selected =
+      typeof dashRestaurant === "string"
+        ? dashRestaurant
+        : dashRestaurant?.id ?? dashRestaurant?._id ?? null;
+
+    return selected; // null => "Tous les restaurants"
+  }, [isRestaurantMode, storeRestaurantId, restaurantIdParam, dashRestaurant]);
+
   const [kpis, setKpis] = useState({
     totalOrders: 0,
     growthOrders: 0,
@@ -39,150 +76,118 @@ const useDashboardData = ({
   const [ordersStatusData, setOrdersStatusData] = useState([]);
   const [topSellingItems, setTopSellingItems] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
-  const [topRestaurants, setTopRestaurants] = useState([]); // admin only
-  const [hourlyOrders, setHourlyOrders] = useState([]); // restaurant only
+  const [topRestaurants, setTopRestaurants] = useState([]);
+  const [hourlyOrders, setHourlyOrders] = useState([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ===============================
-  // BUILD FILTERS
-  // (ne met pas restaurantId ici si ton API l'utilise pour construire l'URL)
-  // Ici on envoie uniquement ce que dashboardAPI consomme: from/to/period.
-  // ===============================
-  const buildFilters = useCallback(() => {
-    const filters = {};
-    if (startDate) filters.from = startDate;
-    if (endDate) filters.to = endDate;
-    if (period) filters.period = period;
-    return filters;
-  }, [startDate, endDate, period]);
+  // ✅ build filters depuis props OU store
+  // 🔥 Fix: si custom et from==to, on envoie to = from + 1 jour (to exclusif)
+  const filters = useMemo(() => {
+    const f = {};
 
-  // ===============================
-  // FETCH DASHBOARD
-  // ===============================
+    const p = period ?? dashPeriod;
+    const isCustom = p === "custom";
+
+    const from = startDate ?? (isCustom ? dashFrom : null);
+    const rawTo = endDate ?? (isCustom ? dashTo : null);
+
+    if (p != null && p !== "") f.period = p;
+    if (from) f.from = from;
+
+    if (rawTo) {
+      if (isCustom && from && rawTo === from) {
+        f.to = addDaysUtcYmd(rawTo, 1);
+      } else {
+        f.to = rawTo;
+      }
+    }
+
+    return f;
+  }, [period, startDate, endDate, dashPeriod, dashFrom, dashTo]);
+
+  const seqRef = useRef(0);
+
   const fetchDashboard = useCallback(async () => {
+    const seq = ++seqRef.current;
     setIsLoading(true);
     setError(null);
 
     try {
-      const filters = buildFilters();
+      // Restaurant: sans restaurantId => rien à fetch
+      if (isRestaurantMode && !restaurantId) return;
 
-      // Restaurant: si pas de restaurantId => rien à fetch
-      if (isRestaurantMode && !restaurantId) {
-        setIsLoading(false);
-        return;
-      }
+      // Admin: global désactivé ET aucun resto => rien à fetch
+      if (isAdminMode && !restaurantId && !allowGlobalAdminDashboard) return;
 
-      // Admin: si global désactivé ET pas de resto sélectionné => rien à fetch
-      if (isAdminMode && !restaurantId && !allowGlobalAdminDashboard) {
-        setIsLoading(false);
-        return;
-      }
-
-      // ================= ADMIN =================
       if (isAdminMode) {
-        // restaurantId optionnel: si null, dashboard global
         const data = await dashboardAPI.getAdminDashboard({ restaurantId, ...filters });
-        if (!data) throw new Error("Invalid admin dashboard response");
+        if (seq !== seqRef.current) return;
 
         setKpis({
-          totalOrders: data.kpis?.totalOrders ?? 0,
-          growthOrders: data.kpis?.growthOrders ?? 0,
-          totalRevenue: data.kpis?.totalRevenue ?? 0,
-          growthRevenue: data.kpis?.growthRevenue ?? 0,
-          // compat si backend envoie averageBasket
-          averageOrderValue: data.kpis?.averageOrderValue ?? data.kpis?.averageBasket ?? 0,
-          growthBasket: data.kpis?.growthBasket ?? 0,
-          totalCustomers: data.kpis?.totalCustomers ?? 0,
-          growthCustomers: data.kpis?.growthCustomers ?? 0,
+          totalOrders: data?.kpis?.totalOrders ?? 0,
+          growthOrders: data?.kpis?.growthOrders ?? 0,
+          totalRevenue: data?.kpis?.totalRevenue ?? 0,
+          growthRevenue: data?.kpis?.growthRevenue ?? 0,
+          averageOrderValue: data?.kpis?.averageOrderValue ?? data?.kpis?.averageBasket ?? 0,
+          growthBasket: data?.kpis?.growthBasket ?? 0,
+          totalCustomers: data?.kpis?.totalCustomers ?? 0,
+          growthCustomers: data?.kpis?.growthCustomers ?? 0,
         });
 
-        setRevenueData(data.charts?.revenue || []);
-        setOrdersStatusData(data.charts?.ordersStatus || []);
-        setTopSellingItems(data.topSellingItems || []);
-        setRecentOrders(data.recentOrders || []);
-        setTopRestaurants(data.topRestaurants || []);
-
-        // hourlyOrders non pertinent en admin (clean)
+        setRevenueData(data?.charts?.revenue || []);
+        setOrdersStatusData(data?.charts?.ordersStatus || []);
+        setTopSellingItems(data?.topSellingItems || []);
+        setRecentOrders(data?.recentOrders || []);
+        setTopRestaurants(data?.topRestaurants || []);
         setHourlyOrders([]);
-        return; // évite tout double traitement
+        return;
       }
 
-      // ================= RESTAURANT =================
       if (isRestaurantMode) {
         const data = await dashboardAPI.getRestaurantDashboard({ restaurantId, ...filters });
-        if (!data) throw new Error("Invalid restaurant dashboard response");
+        if (seq !== seqRef.current) return;
 
         setKpis({
-          totalOrders: data.kpis?.totalOrders ?? 0,
-          growthOrders: data.kpis?.growthOrders ?? 0,
-          totalRevenue: data.kpis?.totalRevenue ?? 0,
-          growthRevenue: data.kpis?.growthRevenue ?? 0,
-          averageOrderValue: data.kpis?.averageOrderValue ?? data.kpis?.averageBasket ?? 0,
-          growthBasket: data.kpis?.growthBasket ?? 0,
-          totalCustomers: data.kpis?.totalCustomers ?? 0,
-          growthCustomers: data.kpis?.growthCustomers ?? 0,
+          totalOrders: data?.kpis?.totalOrders ?? 0,
+          growthOrders: data?.kpis?.growthOrders ?? 0,
+          totalRevenue: data?.kpis?.totalRevenue ?? 0,
+          growthRevenue: data?.kpis?.growthRevenue ?? 0,
+          averageOrderValue: data?.kpis?.averageOrderValue ?? data?.kpis?.averageBasket ?? 0,
+          growthBasket: data?.kpis?.growthBasket ?? 0,
+          totalCustomers: data?.kpis?.totalCustomers ?? 0,
+          growthCustomers: data?.kpis?.growthCustomers ?? 0,
         });
 
-        setRevenueData(data.charts?.revenue || []);
-        setOrdersStatusData(data.charts?.ordersStatus || []);
-        setTopSellingItems(data.topSellingItems || []);
-        setRecentOrders(data.recentOrders || []);
-        setHourlyOrders(data.hourlyOrders || []);
-
-        // topRestaurants non pertinent en restaurant (clean)
+        setRevenueData(data?.charts?.revenue || []);
+        setOrdersStatusData(data?.charts?.ordersStatus || []);
+        setTopSellingItems(data?.topSellingItems || []);
+        setRecentOrders(data?.recentOrders || []);
+        setHourlyOrders(data?.hourlyOrders || []);
         setTopRestaurants([]);
       }
     } catch (err) {
       console.error("Dashboard error:", err);
-      setError(t("dashboard.errors.fetchFailed", "Erreur lors du chargement du dashboard"));
+      if (seq === seqRef.current) {
+        setError(t("dashboard.errors.fetchFailed", "Erreur lors du chargement du dashboard"));
+      }
     } finally {
-      setIsLoading(false);
+      if (seq === seqRef.current) setIsLoading(false);
     }
-  }, [
-    buildFilters,
-    isAdminMode,
-    isRestaurantMode,
-    restaurantId,
-    allowGlobalAdminDashboard,
-    t,
-  ]);
+  }, [isAdminMode, isRestaurantMode, restaurantId, filters, allowGlobalAdminDashboard, t]);
 
-  // ===============================
-  // EFFECT
-  // ===============================
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
- // Refresh auto quand Orders/Payments déclenchent un événement global
+
+  // ✅ cleanup (évite listeners multiples)
   useEffect(() => {
-    const unsubscribe = onDashboardRefresh(() => {
-      fetchDashboard();
-    });
+    const unsubscribe = onDashboardRefresh(() => fetchDashboard());
     return unsubscribe;
   }, [fetchDashboard]);
 
-  // ===============================
-  // PARTIAL REFRESH (stubs compatibles)
-  // ===============================
-  const refreshTopRestaurants = async (limit = 5) => {
-    if (!isAdminMode) return;
-    const data = await dashboardAPI.getTopRestaurants({ limit });
-    setTopRestaurants(data || []);
-  };
-
-  const refreshHourlyOrders = async (date = null) => {
-    if (!isRestaurantMode || !restaurantId) return;
-    const data = await dashboardAPI.getHourlyOrders({ restaurantId, date });
-    setHourlyOrders(data || []);
-  };
-
-  // ===============================
-  // RETURN
-  // ===============================
   return {
-    // Data
     kpis,
     revenueData,
     ordersStatusData,
@@ -190,20 +195,12 @@ const useDashboardData = ({
     recentOrders,
     topRestaurants,
     hourlyOrders,
-
-    // States
     isLoading,
     error,
-
-    // Context
     isAdminMode,
     isRestaurantMode,
     restaurantId,
-
-    // Actions
     refresh: fetchDashboard,
-    refreshTopRestaurants,
-    refreshHourlyOrders,
   };
 };
 

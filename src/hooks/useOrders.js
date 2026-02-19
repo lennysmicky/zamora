@@ -1,3 +1,4 @@
+// src/hooks/useOrders.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { ordersApi } from "../api/orders";
@@ -10,16 +11,37 @@ const toInt = (v, def) => {
   return Number.isFinite(n) && n > 0 ? n : def;
 };
 
+// ✅ centralise la détection d'annulation (StrictMode/dev + AbortController)
+const isCanceledError = (err) => {
+  const msg = String(err?.message ?? "").toLowerCase();
+  return (
+    err?.name === "CanceledError" ||
+    err?.code === "ERR_CANCELED" ||
+    err?.name === "AbortError" ||
+    msg === "canceled" ||
+    msg === "cancelled" ||
+    msg.includes("canceled") ||
+    msg.includes("cancelled") ||
+    msg.includes("aborted")
+  );
+};
+
 export const useOrders = (opts) => {
   const options = opts ?? {};
-  const { userType, restaurantId: storeRestaurantId } = useAuthStore();
+  const userType = useAuthStore((s) => s.userType);
+  const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
   const mode = options.mode ?? userType ?? "admin";
 
   // ---- initial state from URL (ordersQuery.js) ----
-  const initPage = toInt(options.initialPagination?.page ?? options.initialPagination?.currentPage, 1);
+  const initPage = toInt(
+    options.initialPagination?.page ?? options.initialPagination?.currentPage,
+    1
+  );
   const initLimit = toInt(
-    options.initialPagination?.limit ?? options.initialPagination?.itemsPerPage ?? options.initialPageSize,
+    options.initialPagination?.limit ??
+      options.initialPagination?.itemsPerPage ??
+      options.initialPageSize,
     10
   );
 
@@ -48,7 +70,7 @@ export const useOrders = (opts) => {
     itemsPerPage: initLimit,
   });
 
-  //   setFilters = reset page (user-driven)
+  // ✅ setFilters = reset page (user-driven)
   const setFilters = useCallback((next) => {
     _setFilters((prev) => (typeof next === "function" ? next(prev) : next));
     setPagination((p) => (p.currentPage === 1 ? p : { ...p, currentPage: 1 }));
@@ -56,12 +78,13 @@ export const useOrders = (opts) => {
 
   const abortRef = useRef(null);
 
+  // ✅ scope restaurant effectif
   const effectiveRestaurantId = useMemo(() => {
     if (mode === "restaurant") return options.restaurantId ?? storeRestaurantId ?? null;
     return options.restaurantId ?? filters.restaurant ?? null;
   }, [mode, options.restaurantId, storeRestaurantId, filters.restaurant]);
 
-  //   sanitize filters before API
+  // ✅ sanitize filters before API
   const apiFilters = useMemo(() => {
     const f = { ...(filters ?? {}) };
 
@@ -74,7 +97,7 @@ export const useOrders = (opts) => {
     return f;
   }, [filters, mode]);
 
-  //   sync when URL changes (back/forward or opened shared link)
+  // ✅ sync when URL changes (back/forward or opened shared link)
   const extKey = useMemo(
     () =>
       JSON.stringify({
@@ -103,6 +126,7 @@ export const useOrders = (opts) => {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // guard: UNIQUEMENT en restaurant
     if (mode === "restaurant" && !effectiveRestaurantId) {
       setOrders([]);
       setStats(EMPTY_STATS);
@@ -123,6 +147,8 @@ export const useOrders = (opts) => {
         { signal: controller.signal }
       );
 
+      if (controller.signal.aborted) return;
+
       setOrders(res.data ?? []);
       setStats(res.stats ?? EMPTY_STATS);
 
@@ -132,10 +158,13 @@ export const useOrders = (opts) => {
         totalItems: res.totalItems ?? (res.data?.length ?? 0),
       }));
     } catch (err) {
-      if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
+      // ✅ ignore les annulations (StrictMode/dev + abort lors des changements)
+      if (isCanceledError(err) || controller.signal.aborted) return;
+
       setError(err?.message ?? "Erreur lors du chargement des commandes");
       console.error("fetchOrders error:", err);
     } finally {
+      // ✅ si aborted, ne touche pas le state (évite flicker + warnings)
       if (!controller.signal.aborted) setLoading(false);
     }
   }, [mode, effectiveRestaurantId, apiFilters, pagination.currentPage, pagination.itemsPerPage]);
@@ -153,6 +182,7 @@ export const useOrders = (opts) => {
         emitDashboardRefresh({ reason: "order_status_updated", orderId, status: newStatus });
         return true;
       } catch (err) {
+        if (isCanceledError(err)) return false;
         console.error("updateOrderStatus error:", err);
         return false;
       }
@@ -172,6 +202,7 @@ export const useOrders = (opts) => {
         });
         return true;
       } catch (err) {
+        if (isCanceledError(err)) return false;
         console.error("updatePaymentStatus error:", err);
         return false;
       }

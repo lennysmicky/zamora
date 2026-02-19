@@ -23,7 +23,7 @@ const RestaurantSelector = ({ selectedRestaurant, onSelectRestaurant, className 
       try {
         const { data } = await client.get("/restaurent", {
           signal: controller.signal,
-          timeout: 30000, // évite le 10s si backend lent (Render cold start)
+          timeout: 10000, // évite le 10s si backend lent (Render cold start)
         });
 
         // unwrap (supporte: array direct, {data:[]}, {restaurants:[]}, {results:[]})
