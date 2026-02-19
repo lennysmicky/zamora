@@ -166,7 +166,7 @@ const OrdersTableRow = ({
                   <span>{t('common.view')}</span>
                 </button>
 
-                <button onClick={() => onUpdateStatus?.(order.id, order.status)} type="button">
+                <button onClick={() => onViewDetails?.(order)} type="button">
                   <RiEditLine />
                   <span>{t('common.edit')}</span>
                 </button>

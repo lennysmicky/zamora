@@ -1,10 +1,22 @@
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { RiArrowRightSLine } from "react-icons/ri";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../../stores/authStore";
+import { buildOrdersQuery } from "../../utils/ordersQuery";
 import "./RecentOrdersTable.css";
 
-const RecentOrdersTable = ({ data, isLoading = false }) => {
+const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) => {
   const { t } = useTranslation();
+
+  const navigate = useNavigate();
+  const { userType } = useAuthStore();
+  const isRestaurantMode = userType === "restaurant";
+
+  const handleViewAll = () => {
+    const path = isRestaurantMode ? "/restaurant/orders" : "/orders";
+    navigate(`${path}${buildOrdersQuery(linkFilters)}`);
+  };
 
   const getStatusClass = (status) => {
     const statusClasses = {
@@ -12,113 +24,110 @@ const RecentOrdersTable = ({ data, isLoading = false }) => {
       preparing: "status-preparing",
       pending: "status-pending",
       cancelled: "status-cancelled",
+      out_for_delivery: "status-preparing",
     };
-    return statusClasses[status] || "";
+    return statusClasses[status] || "status-pending";
   };
 
-  const getStatusLabel = (status) => t(`status.${status}`);
+  const getStatusLabel = (status) => {
+    const map = {
+      delivered: t("orders.status.delivered"),
+      preparing: t("orders.status.inPreparation"),
+      out_for_delivery: t("orders.status.outForDelivery"),
+      pending: t("orders.status.pending"),
+      cancelled: t("orders.status.cancelled"),
+    };
+    return map[status] || String(status ?? "");
+  };
 
-  const formatCurrency = (value) =>
-    new Intl.NumberFormat("fr-FR", {
+  const formatCurrency = (value) => {
+    const n = Number(value);
+    return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
       minimumFractionDigits: 0,
-    }).format(Number(value) || 0);
+    }).format(Number.isFinite(n) ? n : 0);
+  };
 
   const formatItems = (count) => {
     const n = Number(count) || 0;
-    if (n === 0) return `0 ${t("orders.item")}`;
-    if (n === 1) return `1 ${t("orders.item")}`;
+    if (n <= 1) return `${n} ${t("orders.item")}`;
     return `${n} ${t("orders.itemPlural")}`;
   };
 
-  // Normalisation: accepte plusieurs formats backend
   const orders = useMemo(() => {
     const list = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
 
     const normalizeStatus = (s) => {
       const v = String(s ?? "").toLowerCase();
-      // normaliser quelques variantes fréquentes
-      if (["livree", "livré", "delivered"].includes(v)) return "delivered";
-      if (["preparation", "preparing"].includes(v)) return "preparing";
+      if (["livres", "livree", "livré", "livrée", "delivered"].includes(v)) return "delivered";
+      if (["in_preparation", "en_preparation", "preparing", "préparation", "preparation"].includes(v))
+        return "preparing";
+      if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) return "out_for_delivery";
       if (["en_attente", "attente", "pending"].includes(v)) return "pending";
-      if (["annulee", "annulé", "cancelled", "canceled"].includes(v)) return "cancelled";
+      if (["annules", "annulee", "annulé", "annulée", "cancelled", "canceled"].includes(v))
+        return "cancelled";
       return v || "pending";
-;
     };
 
-    const pickCustomer = (o) =>
-      o?.customer ??
-      o?.client ??
-      o?.customerName ??
-      o?.clientName ??
-      o?.userName ??
-      o?.user?.name ??
-      o?.utilisateur?.nom ??
-      o?.nomClient ??
-      "—";
+    const pickCustomer = (o) => {
+      const c =
+        o?.customer ??
+        o?.client ??
+        o?.user ??
+        o?.utilisateur ??
+        o?.customerName ??
+        o?.clientName ??
+        o?.userName ??
+        o?.nomClient;
 
-    const pickItemsCount = (o) =>
-      o?.itemsCount ??
-      o?.items ??
-      o?.nbrItems ??
-      o?.nbItems ??
-      o?.quantite ??
-      (Array.isArray(o?.orderItems) ? o.orderItems.length : undefined) ??
-      (Array.isArray(o?.items) ? o.items.length : undefined) ??
-      0;
+      if (typeof c === "string") return c;
+      if (c && typeof c === "object") return c.name ?? c.nom ?? "—";
+      return "—";
+    };
 
-    const pickTotal = (o) =>
-      o?.total ??
-      o?.amount ??
-      o?.montant ??
-      o?.priceTotal ??
-      o?.totalPrice ??
-      o?.somme ??
-      o?.revenue ??
-      0;
+    const pickItemsCount = (o) => {
+      const direct = o?.itemsCount ?? o?.items_count ?? o?.nbrItems ?? o?.nbItems ?? o?.quantite;
+      if (direct != null && direct !== "") return Number(direct) || 0;
+
+      if (Array.isArray(o?.items)) {
+        const sumQty = o.items.reduce((acc, it) => acc + (Number(it?.quantite) || 0), 0);
+        return sumQty || o.items.length;
+      }
+      if (Array.isArray(o?.orderItems)) return o.orderItems.length;
+      return 0;
+    };
+
+    const pickTotal = (o) => {
+      const v =
+        o?.total ?? o?.total_amount ?? o?.amount ?? o?.montant ?? o?.priceTotal ?? o?.totalPrice ?? o?.somme ?? o?.revenue;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    };
 
     const pickId = (o) =>
-      o?.id ??
-      o?._id ??
-      o?.orderId ??
-      o?.commandeId ??
-      o?.numero ??
-      o?.reference ??
-      o?.ref ??
-      null;
+      o?.order_number ?? o?.orderNumber ?? o?.id ?? o?._id ?? o?.orderId ?? o?.commandeId ?? o?.numero ?? o?.reference ?? o?.ref ?? null;
 
-    return list
-      .map((o, idx) => {
-        const id = pickId(o) ?? `row-${idx}`;
-        const customer = pickCustomer(o);
-        const items = pickItemsCount(o);
-        const total = pickTotal(o);
-        const status = normalizeStatus(o?.status ?? o?.etat ?? o?.state);
-
-        return {
-          id,
-          customer,
-          items: Number(items) || 0,
-          total: Number(total) || 0,
-          status,
-          raw: o,
-        };
-      })
-      .filter((o) => o.id != null);
+    return list.map((o, idx) => {
+      const id = pickId(o) ?? `row-${idx}`;
+      return {
+        id,
+        customer: pickCustomer(o),
+        items: pickItemsCount(o),
+        total: pickTotal(o),
+        status: normalizeStatus(o?.status ?? o?.etat ?? o?.state),
+        raw: o,
+      };
+    });
   }, [data]);
 
-  // ================================
-  // ÉTAT 1 : LOADING
-  // ================================
   if (isLoading) {
     return (
       <div className="recent-orders-card">
         <div className="recent-orders-header">
           <h3>{t("dashboard.recentOrders")}</h3>
-          <button className="recent-orders-link" type="button">
-            {t("dashboard.viewAll")}
-            <RiArrowRightSLine />
+          <button className="recent-orders-link" type="button" onClick={handleViewAll}>
+            {t("dashboard.viewAll")} <RiArrowRightSLine />
           </button>
         </div>
         <div className="recent-orders-skeleton">
@@ -136,17 +145,13 @@ const RecentOrdersTable = ({ data, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // ÉTAT 2 : EMPTY
-  // ================================
   if (!orders.length) {
     return (
       <div className="recent-orders-card">
         <div className="recent-orders-header">
           <h3>{t("dashboard.recentOrders")}</h3>
-          <button className="recent-orders-link" type="button">
-            {t("dashboard.viewAll")}
-            <RiArrowRightSLine />
+          <button className="recent-orders-link" type="button" onClick={handleViewAll}>
+            {t("dashboard.viewAll")} <RiArrowRightSLine />
           </button>
         </div>
         <div className="recent-orders-empty">
@@ -156,16 +161,12 @@ const RecentOrdersTable = ({ data, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // ÉTAT 3 : DATA
-  // ================================
   return (
     <div className="recent-orders-card">
       <div className="recent-orders-header">
         <h3>{t("dashboard.recentOrders")}</h3>
-        <button className="recent-orders-link" type="button">
-          {t("dashboard.viewAll")}
-          <RiArrowRightSLine />
+        <button className="recent-orders-link" type="button" onClick={handleViewAll}>
+          {t("dashboard.viewAll")} <RiArrowRightSLine />
         </button>
       </div>
 

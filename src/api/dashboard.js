@@ -1,21 +1,10 @@
 // src/api/dashboard.js
 import client from "./client";
 
-// ---------------- Utils ----------------
+// utils existants: clean, unwrap, num, arr, pick, etc.
+
 const clean = (p = {}) =>
   Object.fromEntries(Object.entries(p).filter(([, v]) => v !== "" && v != null));
-
-const pickId = (args = {}) =>
-  args.restuarentId ?? args.restaurentId ?? args.restaurantId ?? args.id;
-
-const stripIds = (args = {}) => {
-  const { restuarentId, restaurentId, restaurantId, id, ...rest } = args;
-  return rest;
-};
-
-// Ton client a déjà baseURL = .../api/  => ici PAS de "/api" au début
-const restoBase = (id) => `/commande/${encodeURIComponent(id)}`;
-const adminBase = () => `/commande/admin`;
 
 const unwrap = (x) => {
   let v = x;
@@ -26,6 +15,7 @@ const unwrap = (x) => {
   return v;
 };
 
+const arr = (v) => (Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : []);
 const num = (v) => {
   if (v == null || v === "") return 0;
   if (typeof v === "number") return Number.isFinite(v) ? v : 0;
@@ -35,16 +25,23 @@ const num = (v) => {
   }
   return 0;
 };
-
 const pick = (obj, keys) => {
   if (!obj || typeof obj !== "object") return undefined;
   for (const k of keys) if (obj[k] != null) return obj[k];
   return undefined;
 };
 
-const arr = (v) => (Array.isArray(v) ? v : Array.isArray(v?.items) ? v.items : []);
+// ===== Normalizers (tu gardes tes versions si déjà présentes) =====
+const normalizeRevenus = (raw) => {
+  const v = unwrap(raw);
+  return arr(v)
+    .map((x) => ({
+      date: x?.date ?? x?.day ?? x?.jour ?? x?.x ?? x?.label ?? "",
+      value: num(x?.value ?? x?.total ?? x?.amount ?? x?.revenue ?? x?.y),
+    }))
+    .filter((p) => p.date !== "");
+};
 
-// ---------------- Normalizers ----------------
 const normalizeStatus = (raw) => {
   const v = unwrap(raw);
   if (Array.isArray(v)) {
@@ -59,17 +56,6 @@ const normalizeStatus = (raw) => {
   return [];
 };
 
-const normalizeRevenus = (raw) => {
-  const v = unwrap(raw);
-  const a = arr(v);
-  return a
-    .map((x) => ({
-      date: x?.date ?? x?.day ?? x?.jour ?? x?.x ?? x?.label ?? "",
-      value: num(x?.value ?? x?.total ?? x?.amount ?? x?.revenue ?? x?.y),
-    }))
-    .filter((p) => p.date !== "");
-};
-
 const mapStatsToKpis = (raw) => {
   const s = unwrap(raw) ?? {};
   return {
@@ -77,145 +63,102 @@ const mapStatsToKpis = (raw) => {
     growthOrders: num(pick(s, ["growthOrders", "ordersGrowth"])),
     totalRevenue: num(pick(s, ["totalRevenue", "totalRevenu", "revenue", "revenu"])),
     growthRevenue: num(pick(s, ["growthRevenue", "revenueGrowth"])),
-    averageOrderValue: num(
-      pick(s, ["averageOrderValue", "avgOrderValue", "panierMoyen", "averageBasket"])
-    ),
+    averageOrderValue: num(pick(s, ["averageOrderValue", "avgOrderValue", "panierMoyen", "averageBasket"])),
     growthBasket: num(pick(s, ["growthBasket", "basketGrowth"])),
     totalCustomers: num(pick(s, ["totalCustomers", "customers", "clients"])),
     growthCustomers: num(pick(s, ["growthCustomers", "customersGrowth"])),
   };
 };
 
-// Admin n’a pas de route /status => on dérive depuis listcommande/recent_order
-const statusFromOrders = (orders = []) => {
-  const m = new Map();
-  for (const o of orders) {
-    const s = o?.status ?? o?.etat ?? o?.state ?? "unknown";
-    m.set(s, (m.get(s) ?? 0) + 1);
-  }
-  return Array.from(m.entries()).map(([label, value]) => ({ label, value }));
+const extractStatusPayload = (raw) => {
+  const v = unwrap(raw);
+  return v?.status ?? v?.ordersStatus ?? v?.byStatus ?? v?.breakdown ?? null;
 };
 
-const normalizeDashboard = (maybeDashboard, parts) => {
-  const d = unwrap(maybeDashboard);
-
-  // Si le backend renvoie déjà {kpis, charts, ...}
-  if (d?.kpis || d?.charts) {
-    return {
-      kpis: mapStatsToKpis(d.kpis ?? d.stats ?? {}),
-      charts: {
-        revenue: normalizeRevenus(d.charts?.revenue ?? d.revenus ?? []),
-        ordersStatus: normalizeStatus(d.charts?.ordersStatus ?? d.status ?? []),
-      },
-      topSellingItems: arr(d.topSellingItems ?? d.top ?? []),
-      recentOrders: arr(d.recentOrders ?? d.recent ?? []),
-      topRestaurants: arr(d.topRestaurants ?? []),
-      hourlyOrders: arr(d.hourlyOrders ?? []),
-    };
-  }
-
-  // Sinon on construit depuis les endpoints
-  const { stats, revenus, status, topSellingItems, recentOrders } = parts;
-  return {
-    kpis: mapStatsToKpis(stats),
-    charts: { revenue: normalizeRevenus(revenus), ordersStatus: normalizeStatus(status) },
-    topSellingItems: arr(topSellingItems),
-    recentOrders: arr(recentOrders),
-    topRestaurants: [],
-    hourlyOrders: [],
-  };
-};
-
-// helper: tolerant fetch + timeout dashboard
 const DASH_TIMEOUT = 30000;
-const safeGet = async (url, params) => {
-  const r = await client.get(url, { params, timeout: DASH_TIMEOUT });
-  return r.data;
-};
+const safeGet = async (url, params) => (await client.get(url, { params, timeout: DASH_TIMEOUT })).data;
 
-// ---------------- API ----------------
+// ===== Bases =====
+const ADMIN_BASE = "/admin/dashboard";
+// Si tes routes resto existent déjà ailleurs, garde-les ici (ex: /commande/:id/...)
+const restoBase = (id) => `/commande/${encodeURIComponent(id)}`;
+
+// ===== API =====
 const dashboardAPI = {
-  /**
-   * ADMIN:
-   * - si restaurantId fourni => dashboard du resto (routes /commande/:id/*)
-   * - sinon => dashboard global (routes /commande/admin/*)
-   */
+  // ADMIN: global (sans restaurantId) OU filtré (avec restaurantId en query)
   getAdminDashboard: async (args = {}) => {
     const src = args.filters ?? args;
 
     const params = clean({
-      ...stripIds(src),
+      restaurantId: src.restaurantId ?? src.idRestaurant ?? src.restuarentId ?? src.restaurentId ?? undefined,
       from: src.from ?? src.startDate,
       to: src.to ?? src.endDate,
       period: src.period,
     });
 
-    const restuarentId = pickId(args); // optionnel en admin
-
-    // ===== Admin par restaurant (si un resto est sélectionné) =====
-    if (restuarentId) {
-      const results = await Promise.allSettled([
-        safeGet(`${restoBase(restuarentId)}/stats`, params),
-        safeGet(`${restoBase(restuarentId)}/revenus`, params),
-        safeGet(`${restoBase(restuarentId)}/status`, params),
-        safeGet(`${restoBase(restuarentId)}/meilleurs_ventes`, params),
-        safeGet(`${restoBase(restuarentId)}/commandes_recente`, params),
-      ]);
-
-      const [stats, revenus, status, topSellingItems, recentOrders] = results.map((x) =>
-        x.status === "fulfilled" ? x.value : null
-      );
-
-      return normalizeDashboard(null, { stats, revenus, status, topSellingItems, recentOrders });
-    }
-
-    // ===== Admin global =====
     const results = await Promise.allSettled([
-      safeGet(`${adminBase()}/statorder`, params),
-      safeGet(`${adminBase()}/revenuchart`, params),
-      safeGet(`${adminBase()}/recent_order`, params),
-      safeGet(`${adminBase()}/top_sell`, params),
-      safeGet(`${adminBase()}/listcommande`, params),
+      safeGet(`${ADMIN_BASE}/statorder`, params),
+      safeGet(`${ADMIN_BASE}/revenuchart`, params),
+      safeGet(`${ADMIN_BASE}/recent_order`, params),
+      safeGet(`${ADMIN_BASE}/top_sell`, params),
     ]);
 
-    const [stats, revenus, recentOrders, topSellingItems, ordersList] = results.map((x) =>
+    const [statorder, revenus, recentOrders, topSellingItems] = results.map((x) =>
       x.status === "fulfilled" ? x.value : null
     );
 
-    const ordersForStatus = arr(ordersList).length ? arr(ordersList) : arr(recentOrders);
+    const statusPayload = extractStatusPayload(statorder);
 
     return {
-      kpis: mapStatsToKpis(stats),
+      kpis: mapStatsToKpis(statorder),
       charts: {
         revenue: normalizeRevenus(revenus),
-        ordersStatus: statusFromOrders(ordersForStatus),
+        ordersStatus: statusPayload ? normalizeStatus(statusPayload) : [],
       },
       topSellingItems: arr(topSellingItems),
-      recentOrders: arr(recentOrders).length ? arr(recentOrders) : arr(ordersList),
+      recentOrders: arr(recentOrders),
       topRestaurants: [],
       hourlyOrders: [],
     };
   },
 
-  getRestaurantDashboard: (args = {}) => dashboardAPI.getAdminDashboard(args),
+  // RESTAURANT: garde tes routes resto existantes (si c’est déjà en prod)
+  getRestaurantDashboard: async (args = {}) => {
+    const src = args.filters ?? args;
+    const restaurantId =
+      src.restaurantId ?? src.restuarentId ?? src.restaurentId ?? src.id;
 
-  // ----- unitaires resto (inchangé) -----
-  getStats: (restuarentId, params = {}) =>
-    client.get(`${restoBase(restuarentId)}/stats`, { params: clean(params) }).then((r) => r.data),
+    if (!restaurantId) return null;
 
-  getRevenus: (restuarentId, params = {}) =>
-    client.get(`${restoBase(restuarentId)}/revenus`, { params: clean(params) }).then((r) => r.data),
+    const params = clean({
+      from: src.from ?? src.startDate,
+      to: src.to ?? src.endDate,
+      period: src.period,
+    });
 
-  getStatus: (restuarentId, params = {}) =>
-    client.get(`${restoBase(restuarentId)}/status`, { params: clean(params) }).then((r) => r.data),
+    const results = await Promise.allSettled([
+      safeGet(`${restoBase(restaurantId)}/stats`, params),
+      safeGet(`${restoBase(restaurantId)}/revenus`, params),
+      safeGet(`${restoBase(restaurantId)}/status`, params),
+      safeGet(`${restoBase(restaurantId)}/meilleurs_ventes`, params),
+      safeGet(`${restoBase(restaurantId)}/commandes_recente`, params),
+    ]);
 
-  getTopSellingItems: (restuarentId, params = {}) =>
-    client.get(`${restoBase(restuarentId)}/meilleurs_ventes`, { params: clean(params) }).then((r) => r.data),
+    const [stats, revenus, status, topSellingItems, recentOrders] = results.map((x) =>
+      x.status === "fulfilled" ? x.value : null
+    );
 
-  getRecentOrders: (restuarentId, params = {}) =>
-    client.get(`${restoBase(restuarentId)}/commandes_recente`, { params: clean(params) }).then((r) => r.data),
+    return {
+      kpis: mapStatsToKpis(stats),
+      charts: { revenue: normalizeRevenus(revenus), ordersStatus: normalizeStatus(status) },
+      topSellingItems: arr(topSellingItems),
+      recentOrders: arr(recentOrders),
+      topRestaurants: [],
+      hourlyOrders: [],
+    };
+  },
 
-  // ----- stubs pour éviter crash si appelés par le hook -----
+  // stubs
   getTopRestaurants: async () => [],
   getHourlyOrders: async () => [],
 };

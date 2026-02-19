@@ -3,24 +3,21 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "../stores/authStore";
 import dashboardAPI from "../api/dashboard";
+import { onDashboardRefresh } from "../utils/dashboardEvents";
 
-/**
- * Hook Dashboard – Admin & Restaurant
- * Toutes les données viennent du backend
- */
+
 const useDashboardData = ({
   restaurantId: restaurantIdParam = null,
   startDate = null,
   endDate = null,
   period = null,
+  allowGlobalAdminDashboard = true,
 } = {}) => {
   const { t } = useTranslation();
   const { userType, restaurantId: storeRestaurantId } = useAuthStore();
 
-  // ===============================
-  // CONTEXTE UTILISATEUR
-  // ===============================
-  const restaurantId = restaurantIdParam || storeRestaurantId;
+
+  const restaurantId = restaurantIdParam || storeRestaurantId || null;
   const isAdminMode = userType === "admin";
   const isRestaurantMode = userType === "restaurant";
 
@@ -50,21 +47,16 @@ const useDashboardData = ({
 
   // ===============================
   // BUILD FILTERS
-  // (ne met pas restaurantId ici: l'ID sert à construire l'URL)
+  // (ne met pas restaurantId ici si ton API l'utilise pour construire l'URL)
+  // Ici on envoie uniquement ce que dashboardAPI consomme: from/to/period.
   // ===============================
-  const buildFilters = () => {
+  const buildFilters = useCallback(() => {
     const filters = {};
-    if (startDate) {
-      filters.startDate = startDate;
-      filters.from = startDate;
-    }
-    if (endDate) {
-      filters.endDate = endDate;
-      filters.to = endDate;
-    }
+    if (startDate) filters.from = startDate;
+    if (endDate) filters.to = endDate;
     if (period) filters.period = period;
     return filters;
-  };
+  }, [startDate, endDate, period]);
 
   // ===============================
   // FETCH DASHBOARD
@@ -76,14 +68,21 @@ const useDashboardData = ({
     try {
       const filters = buildFilters();
 
-      // Admin sans restaurant sélectionné: ne fetch pas
-      if (isAdminMode && !restaurantId) {
+      // Restaurant: si pas de restaurantId => rien à fetch
+      if (isRestaurantMode && !restaurantId) {
+        setIsLoading(false);
+        return;
+      }
+
+      // Admin: si global désactivé ET pas de resto sélectionné => rien à fetch
+      if (isAdminMode && !restaurantId && !allowGlobalAdminDashboard) {
         setIsLoading(false);
         return;
       }
 
       // ================= ADMIN =================
       if (isAdminMode) {
+        // restaurantId optionnel: si null, dashboard global
         const data = await dashboardAPI.getAdminDashboard({ restaurantId, ...filters });
         if (!data) throw new Error("Invalid admin dashboard response");
 
@@ -104,10 +103,14 @@ const useDashboardData = ({
         setTopSellingItems(data.topSellingItems || []);
         setRecentOrders(data.recentOrders || []);
         setTopRestaurants(data.topRestaurants || []);
+
+        // hourlyOrders non pertinent en admin (clean)
+        setHourlyOrders([]);
+        return; // évite tout double traitement
       }
 
       // ================= RESTAURANT =================
-      if (isRestaurantMode && restaurantId) {
+      if (isRestaurantMode) {
         const data = await dashboardAPI.getRestaurantDashboard({ restaurantId, ...filters });
         if (!data) throw new Error("Invalid restaurant dashboard response");
 
@@ -127,6 +130,9 @@ const useDashboardData = ({
         setTopSellingItems(data.topSellingItems || []);
         setRecentOrders(data.recentOrders || []);
         setHourlyOrders(data.hourlyOrders || []);
+
+        // topRestaurants non pertinent en restaurant (clean)
+        setTopRestaurants([]);
       }
     } catch (err) {
       console.error("Dashboard error:", err);
@@ -134,7 +140,14 @@ const useDashboardData = ({
     } finally {
       setIsLoading(false);
     }
-  }, [isAdminMode, isRestaurantMode, restaurantId, startDate, endDate, period, t]);
+  }, [
+    buildFilters,
+    isAdminMode,
+    isRestaurantMode,
+    restaurantId,
+    allowGlobalAdminDashboard,
+    t,
+  ]);
 
   // ===============================
   // EFFECT
@@ -142,10 +155,16 @@ const useDashboardData = ({
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
+ // Refresh auto quand Orders/Payments déclenchent un événement global
+  useEffect(() => {
+    const unsubscribe = onDashboardRefresh(() => {
+      fetchDashboard();
+    });
+    return unsubscribe;
+  }, [fetchDashboard]);
 
   // ===============================
-  // PARTIAL REFRESH
-  // (conservé tel quel, même si tes routes actuelles ne les exposent pas)
+  // PARTIAL REFRESH (stubs compatibles)
   // ===============================
   const refreshTopRestaurants = async (limit = 5) => {
     if (!isAdminMode) return;
@@ -167,10 +186,10 @@ const useDashboardData = ({
     kpis,
     revenueData,
     ordersStatusData,
-    topSellingItems, // restaurant/admin (si dispo)
+    topSellingItems,
     recentOrders,
-    topRestaurants, // admin only
-    hourlyOrders, // restaurant only
+    topRestaurants,
+    hourlyOrders,
 
     // States
     isLoading,

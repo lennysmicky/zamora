@@ -1,5 +1,5 @@
 // src/pages/Restaurant/Dashboard/RestaurantDashboardPage.jsx
-import React from "react";
+import React, { useMemo } from "react";
 import useAuthStore from "../../../stores/authStore";
 
 // Components
@@ -29,23 +29,36 @@ const RestaurantDashboardPage = () => {
     refresh,
   } = useDashboardData({ restaurantId });
 
+  //  filtres "View all" (plus tard: period/from/to)
+  const linkFilters = useMemo(
+    () => ({
+      restaurant: restaurantId, // utile côté restaurant aussi (safe)
+    }),
+    [restaurantId]
+  );
+
   return (
     <div className="dashboard-page">
       {error && <div style={{ marginBottom: 12 }}>{error}</div>}
 
-      {/* KPI */}
       <KpiGrid data={kpis} isLoading={isLoading} onRefresh={refresh} />
 
-      {/* Graphiques */}
       <div className="dashboard-charts">
         <RevenueChart data={revenueData} isLoading={isLoading} />
         <OrdersStatusChart data={ordersStatusData} isLoading={isLoading} />
       </div>
 
-      {/* Listes */}
       <div className="dashboard-bottom">
-        <TopSellingItems data={topSellingItems} isLoading={isLoading} />
-        <RecentOrdersTable data={recentOrders} isLoading={isLoading} />
+        <TopSellingItems
+          data={topSellingItems}
+          isLoading={isLoading}
+          linkFilters={linkFilters}
+        />
+        <RecentOrdersTable
+          data={recentOrders}
+          isLoading={isLoading}
+          linkFilters={linkFilters}
+        />
       </div>
     </div>
   );

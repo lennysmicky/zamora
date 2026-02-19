@@ -1,6 +1,8 @@
 // src/pages/Orders/OrdersPage.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
+
 import { ordersStore } from "../../stores/ordersStore";
 import { useSelectedOrders, useIsCreateModalOpen } from "../../hooks/useOrdersStore";
 import useAuthStore from "../../stores/authStore";
@@ -16,6 +18,8 @@ import { useOrders } from "../../hooks/useOrders";
 
 import Modal from "../../components/common/Modal";
 import OrderCreateForm from "../../components/orders/OrderCreateForm";
+
+import { readOrdersSearchParams, writeOrdersSearchParams } from "../../utils/ordersQuery";
 
 import "./OrdersPage.css";
 
@@ -35,24 +39,36 @@ const getOrderId = (o) => o?.id ?? o?._id ?? null;
 
 const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // ✅ selectors
+  // stable string (évite deps instables)
+  const currentQS = useMemo(() => searchParams.toString(), [searchParams]);
+  const lastWrittenQSRef = useRef(null);
+
   const selectedOrders = useSelectedOrders();
   const isCreateModalOpen = useIsCreateModalOpen();
 
-  // ✅ actions direct store (stables)
   const setSelectedOrders = ordersStore.setSelectedOrders;
   const openCreateModal = ordersStore.openCreateModal;
   const closeCreateModal = ordersStore.closeCreateModal;
 
-  const { restaurantId: storeRestaurantId, userType } = useAuthStore();
+  const userType = useAuthStore((s) => s.userType);
+  const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
   const isRestaurantMode = userType === "restaurant" || Boolean(restaurantIdProp);
+  const mode = isRestaurantMode ? "restaurant" : "admin";
 
   const restaurantIdForHook = useMemo(() => {
     if (!isRestaurantMode) return null;
     return restaurantIdProp || storeRestaurantId || null;
   }, [isRestaurantMode, restaurantIdProp, storeRestaurantId]);
+
+  // URL -> initial state (first mount)
+  const { initialFilters, initialPagination } = useMemo(
+    () => readOrdersSearchParams(searchParams, { defaults: DEFAULT_FILTERS, mode }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentQS, mode]
+  );
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -68,10 +84,54 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     setPagination,
     fetchOrders,
     updateOrderStatus,
+    updatePaymentStatus,
   } = useOrders({
     restaurantId: restaurantIdForHook,
-    mode: isRestaurantMode ? "restaurant" : "admin",
+    mode,
+    initialFilters,
+    initialPagination,
   });
+
+  // ✅ UI change filters => reset page 1 (pas dans useOrders sinon URL page casse)
+  const setFiltersUI = useCallback(
+    (updater) => {
+      setFilters((prev) => (typeof updater === "function" ? updater(prev) : updater));
+      setPagination((p) => ({ ...p, currentPage: 1 }));
+    },
+    [setFilters, setPagination]
+  );
+
+  // ✅ URL -> State (back/forward / lien copié / édition URL)
+  useEffect(() => {
+    if (lastWrittenQSRef.current === currentQS) return;
+
+    const { initialFilters: fFromUrl, initialPagination: pFromUrl } = readOrdersSearchParams(
+      searchParams,
+      { defaults: DEFAULT_FILTERS, mode }
+    );
+
+    setFilters(fFromUrl);
+    setPagination((p) => ({
+      ...p,
+      currentPage: pFromUrl.currentPage,
+      itemsPerPage: pFromUrl.itemsPerPage,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentQS, mode]);
+
+  // ✅ State -> URL
+  useEffect(() => {
+    const nextQS = writeOrdersSearchParams({
+      filters,
+      pagination: { page: pagination.currentPage, limit: pagination.itemsPerPage },
+      mode,
+    });
+
+    if (nextQS !== currentQS) {
+      lastWrittenQSRef.current = nextQS;
+      setSearchParams(nextQS, { replace: true });
+    }
+  }, [filters, pagination.currentPage, pagination.itemsPerPage, mode, currentQS, setSearchParams]);
 
   // ================================
   // HANDLERS UI
@@ -109,8 +169,8 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   }, [orders, setSelectedOrders]);
 
   const resetFilters = useCallback(() => {
-    setFilters((prev) => ({ ...prev, ...DEFAULT_FILTERS }));
-  }, [setFilters]);
+    setFiltersUI((prev) => ({ ...prev, ...DEFAULT_FILTERS }));
+  }, [setFiltersUI]);
 
   // ================================
   // HANDLERS STORE (stables => refs)
@@ -171,7 +231,11 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     <div className={`orders-page ${isRestaurantMode ? "restaurant-mode" : "admin-mode"}`}>
       <OrdersStats stats={stats} loading={loading} isRestaurantMode={isRestaurantMode} />
 
-      <OrdersFilters filters={filters} onFiltersChange={setFilters} isRestaurantMode={isRestaurantMode} />
+      <OrdersFilters
+        filters={filters}
+        onFiltersChange={setFiltersUI}
+        isRestaurantMode={isRestaurantMode}
+      />
 
       <div className="orders-content">
         {loading ? (
@@ -199,7 +263,7 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
               isRestaurantMode={isRestaurantMode}
             />
 
-            <OrdersPagination pagination={pagination} onPaginationChange={setPagination} />
+            <OrdersPagination pagination={pagination} onPaginationChange={setPagination} isLoading={loading} />
           </>
         )}
       </div>
@@ -210,6 +274,7 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onUpdateStatus={updateOrderStatus}
+          onUpdatePaymentStatus={updatePaymentStatus}
           isRestaurantMode={isRestaurantMode}
         />
       )}

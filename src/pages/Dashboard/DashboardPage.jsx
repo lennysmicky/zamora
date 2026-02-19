@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 // Hook
 import useDashboardData from "../../hooks/useDashboardData";
@@ -14,6 +14,7 @@ import RecentOrdersTable from "../../components/dashboard/RecentOrdersTable";
 import "./DashboardPage.css";
 
 const DashboardPage = () => {
+  // ✅ Un seul hook ici (les enfants reçoivent data/props)
   const {
     kpis,
     revenueData,
@@ -23,26 +24,45 @@ const DashboardPage = () => {
     isLoading,
     error,
     refresh,
+    // si plus tard tu ajoutes des filtres dans useDashboardData:
+    // restaurantId, ...
   } = useDashboardData();
+
+  // ✅ Filtres pour "View all" (query params)
+  // Pour l’instant, pas de filtres => query vide. Plus tard: period/from/to/restaurant
+  const linkFilters = useMemo(
+    () => ({
+      // period,
+      // from: startDate,
+      // to: endDate,
+      // restaurant: selectedRestaurantId,
+    }),
+    []
+  );
 
   return (
     <div className="dashboard-page">
-      {/* Optionnel: erreurs/chargement (sans toucher au CSS, tu peux retirer si tu veux) */}
       {error && <div style={{ marginBottom: 12 }}>{error}</div>}
 
-      {/* KPI Section */}
       <KpiGrid data={kpis} isLoading={isLoading} onRefresh={refresh} />
 
-      {/* Charts Section */}
       <div className="dashboard-charts">
         <RevenueChart data={revenueData} isLoading={isLoading} />
         <OrdersStatusChart data={ordersStatusData} isLoading={isLoading} />
       </div>
 
-      {/* Lists Section */}
       <div className="dashboard-lists">
-        <TopSellingItems data={topSellingItems} isLoading={isLoading} />
-        <RecentOrdersTable data={recentOrders} isLoading={isLoading} />
+        {/* Passe data + isLoading + filtres view-all */}
+        <TopSellingItems
+          data={topSellingItems}
+          isLoading={isLoading}
+          linkFilters={linkFilters}
+        />
+        <RecentOrdersTable
+          data={recentOrders}
+          isLoading={isLoading}
+          linkFilters={linkFilters}
+        />
       </div>
     </div>
   );

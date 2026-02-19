@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   RiSearchLine,
@@ -13,21 +13,18 @@ import "./css/OrdersFilters.css";
 /**
  * Props:
  * - filters
- * - onFiltersChange
- * - isRestaurantMode (true => restaurant connecté => pas de select restaurant)
- * - restaurants? (optionnel) [{ _id, name }] pour admin
+ * - onFiltersChange (fn updater OK)
+ * - isRestaurantMode
+ * - restaurants? [{ _id, name }]
  */
-const OrdersFilters = ({
-  filters,
-  onFiltersChange,
-  isRestaurantMode,
-  restaurants = [],
-}) => {
+const OrdersFilters = ({ filters, onFiltersChange, isRestaurantMode, restaurants = [] }) => {
   const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // ✅ Backend supporte uniquement: en_attente | livres | annules
-  // => UI: PENDING | DELIVERED | CANCELLED
+  // --------- normalize local (évite crash si filters null)
+  const f = filters || {};
+
+  // ✅ Backend: en_attente | livres | annules
   const statusOptions = useMemo(
     () => [
       { value: "", label: t("orders.filters.allStatus") },
@@ -39,8 +36,6 @@ const OrdersFilters = ({
   );
 
   // ✅ Backend: en_attente | en_traitement | paye | non_paye
-  // => UI (dans ton badge): PENDING | PAID | FAILED
-  // (REFUNDED supprimé car non géré backend)
   const paymentStatusOptions = useMemo(
     () => [
       { value: "", label: t("orders.filters.allPaymentStatus") },
@@ -52,20 +47,17 @@ const OrdersFilters = ({
   );
 
   // ✅ Backend: espece | tmoney | virement
-  // => UI: CASH_ON_DELIVERY | MOBILE_MONEY | OTHER
-  // (CARD supprimé)
   const paymentMethodOptions = useMemo(
     () => [
       { value: "", label: t("orders.filters.allMethods") },
-      { value: "CASH_ON_DELIVERY", label: t("orders.paymentMethod.cashOnDelivery") }, // espece
-      { value: "MOBILE_MONEY", label: t("orders.paymentMethod.mobileMoney") }, // tmoney
-      { value: "OTHER", label: t("orders.paymentMethod.other") }, // virement
+      { value: "CASH_ON_DELIVERY", label: t("orders.paymentMethod.cashOnDelivery") },
+      { value: "MOBILE_MONEY", label: t("orders.paymentMethod.mobileMoney") },
+      { value: "OTHER", label: t("orders.paymentMethod.other") },
     ],
     [t]
   );
 
   // ✅ Backend: application_mobile | application_web
-  // => UI: MOBILE | WEB | OTHER
   const sourceOptions = useMemo(
     () => [
       { value: "", label: t("orders.filters.allSources") },
@@ -86,8 +78,18 @@ const OrdersFilters = ({
     [t]
   );
 
+  // ✅ règle: si period != custom => from/to doivent être vides
+  useEffect(() => {
+    if (f.period !== "custom" && (f.from || f.to)) {
+      onFiltersChange((prev) => ({ ...(prev || {}), from: "", to: "" }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [f.period]);
+
   const handleFilterChange = (key, value) => {
-    onFiltersChange((prev) => ({ ...prev, [key]: value }));
+    // si on passe à custom, on garde from/to (l’utilisateur choisira après)
+    // si on quitte custom, l'effet au-dessus vide from/to
+    onFiltersChange((prev) => ({ ...(prev || {}), [key]: value }));
   };
 
   const handleReset = () => {
@@ -104,7 +106,7 @@ const OrdersFilters = ({
     });
   };
 
-  const hasActiveFilters = Object.entries(filters || {}).some(([k, v]) => {
+  const hasActiveFilters = Object.entries(f).some(([k, v]) => {
     if (k === "period") return v && v !== "30days";
     return v !== "" && v != null;
   });
@@ -118,11 +120,11 @@ const OrdersFilters = ({
           <input
             type="text"
             placeholder={t("orders.searchPlaceholder")}
-            value={filters.search || ""}
+            value={f.search || ""}
             onChange={(e) => handleFilterChange("search", e.target.value)}
             className="orders-search-input"
           />
-          {filters.search && (
+          {f.search && (
             <button
               className="orders-search-clear"
               onClick={() => handleFilterChange("search", "")}
@@ -135,12 +137,8 @@ const OrdersFilters = ({
 
         {/* Filtres rapides */}
         <div className="orders-filters-quick">
-          {/* Statut commande */}
           <div className="orders-filter-select">
-            <select
-              value={filters.status || ""}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
-            >
+            <select value={f.status || ""} onChange={(e) => handleFilterChange("status", e.target.value)}>
               {statusOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -150,10 +148,9 @@ const OrdersFilters = ({
             <RiArrowDownSLine className="select-arrow" />
           </div>
 
-          {/* Statut paiement */}
           <div className="orders-filter-select">
             <select
-              value={filters.paymentStatus || ""}
+              value={f.paymentStatus || ""}
               onChange={(e) => handleFilterChange("paymentStatus", e.target.value)}
             >
               {paymentStatusOptions.map((opt) => (
@@ -165,13 +162,9 @@ const OrdersFilters = ({
             <RiArrowDownSLine className="select-arrow" />
           </div>
 
-          {/* Période */}
           <div className="orders-filter-select">
             <RiCalendarLine className="select-icon" />
-            <select
-              value={filters.period || "30days"}
-              onChange={(e) => handleFilterChange("period", e.target.value)}
-            >
+            <select value={f.period || "30days"} onChange={(e) => handleFilterChange("period", e.target.value)}>
               {periodOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
                   {opt.label}
@@ -205,12 +198,11 @@ const OrdersFilters = ({
       {/* Avancés */}
       {showAdvanced && (
         <div className="orders-filters-advanced">
-          {/* Méthode paiement */}
           <div className="orders-filter-group">
             <label>{t("orders.table.paymentMethod")}</label>
             <div className="orders-filter-select">
               <select
-                value={filters.paymentMethod || ""}
+                value={f.paymentMethod || ""}
                 onChange={(e) => handleFilterChange("paymentMethod", e.target.value)}
               >
                 {paymentMethodOptions.map((opt) => (
@@ -223,14 +215,10 @@ const OrdersFilters = ({
             </div>
           </div>
 
-          {/* Source */}
           <div className="orders-filter-group">
             <label>{t("orders.table.source")}</label>
             <div className="orders-filter-select">
-              <select
-                value={filters.source || ""}
-                onChange={(e) => handleFilterChange("source", e.target.value)}
-              >
+              <select value={f.source || ""} onChange={(e) => handleFilterChange("source", e.target.value)}>
                 {sourceOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.label}
@@ -241,14 +229,13 @@ const OrdersFilters = ({
             </div>
           </div>
 
-          {/* Restaurant (admin) */}
           {!isRestaurantMode && (
             <div className="orders-filter-group">
               <label>{t("orders.table.restaurant")}</label>
               <div className="orders-filter-select">
                 <RiStoreLine className="select-icon" />
                 <select
-                  value={filters.restaurant || ""}
+                  value={f.restaurant || ""}
                   onChange={(e) => handleFilterChange("restaurant", e.target.value)}
                 >
                   <option value="">{t("orders.filters.allRestaurants")}</option>

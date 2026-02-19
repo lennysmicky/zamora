@@ -1,39 +1,67 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { RiArrowRightSLine } from 'react-icons/ri';
-import useDashboardData from '../../hooks/useDashboardData';
-import './TopSellingItems.css';
+import React, { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { RiArrowRightSLine } from "react-icons/ri";
+import { useNavigate } from "react-router-dom";
+import useAuthStore from "../../stores/authStore";
+import { buildOrdersQuery } from "../../utils/ordersQuery";
+import "./TopSellingItems.css";
 
-const TopSellingItems = () => {
+const TopSellingItems = ({ data = [], isLoading = false, linkFilters = {} }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { userType } = useAuthStore();
+  const isRestaurantMode = userType === "restaurant";
 
-  //  Récupération des données depuis le hook
-  const { topSellingItems, isLoading } = useDashboardData();
+  const handleViewAll = () => {
+    const path = isRestaurantMode ? "/restaurant/orders" : "/orders";
+    navigate(`${path}${buildOrdersQuery(linkFilters)}`);
+  };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0
-    }).format(value);
+    const n = Number(value);
+    return new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "XOF",
+      minimumFractionDigits: 0,
+    }).format(Number.isFinite(n) ? n : 0);
   };
 
   const formatSold = (count) => {
-    if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
-    return count.toString();
+    const n = Number(count);
+    const v = Number.isFinite(n) ? n : 0;
+    if (v >= 1000) return `${(v / 1000).toFixed(1)}k`;
+    return String(v);
   };
 
-  // ================================
-  // ÉTAT 1 : LOADING
-  // ================================
+  const topSellingItems = useMemo(() => {
+    const arr = Array.isArray(data) ? data : [];
+    return arr.map((x, idx) => {
+      const it = x ?? {};
+      const sold = it.sold ?? it.qty ?? it.qte ?? it.count ?? it.total ?? it.nb ?? 0;
+      const id =
+        it.id ??
+        it._id ??
+        it.mealId ??
+        it.productId ??
+        `${it.name ?? it.nom ?? "item"}-${it.category ?? it.categorie ?? ""}-${idx}`;
+
+      return {
+        id,
+        name: it.name ?? it.nom ?? it.title ?? "-",
+        price: it.price ?? it.prix ?? it.amount ?? 0,
+        category: it.category ?? it.categorie ?? "-",
+        sold,
+      };
+    });
+  }, [data]);
+
   if (isLoading) {
     return (
       <div className="top-selling-card">
         <div className="top-selling-header">
-          <h3>{t('dashboard.topSelling')}</h3>
-          <button className="top-selling-link">
-            {t('dashboard.viewAll')}
-            <RiArrowRightSLine />
+          <h3>{t("dashboard.topSelling")}</h3>
+          <button className="top-selling-link" type="button" onClick={handleViewAll}>
+            {t("dashboard.viewAll")} <RiArrowRightSLine />
           </button>
         </div>
         <div className="top-selling-list">
@@ -52,45 +80,35 @@ const TopSellingItems = () => {
     );
   }
 
-  // ================================
-  // ÉTAT 2 : EMPTY
-  // ================================
-  if (!topSellingItems || topSellingItems.length === 0) {
+  if (!topSellingItems.length) {
     return (
       <div className="top-selling-card">
         <div className="top-selling-header">
-          <h3>{t('dashboard.topSelling')}</h3>
-          <button className="top-selling-link">
-            {t('dashboard.viewAll')}
-            <RiArrowRightSLine />
+          <h3>{t("dashboard.topSelling")}</h3>
+          <button className="top-selling-link" type="button" onClick={handleViewAll}>
+            {t("dashboard.viewAll")} <RiArrowRightSLine />
           </button>
         </div>
         <div className="top-selling-empty">
-          <p>{t('dashboard.noSales')}</p>
+          <p>{t("dashboard.noSales")}</p>
         </div>
       </div>
     );
   }
 
-  // ================================
-  // ÉTAT 3 : DATA
-  // ================================
   return (
     <div className="top-selling-card">
       <div className="top-selling-header">
-        <h3>{t('dashboard.topSelling')}</h3>
-        <button className="top-selling-link">
-          {t('dashboard.viewAll')}
-          <RiArrowRightSLine />
+        <h3>{t("dashboard.topSelling")}</h3>
+        <button className="top-selling-link" type="button" onClick={handleViewAll}>
+          {t("dashboard.viewAll")} <RiArrowRightSLine />
         </button>
       </div>
 
       <div className="top-selling-list">
         {topSellingItems.map((item, index) => (
           <div key={item.id} className="top-selling-item">
-            <div className={`top-selling-rank rank-${index + 1}`}>
-              {index + 1}
-            </div>
+            <div className={`top-selling-rank rank-${index + 1}`}>{index + 1}</div>
             <div className="top-selling-info">
               <span className="top-selling-name">{item.name}</span>
               <span className="top-selling-meta">
@@ -99,7 +117,7 @@ const TopSellingItems = () => {
             </div>
             <div className="top-selling-stats">
               <span className="top-selling-sold">{formatSold(item.sold)}</span>
-              <span className="top-selling-sold-label">{t('common.sold')}</span>
+              <span className="top-selling-sold-label">{t("common.sold")}</span>
             </div>
           </div>
         ))}

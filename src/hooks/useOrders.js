@@ -1,22 +1,34 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { ordersApi } from "../api/orders";
+import { emitDashboardRefresh } from "../utils/dashboardEvents";
 
 const EMPTY_STATS = { total: 0, pending: 0, delivered: 0, cancelled: 0 };
+
+const toInt = (v, def) => {
+  const n = Number.parseInt(String(v ?? ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : def;
+};
 
 export const useOrders = (opts) => {
   const options = opts ?? {};
   const { userType, restaurantId: storeRestaurantId } = useAuthStore();
 
-  // mode effectif ("admin" | "restaurant")
   const mode = options.mode ?? userType ?? "admin";
+
+  // ---- initial state from URL (ordersQuery.js) ----
+  const initPage = toInt(options.initialPagination?.page ?? options.initialPagination?.currentPage, 1);
+  const initLimit = toInt(
+    options.initialPagination?.limit ?? options.initialPagination?.itemsPerPage ?? options.initialPageSize,
+    10
+  );
 
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState(EMPTY_STATS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [filters, setFilters] = useState({
+  const [filters, _setFilters] = useState({
     search: "",
     status: "",
     paymentStatus: "",
@@ -25,37 +37,63 @@ export const useOrders = (opts) => {
     period: "30days",
     from: "",
     to: "",
-    restaurant: "", // admin-only => ID restaurent
+    restaurant: "",
     ...(options.initialFilters ?? {}),
   });
 
   const [pagination, setPagination] = useState({
-    currentPage: 1,
+    currentPage: initPage,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: options.initialPageSize ?? 10,
+    itemsPerPage: initLimit,
   });
+
+  //   setFilters = reset page (user-driven)
+  const setFilters = useCallback((next) => {
+    _setFilters((prev) => (typeof next === "function" ? next(prev) : next));
+    setPagination((p) => (p.currentPage === 1 ? p : { ...p, currentPage: 1 }));
+  }, []);
 
   const abortRef = useRef(null);
 
-  //  restaurant scope
-  // - restaurant mode => id obligatoire
-  // - admin mode => id optionnel (liste globale) + filtre "restaurant" si fourni
   const effectiveRestaurantId = useMemo(() => {
     if (mode === "restaurant") return options.restaurantId ?? storeRestaurantId ?? null;
-    // admin: si une prop restaurantId est passée on peut la prendre, sinon filtre restaurant
     return options.restaurantId ?? filters.restaurant ?? null;
   }, [mode, options.restaurantId, storeRestaurantId, filters.restaurant]);
 
-  // reset page quand filtres changent
-  const lastFiltersRef = useRef(JSON.stringify(filters));
-  useEffect(() => {
-    const curr = JSON.stringify(filters);
-    if (lastFiltersRef.current !== curr) {
-      lastFiltersRef.current = curr;
-      setPagination((p) => ({ ...p, currentPage: 1 }));
+  //   sanitize filters before API
+  const apiFilters = useMemo(() => {
+    const f = { ...(filters ?? {}) };
+
+    if (mode === "restaurant") delete f.restaurant; // ignore admin filter in restaurant mode
+    if (f.period !== "custom") {
+      f.from = "";
+      f.to = "";
     }
-  }, [filters]);
+
+    return f;
+  }, [filters, mode]);
+
+  //   sync when URL changes (back/forward or opened shared link)
+  const extKey = useMemo(
+    () =>
+      JSON.stringify({
+        f: options.initialFilters ?? null,
+        p: { page: initPage, limit: initLimit },
+        mode,
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [options.initialFilters, initPage, initLimit, mode]
+  );
+  const lastExtKeyRef = useRef(extKey);
+
+  useEffect(() => {
+    if (lastExtKeyRef.current === extKey) return;
+    lastExtKeyRef.current = extKey;
+
+    if (options.initialFilters) _setFilters((prev) => ({ ...prev, ...options.initialFilters }));
+    setPagination((p) => ({ ...p, currentPage: initPage, itemsPerPage: initLimit }));
+  }, [extKey, initPage, initLimit, options.initialFilters]);
 
   const fetchOrders = useCallback(async () => {
     setLoading(true);
@@ -65,7 +103,6 @@ export const useOrders = (opts) => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    //  guard UNIQUEMENT en restaurant
     if (mode === "restaurant" && !effectiveRestaurantId) {
       setOrders([]);
       setStats(EMPTY_STATS);
@@ -77,11 +114,9 @@ export const useOrders = (opts) => {
     try {
       const res = await ordersApi.getOrders(
         {
-          mode, //  indispensable pour router admin/restaurant
-          // restaurant: obligatoire en restaurant, optionnel en admin
+          mode,
           restaurantId: effectiveRestaurantId ?? undefined,
-          // en admin, on garde filters.restaurant pour filtrer côté backend si supporté
-          ...filters,
+          ...apiFilters,
           page: pagination.currentPage,
           limit: pagination.itemsPerPage,
         },
@@ -99,18 +134,11 @@ export const useOrders = (opts) => {
     } catch (err) {
       if (err?.name === "CanceledError" || err?.code === "ERR_CANCELED") return;
       setError(err?.message ?? "Erreur lors du chargement des commandes");
-      // utile pour debug: voir endpoint / params
       console.error("fetchOrders error:", err);
     } finally {
       if (!controller.signal.aborted) setLoading(false);
     }
-  }, [
-    mode,
-    effectiveRestaurantId,
-    filters,
-    pagination.currentPage,
-    pagination.itemsPerPage,
-  ]);
+  }, [mode, effectiveRestaurantId, apiFilters, pagination.currentPage, pagination.itemsPerPage]);
 
   useEffect(() => {
     fetchOrders();
@@ -122,6 +150,7 @@ export const useOrders = (opts) => {
       try {
         await ordersApi.updateStatus(orderId, newStatus);
         await fetchOrders();
+        emitDashboardRefresh({ reason: "order_status_updated", orderId, status: newStatus });
         return true;
       } catch (err) {
         console.error("updateOrderStatus error:", err);
@@ -136,6 +165,11 @@ export const useOrders = (opts) => {
       try {
         await ordersApi.updatePaymentStatus(orderId, newPaymentStatus);
         await fetchOrders();
+        emitDashboardRefresh({
+          reason: "payment_status_updated",
+          orderId,
+          paymentStatus: newPaymentStatus,
+        });
         return true;
       } catch (err) {
         console.error("updatePaymentStatus error:", err);
@@ -146,7 +180,6 @@ export const useOrders = (opts) => {
   );
 
   const canUseRestaurantScope = useMemo(() => {
-    // admin: toujours OK (liste globale possible)
     if (mode === "admin") return true;
     return Boolean(effectiveRestaurantId);
   }, [mode, effectiveRestaurantId]);

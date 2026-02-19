@@ -285,7 +285,7 @@ export const ordersApi = {
 
     const [listRes, statsRes] = await Promise.allSettled([
       client.get(restoListUrl(rid), axiosCfg),
-      client.get(restoStatsUrl(rid), { timeout: TIMEOUT, signal: options.signal }),
+      client.get(restoStatsUrl(rid), axiosCfg),
     ]);
 
     const listData = listRes.status === "fulfilled" ? unwrap(listRes.value?.data) : [];
