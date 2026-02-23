@@ -7,6 +7,12 @@ const idOf = (x) => x?.id ?? x?._id ?? null;
 const eqId = (a, b) => String(a ?? "") === String(b ?? "");
 const asArray = (v) => (Array.isArray(v) ? v : []);
 
+const normalizeRole = (v) => String(v ?? "").trim().toLowerCase();
+const isRestaurantRole = (role) => {
+  const r = normalizeRole(role);
+  return r === "restaurant" || r === "restaurent" || r === "resto";
+};
+
 const pickCategories = (payload) => {
   if (Array.isArray(payload?.categories)) return payload.categories;
   if (Array.isArray(payload?.categorie)) return payload.categorie;
@@ -47,8 +53,7 @@ const normMeal = (m) => ({
     m?.categorie?.id ??
     m?.categorie ??
     null,
-  // tolère typo backend
-  isAvailable: m?.isAvailable ?? m?.isAvaible ?? false,
+  isAvailable: m?.isAvailable ?? m?.isAvaible ?? false, // tolère typo backend
 });
 
 const ensureId = (name, v) => {
@@ -56,7 +61,7 @@ const ensureId = (name, v) => {
   return v;
 };
 
-// Base API (admin/global)
+// ======================= Base API (admin/global) =======================
 const baseApi = {
   // categories
   getCategories: menusAPI.getCategories,
@@ -81,67 +86,90 @@ const baseApi = {
 export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = null } = {}) => {
   const restaurantIdStore = useAuthStore((s) => s.restaurantId ?? s.restaurentId);
   const userTypeStore = useAuthStore((s) => s.userType);
-  const userType = userTypeStore ?? localStorage.getItem("user_role"); // fallback
+
+  const userType = userTypeStore ?? localStorage.getItem("user_role");
   const restaurantId = restaurantIdProp || restaurantIdStore;
 
-  // ✅ scope restaurant : uniquement si user restaurant + restaurantId + pas de menuId
-  const isRestaurantScope = userType === "restaurant" && !!restaurantId && !menuId;
+  // scope restaurant : uniquement si user restaurant + restaurantId + pas de menuId
+  const isRestaurantScope = isRestaurantRole(userType) && !!restaurantId && !menuId;
 
-  // ✅ en mode restaurant : on masque les erreurs de fetch (505/500 etc.)
+  // en mode restaurant : on masque les erreurs de fetch (on garde l’UI)
   const silentFetchErrors = isRestaurantScope;
 
-  // ✅ API “effective” selon scope
+  // ======================= API effective =======================
   const api = useMemo(() => {
     if (!isRestaurantScope) return baseApi;
 
-    // wrap signatures pour matcher l’usage existant du hook
+    const rid = restaurantId;
+
+    // NOTE:
+    // - Si ton backend a des routes “/categorie/:restaurentId” et “/repas/categorie/:restaurentId/:categorieId”
+    //   on les utilise.
+    // - Sinon fallback sur endpoints admin + params.
     return {
       ...baseApi,
 
-      // meals list : GET /repas/categorie/:restaurentId/:categorieId
-      getMealsByCategory: menusAPI.getMealsByCategoryForRestaurant
-        ? (categorieId) => menusAPI.getMealsByCategoryForRestaurant(restaurantId, categorieId)
-        : baseApi.getMealsByCategory,
+      // -------- CATEGORIES LIST (restaurant) --------
+      getCategories:
+        menusAPI.getCategoriesForRestaurant
+          ? () => menusAPI.getCategoriesForRestaurant(rid)
+          : // fallback : essayer via params (typo restaurent tolérée dans menus.js)
+            (params = {}) => baseApi.getCategories?.({ ...params, restaurent: rid, restaurantId: rid }),
 
-      // create/update/delete meals : /repas/:restaurentId(/:id)
-      createMeal: menusAPI.createMealForRestaurant
-        ? (payload) => menusAPI.createMealForRestaurant(restaurantId, payload)
-        : baseApi.createMeal,
+      // -------- MEALS LIST (restaurant) --------
+      getMealsByCategory:
+        menusAPI.getMealsByCategoryForRestaurant
+          ? (categorieId) => menusAPI.getMealsByCategoryForRestaurant(rid, categorieId)
+          : baseApi.getMealsByCategory,
 
-      updateMeal: menusAPI.updateMealForRestaurant
-        ? (id, payload) => menusAPI.updateMealForRestaurant(restaurantId, id, payload)
-        : baseApi.updateMeal,
+      // -------- MEALS CRUD (restaurant) --------
+      createMeal:
+        menusAPI.createMealForRestaurant
+          ? (payload) => menusAPI.createMealForRestaurant(rid, payload)
+          : baseApi.createMeal,
 
-      deleteMeal: menusAPI.deleteMealForRestaurant
-        ? (id) => menusAPI.deleteMealForRestaurant(restaurantId, id)
-        : baseApi.deleteMeal,
+      updateMeal:
+        menusAPI.updateMealForRestaurant
+          ? (id, payload) => menusAPI.updateMealForRestaurant(rid, id, payload)
+          : baseApi.updateMeal,
 
-      // categories : /categorie/:restaurentId(/:id)
-      createCategory: menusAPI.createCategoryForRestaurant
-        ? (payload) => menusAPI.createCategoryForRestaurant(restaurantId, payload)
-        : baseApi.createCategory,
+      deleteMeal:
+        menusAPI.deleteMealForRestaurant
+          ? (id) => menusAPI.deleteMealForRestaurant(rid, id)
+          : baseApi.deleteMeal,
 
-      updateCategory: menusAPI.updateCategoryForRestaurant
-        ? (id, payload) => menusAPI.updateCategoryForRestaurant(restaurantId, id, payload)
-        : baseApi.updateCategory,
+      // -------- CATEGORIES CRUD (restaurant) --------
+      createCategory:
+        menusAPI.createCategoryForRestaurant
+          ? (payload) => menusAPI.createCategoryForRestaurant(rid, payload)
+          : baseApi.createCategory,
 
-      deleteCategory: menusAPI.deleteCategoryForRestaurant
-        ? (id) => menusAPI.deleteCategoryForRestaurant(restaurantId, id)
-        : baseApi.deleteCategory,
+      updateCategory:
+        menusAPI.updateCategoryForRestaurant
+          ? (id, payload) => menusAPI.updateCategoryForRestaurant(rid, id, payload)
+          : baseApi.updateCategory,
+
+      deleteCategory:
+        menusAPI.deleteCategoryForRestaurant
+          ? (id) => menusAPI.deleteCategoryForRestaurant(rid, id)
+          : baseApi.deleteCategory,
+
+      // -------- MENUS (souvent global, mais on filtre si possible) --------
+      getMenus: (params = {}) =>
+        baseApi.getMenus?.({ ...params, restaurent: rid, restaurantId: rid }),
     };
   }, [isRestaurantScope, restaurantId]);
 
+  // ======================= State =======================
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
   const [menus, setMenus] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // UI states
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // cache repas par catégorie
   const mealsByCategoryRef = useRef({});
 
   // anti-race
@@ -191,6 +219,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     setError(e?.message ?? fallbackMsg);
   };
 
+  // ======================= Fetchers =======================
   const fetchCategories = useCallback(async () => {
     const mode = categoriesRef.current.length === 0 ? "loading" : "refresh";
     startFetch(mode);
@@ -200,8 +229,9 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
     try {
       const payload = menuId
-        ? await api.getMenuCategoriesWithMeals(ensureId("menuId", menuId))
-        : await api.getCategories?.(restaurantId ? { restaurantId } : {});
+        ? await api.getMenuCategoriesWithMeals?.(ensureId("menuId", menuId))
+        : // en scope restaurant, api.getCategories ignore params et utilise restaurantId
+          await api.getCategories?.(restaurantId ? { restaurent: restaurantId, restaurantId } : {});
 
       if (mySeq !== seqCats.current) return;
 
@@ -289,7 +319,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     const mySeq = ++seqMenus.current;
 
     try {
-      const payload = await api.getMenus(restaurantId ? { restaurantId } : {});
+      const payload = await api.getMenus(restaurantId ? { restaurent: restaurantId, restaurantId } : {});
       if (mySeq !== seqMenus.current) return;
 
       const list = pickMenusList(payload);
@@ -302,16 +332,17 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     }
   }, [api, restaurantId, silentFetchErrors]);
 
-  // ---------- CRUD Categories ----------
+  // ======================= CRUD Categories =======================
   const addCategory = useCallback(
     async (categoryData) => {
       try {
         if (!api.createCategory) throw new Error("API createCategory manquante");
 
-        // ✅ restaurant scope: restaurantId dans l’URL => on n’envoie pas restaurantId dans payload
         const payload = {
           ...categoryData,
           ...(menuId && !categoryData.menu ? { menu: menuId } : {}),
+          // en scope restaurant: restaurantId dans l’URL (si route /categorie/:restaurentId)
+          // sinon (admin) on le passe en body
           ...(!isRestaurantScope &&
           restaurantId &&
           !categoryData.restaurantId &&
@@ -382,7 +413,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     [api, selectedCategoryId]
   );
 
-  // ---------- CRUD Meals ----------
+  // ======================= CRUD Meals =======================
   const addMeal = useCallback(
     async (mealData) => {
       try {
@@ -391,7 +422,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         const payload = {
           ...mealData,
           ...(menuId && !mealData.menu ? { menu: menuId } : {}),
-          // ✅ restaurant scope: restaurantId dans l’URL => pas dans payload
+          // en scope restaurant: restaurantId dans l’URL (routes repas/:restaurentId)
           ...(!isRestaurantScope &&
           restaurantId &&
           !mealData.restaurantId &&
@@ -410,7 +441,10 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
         if (selectedCategoryId) {
           const cur = mealsByCategoryRef.current[selectedCategoryId] || [];
-          mealsByCategoryRef.current = { ...mealsByCategoryRef.current, [selectedCategoryId]: [...cur, meal] };
+          mealsByCategoryRef.current = {
+            ...mealsByCategoryRef.current,
+            [selectedCategoryId]: [...cur, meal],
+          };
         }
 
         return { success: true, data: meal };
@@ -475,12 +509,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     [updateMeal]
   );
 
-  // ---------- CRUD Menus (inchangé) ----------
+  // ======================= CRUD Menus =======================
   const addMenu = useCallback(
     async (menuData) => {
       try {
         if (!api.createMenu) throw new Error("API createMenu manquante");
 
+        // ici on garde restaurantId en payload (souvent /menu est global)
         const payload = {
           ...menuData,
           ...(restaurantId && !menuData.restaurantId && !menuData.restaurent ? { restaurantId } : {}),
@@ -504,7 +539,9 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         if (!api.updateMenu) throw new Error("API updateMenu manquante");
 
         await api.updateMenu(menuIdToUpdate, menuData);
-        setMenus((prev) => prev.map((m) => (eqId(m.id, menuIdToUpdate) ? { ...m, ...menuData } : m)));
+        setMenus((prev) =>
+          prev.map((m) => (eqId(m.id, menuIdToUpdate) ? { ...m, ...menuData } : m))
+        );
 
         return { success: true };
       } catch (e) {
@@ -530,7 +567,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     [api]
   );
 
-  // init
+  // ======================= Init =======================
   useEffect(() => {
     fetchCategories();
     fetchMenus();
@@ -550,7 +587,8 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
     isLoading,
     isRefreshing,
-    // ✅ en mode restaurant, error restera null sur fetch (donc pas de “fetch 505” à l’écran)
+
+    // en mode restaurant, error restera null sur fetch (donc pas de “fetch 505” à l’écran)
     error,
 
     addCategory,

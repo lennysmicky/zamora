@@ -2,24 +2,31 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiRefreshLine, RiLoader4Line } from "react-icons/ri";
-import { useMenusData } from "../../../hooks/UseMenusdata";
+
+
+import { useMenusData } from "../../../hooks/UseMenusDatas";
 
 import CategoryList from "../../../components/menus/CategoryList";
 import CategoryForm from "../../../components/menus/CategoryForm";
 import MealList from "../../../components/menus/MealList";
 import MealForm from "../../../components/menus/MealForm";
 
+//  AJOUT menus
+import MenuList from "../../../components/menus/MenuList";
+import MenuForm from "../../../components/menus/MenuForm";
+
 import "../../Menus/MenusPage.css";
+
+const idOf = (x) => x?.id ?? x?._id ?? null;
 
 const RestaurantMenuPage = () => {
   const { t } = useTranslation();
 
   const {
+    // categories / meals
     categories,
     meals,
     selectedCategory,
-    isLoading,
-    error,
     setSelectedCategory,
     addCategory,
     updateCategory,
@@ -28,39 +35,65 @@ const RestaurantMenuPage = () => {
     updateMeal,
     deleteMeal,
     toggleMealAvailability,
+
+    //  menus
+    menus,
+    addMenu,
+    updateMenu: updateMenuFn,
+    deleteMenu: deleteMenuFn,
+
+    // ui
+    isLoading,
+    isRefreshing, // peut être undefined selon ton hook => on gère
+    error,
+
+    // refresh
     refreshCategories,
     refreshMeals,
+    refreshMenus,
   } = useMenusData();
 
-  // ✅ Toujours des arrays pour éviter crash UI si undefined
+  //  Toujours des arrays
   const safeCategories = useMemo(() => (Array.isArray(categories) ? categories : []), [categories]);
   const safeMeals = useMemo(() => (Array.isArray(meals) ? meals : []), [meals]);
+  const safeMenus = useMemo(() => (Array.isArray(menus) ? menus : []), [menus]);
 
-  // modals
+  // ----- Modals Category -----
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState(null);
   const [isCategoryLoading, setIsCategoryLoading] = useState(false);
 
+  // ----- Modals Meal -----
   const [showMealForm, setShowMealForm] = useState(false);
   const [mealToEdit, setMealToEdit] = useState(null);
   const [isMealLoading, setIsMealLoading] = useState(false);
 
+  // ----- Modals Menu -----
+  const [showMenuForm, setShowMenuForm] = useState(false);
+  const [menuToEdit, setMenuToEdit] = useState(null);
+  const [isMenuLoading, setIsMenuLoading] = useState(false);
+
   const [refreshing, setRefreshing] = useState(false);
+
+  const selectedCategoryId = idOf(selectedCategory);
 
   // ========================================
   // Refresh (non bloquant)
   // ========================================
   const handleRefresh = async () => {
-    if (refreshing || isLoading) return;
+    if (refreshing) return;
 
     setRefreshing(true);
     try {
-      await refreshCategories?.();
-      if (selectedCategory?.id) {
+      await Promise.allSettled([
+        refreshCategories?.(),
+        refreshMenus?.(),
+      ]);
+
+      if (selectedCategoryId) {
         await refreshMeals?.();
       }
     } catch (err) {
-      // ✅ on ne bloque pas l’UI
       console.error("Refresh error:", err);
     } finally {
       setRefreshing(false);
@@ -88,15 +121,10 @@ const RestaurantMenuPage = () => {
   const handleCategorySubmit = async (data) => {
     setIsCategoryLoading(true);
     try {
-      const result = categoryToEdit
-        ? await updateCategory?.(categoryToEdit.id, data)
-        : await addCategory?.(data);
+      const id = idOf(categoryToEdit);
+      const result = id ? await updateCategory?.(id, data) : await addCategory?.(data);
 
-      const ok = Boolean(result?.success);
-      if (ok) {
-        setShowCategoryForm(false);
-        setCategoryToEdit(null);
-      }
+      if (result?.success) handleCloseCategoryForm();
       return result ?? { success: false, error: "No response" };
     } catch (e) {
       console.error("Category submit error:", e);
@@ -136,15 +164,10 @@ const RestaurantMenuPage = () => {
   const handleMealSubmit = async (data) => {
     setIsMealLoading(true);
     try {
-      const result = mealToEdit
-        ? await updateMeal?.(mealToEdit.id, data)
-        : await addMeal?.(data);
+      const id = idOf(mealToEdit);
+      const result = id ? await updateMeal?.(id, data) : await addMeal?.(data);
 
-      const ok = Boolean(result?.success);
-      if (ok) {
-        setShowMealForm(false);
-        setMealToEdit(null);
-      }
+      if (result?.success) handleCloseMealForm();
       return result ?? { success: false, error: "No response" };
     } catch (e) {
       console.error("Meal submit error:", e);
@@ -172,15 +195,57 @@ const RestaurantMenuPage = () => {
     }
   };
 
+  // ========================================
+  // Menus (liste + create/edit/delete)
+  // ========================================
+  const handleAddMenu = () => {
+    setMenuToEdit(null);
+    setShowMenuForm(true);
+  };
+
+  const handleEditMenu = (m) => {
+    setMenuToEdit(m || null);
+    setShowMenuForm(true);
+  };
+
+  const handleCloseMenuForm = () => {
+    setShowMenuForm(false);
+    setMenuToEdit(null);
+  };
+
+  const handleMenuSubmit = async (data) => {
+    setIsMenuLoading(true);
+    try {
+      const id = idOf(menuToEdit);
+      const result = id ? await updateMenuFn?.(id, data) : await addMenu?.(data);
+
+      if (result?.success) handleCloseMenuForm();
+      return result ?? { success: false, error: "No response" };
+    } catch (e) {
+      console.error("Menu submit error:", e);
+      return { success: false, error: e?.message || "Menu submit failed" };
+    } finally {
+      setIsMenuLoading(false);
+    }
+  };
+
+  const handleDeleteMenu = async (menuId) => {
+    try {
+      return await deleteMenuFn?.(menuId);
+    } catch (e) {
+      console.error("Delete menu error:", e);
+      return { success: false, error: e?.message || "Delete menu failed" };
+    }
+  };
+
+  const busy = Boolean(isLoading || isRefreshing || refreshing);
+
   return (
     <div className="menus-page">
-      {/* ✅ Message non bloquant si API KO */}
+      {/*  Erreur NON bloquante */}
       {!!error && (
-        <div className="menus-warning" style={{ marginBottom: 12 }}>
-          {/* pas de bouton retry, UI reste visible */}
-          <p style={{ margin: 0 }}>
-            {t("common.error")}: {String(error)} {/* ex: 500/505 */}
-          </p>
+        <div className="menus-error" style={{ marginBottom: 12 }}>
+          <p style={{ margin: 0 }}>{t("common.error")}: {String(error)}</p>
         </div>
       )}
 
@@ -189,13 +254,14 @@ const RestaurantMenuPage = () => {
         <button
           className={`menus-refresh-btn ${refreshing ? "refreshing" : ""}`}
           onClick={handleRefresh}
-          disabled={refreshing || isLoading}
+          disabled={refreshing}
           title={t("common.refresh")}
         >
           {refreshing ? <RiLoader4Line className="spin" /> : <RiRefreshLine />}
         </button>
       </div>
 
+      {/*  Grille Catégories / Repas */}
       <div className="menus-grid">
         <div className="menus-column categories-column">
           <CategoryList
@@ -205,7 +271,7 @@ const RestaurantMenuPage = () => {
             onAddCategory={handleAddCategory}
             onEditCategory={handleEditCategory}
             onDeleteCategory={handleDeleteCategory}
-            isLoading={isLoading && !refreshing}
+            isLoading={busy && safeCategories.length === 0}
           />
         </div>
 
@@ -217,11 +283,23 @@ const RestaurantMenuPage = () => {
             onEditMeal={handleEditMeal}
             onDeleteMeal={handleDeleteMeal}
             onToggleAvailability={handleToggleMealAvailability}
-            isLoading={isLoading && !refreshing}
+            isLoading={busy && safeMeals.length === 0}
           />
         </div>
       </div>
 
+      {/*  Section MENUS (comme Admin) */}
+      <div style={{ marginTop: 12 }}>
+        <MenuList
+          menus={safeMenus}
+          onAddMenu={handleAddMenu}
+          onEditMenu={handleEditMenu}
+          onDeleteMenu={handleDeleteMenu}
+          isLoading={busy && safeMenus.length === 0}
+        />
+      </div>
+
+      {/* Modals */}
       <CategoryForm
         isOpen={showCategoryForm}
         onClose={handleCloseCategoryForm}
@@ -236,8 +314,16 @@ const RestaurantMenuPage = () => {
         onSubmit={handleMealSubmit}
         meal={mealToEdit}
         categories={safeCategories}
-        selectedCategoryId={selectedCategory?.id}
+        selectedCategoryId={selectedCategoryId}
         isLoading={isMealLoading}
+      />
+
+      <MenuForm
+        isOpen={showMenuForm}
+        onClose={handleCloseMenuForm}
+        onSubmit={handleMenuSubmit}
+        menu={menuToEdit}
+        isLoading={isMenuLoading}
       />
     </div>
   );

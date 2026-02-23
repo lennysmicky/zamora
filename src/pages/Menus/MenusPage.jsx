@@ -1,7 +1,7 @@
 // src/pages/Menus/MenusPage.jsx
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useMenusData } from "../../hooks/UseMenusdata";
+import { useMenusData } from "../../hooks/UseMenusDatas";
 
 // Components
 import CategoryList from "../../components/menus/CategoryList";
@@ -40,7 +40,7 @@ const MenusPage = () => {
     // ui
     isLoading,
     isRefreshing,
-    // ❌ error volontairement ignoré pour ne rien afficher
+    //  error volontairement ignoré pour ne rien afficher
     // error,
   } = useMenusData();
 

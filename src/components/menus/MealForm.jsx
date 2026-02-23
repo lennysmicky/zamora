@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { RiImageAddLine, RiCloseLine } from "react-icons/ri";
 import Modal from "../common/Modal";
 import "./MealForm.css";
+
+const idOf = (x) => x?.id ?? x?._id ?? null;
 
 const MealForm = ({
   isOpen,
@@ -16,8 +18,9 @@ const MealForm = ({
   const { t } = useTranslation();
   const isEditing = !!meal;
 
-  // ✅ si ton Modal est capricieux, ce guard évite les états bizarres
-  if (!isOpen) return null;
+  //  hooks toujours exécutés (pas de return conditionnel)
+  const cats = useMemo(() => (Array.isArray(categories) ? categories : []), [categories]);
+  const mealId = useMemo(() => idOf(meal), [meal]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,14 +34,26 @@ const MealForm = ({
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
+  //  reset quand on ouvre + quand meal change
   useEffect(() => {
+    if (!isOpen) return;
+
     if (meal) {
+      const cid =
+        String(
+          meal.categoryId ??
+            meal.categorieId ??
+            idOf(meal.categorie) ??
+            selectedCategoryId ??
+            ""
+        ) || "";
+
       setFormData({
-        name: meal.name || "",
+        name: meal.name || meal.nom || "",
         description: meal.description || "",
-        categoryId: String(meal.categoryId || selectedCategoryId || ""),
+        categoryId: cid,
         price: meal.price != null ? String(meal.price) : "",
-        isAvailable: meal.isAvailable ?? true,
+        isAvailable: meal.isAvailable ?? meal.isAvaible ?? true,
         image: meal.image || "",
       });
       setImagePreview(meal.image || null);
@@ -53,8 +68,9 @@ const MealForm = ({
       });
       setImagePreview(null);
     }
+
     setErrors({});
-  }, [meal, selectedCategoryId, isOpen]);
+  }, [isOpen, mealId, selectedCategoryId, meal]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -95,6 +111,7 @@ const MealForm = ({
 
   const validate = () => {
     const newErrors = {};
+
     if (!formData.name.trim()) newErrors.name = "required";
     else if (formData.name.trim().length < 2) newErrors.name = "tooShort";
 
@@ -114,7 +131,7 @@ const MealForm = ({
 
     const payload = {
       ...formData,
-      categoryId: formData.categoryId, // string
+      categoryId: String(formData.categoryId),
       price: Number(formData.price),
     };
 
@@ -125,7 +142,7 @@ const MealForm = ({
   const title = isEditing ? t("menu.meals.edit") : t("menu.meals.add");
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="medium">
+    <Modal isOpen={!!isOpen} onClose={onClose} title={title} size="medium">
       <form className="meal-form" onSubmit={handleSubmit}>
         <div className="meal-form-grid">
           <div className="meal-form-left">
@@ -141,6 +158,7 @@ const MealForm = ({
                 onChange={handleChange}
                 placeholder={t("menu.meals.namePlaceholder")}
                 autoFocus
+                disabled={isLoading}
               />
               {errors.name && (
                 <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>
@@ -156,6 +174,7 @@ const MealForm = ({
                 onChange={handleChange}
                 placeholder={t("menu.meals.descriptionPlaceholder")}
                 rows={3}
+                disabled={isLoading}
               />
             </div>
 
@@ -169,13 +188,18 @@ const MealForm = ({
                 value={formData.categoryId || ""}
                 onChange={handleChange}
                 className="custom-select"
+                disabled={isLoading}
               >
                 <option value="">{t("menu.meals.selectCategory")}</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
+                {cats.map((cat) => {
+                  const id = idOf(cat);
+                  const label = cat.name ?? cat.nom ?? cat.title ?? id;
+                  return (
+                    <option key={id} value={id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
               {errors.categoryId && (
                 <span className="form-error">{t(`menu.errors.${errors.categoryId}`)}</span>
@@ -196,6 +220,7 @@ const MealForm = ({
                   placeholder={t("menu.meals.pricePlaceholder")}
                   min="0"
                   step="0.01"
+                  disabled={isLoading}
                 />
                 <span className="price-currency">{t("menu.meals.currency")}</span>
               </div>
@@ -211,6 +236,7 @@ const MealForm = ({
                   name="isAvailable"
                   checked={!!formData.isAvailable}
                   onChange={handleChange}
+                  disabled={isLoading}
                 />
                 <span className="checkmark"></span>
                 <span>{t("menu.meals.available")}</span>
@@ -230,13 +256,20 @@ const MealForm = ({
                       type="button"
                       className="image-remove-btn"
                       onClick={handleRemoveImage}
+                      disabled={isLoading}
                     >
                       <RiCloseLine />
                     </button>
                   </div>
                 ) : (
                   <label className="image-upload-area">
-                    <input type="file" accept="image/*" onChange={handleImageChange} hidden />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      hidden
+                      disabled={isLoading}
+                    />
                     <RiImageAddLine className="upload-icon" />
                     <span>{t("menu.meals.imageUpload")}</span>
                     <span className="upload-hint">PNG, JPG (max 5MB)</span>

@@ -81,7 +81,7 @@ const MealList = ({
           ) : null}
         </div>
 
-        {/* ✅ Bouton toujours visible */}
+        {/*  Bouton toujours visible */}
         <button
           className="meal-add-btn"
           onClick={onAddMeal}
