@@ -44,6 +44,7 @@ const MessagesPage = lazy(() => import('../pages/Messages/MessagesPage'));
 const SettingsPage = lazy(() => import('../pages/Settings/SettingsPage'));
 const PaymentsPage = lazy(() => import('../pages/Payments/PaymentsPage'));
 const SpecialOffersPage = lazy(() => import('../pages/SpecialOffers/SpecialOffersPage'));
+const TablesPage = lazy(() => import('../pages/Tables/TablesPage'));
 
 // Restaurant dashboard
 const RestaurantDashboardPage = lazy(() => import('../pages/Restaurant/Dashboard/RestaurantDashboardPage'));
@@ -55,6 +56,7 @@ const RestaurantPaymentsPage = lazy(() => import('../pages/Restaurant/Payments/R
 const RestaurantNotificationsPage = lazy(() => import('../pages/Restaurant/Notifications/RestaurantNotificationsPage'));
 const RestaurantMessagesPage = lazy(() => import('../pages/Restaurant/Messages/RestaurantMessagesPage'));
 const RestaurantSettingsPage = lazy(() => import('../pages/Restaurant/Settings/RestaurantSettingsPage'));
+const RestaurantTablesPage = lazy(() => import('../pages/Restaurant/Tables/RestaurantTablesPage'));
 
 // 404
 const NotFoundPage = () => (
@@ -86,6 +88,7 @@ const adminRoutes = [
   { path: 'messages', element: <MessagesPage /> },
   { path: 'notifications', element: <NotificationsPage /> },
   { path: 'settings', element: <SettingsPage /> },
+  { path: 'tables', element: <TablesPage /> },
 ];
 
 const restaurantRoutes = [
@@ -98,6 +101,7 @@ const restaurantRoutes = [
   { path: 'messages', element: <RestaurantMessagesPage /> },
   { path: 'notifications', element: <RestaurantNotificationsPage /> },
   { path: 'settings', element: <RestaurantSettingsPage /> },
+  { path: 'tables', element: <RestaurantTablesPage /> },
 ];
 
 // ============================

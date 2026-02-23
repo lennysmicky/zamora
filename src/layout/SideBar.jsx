@@ -33,6 +33,7 @@ const adminNavItems = [
   { path: '/special-offers', labelKey: 'sidebar.specialOffers', icon: RiGiftLine, iconActive: RiGiftFill },
   { path: '/payments', labelKey: 'sidebar.payments', icon: RiSecurePaymentLine, iconActive: RiSecurePaymentFill },
   { path: '/messages', labelKey: 'sidebar.messages', icon: RiMessage3Line, iconActive: RiMessage3Fill },
+  { path: '/tables', labelKey: 'sidebar.tables', icon: RiStore2Line, iconActive: RiStore2Fill },
   { path: '/notifications', labelKey: 'sidebar.notifications', icon: RiNotification3Line, iconActive: RiNotification3Fill },
   { path: '/settings', labelKey: 'sidebar.settings', icon: RiSettings4Line, iconActive: RiSettings4Fill }
 ];
@@ -45,6 +46,7 @@ const restaurantNavItems = [
   { path: '/restaurant/special-offers', labelKey: 'sidebar.specialOffers', icon: RiGiftLine, iconActive: RiGiftFill },
   { path: '/restaurant/payments', labelKey: 'sidebar.payments', icon: RiSecurePaymentLine, iconActive: RiSecurePaymentFill },
   { path: '/restaurant/messages', labelKey: 'sidebar.messages', icon: RiMessage3Line, iconActive: RiMessage3Fill },
+  { path: '/restaurant/tables', labelKey: 'sidebar.tables', icon: RiStore2Line, iconActive: RiStore2Fill },
   { path: '/restaurant/notifications', labelKey: 'sidebar.notifications', icon: RiNotification3Line, iconActive: RiNotification3Fill },
   { path: '/restaurant/settings', labelKey: 'sidebar.settings', icon: RiSettings4Line, iconActive: RiSettings4Fill }
 ];
