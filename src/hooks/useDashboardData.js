@@ -36,14 +36,14 @@ const useDashboardData = ({
   const isAdminMode = userType === "admin";
   const isRestaurantMode = userType === "restaurant";
 
-  // ✅ Dashboard filters store (source of truth UI)
+  //   Dashboard filters store (source of truth UI)
   const dashRestaurant = useDashboardFiltersStore((s) => s.restaurant); // {id|_id,name}|string|null
   const dashPeriod = useDashboardFiltersStore((s) => s.period); // "30days" | "7days" | "today" | "custom" | ""
   const dashFrom = useDashboardFiltersStore((s) => s.from);
   const dashTo = useDashboardFiltersStore((s) => s.to);
 
   /**
-   * ✅ restaurantId effectif:
+   *   restaurantId effectif:
    * - restaurant mode: PRIORITÉ AU STORE (JWT restaurantId), puis param en fallback
    * - admin mode: param override, sinon selector (id/_id/string)
    */
@@ -82,8 +82,8 @@ const useDashboardData = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ✅ build filters depuis props OU store
-  // 🔥 Fix: si custom et from==to, on envoie to = from + 1 jour (to exclusif)
+  //   build filters depuis props OU store
+  //  Fix: si custom et from==to, on envoie to = from + 1 jour (to exclusif)
   const filters = useMemo(() => {
     const f = {};
 
@@ -181,7 +181,7 @@ const useDashboardData = ({
     fetchDashboard();
   }, [fetchDashboard]);
 
-  // ✅ cleanup (évite listeners multiples)
+  //   cleanup (évite listeners multiples)
   useEffect(() => {
     const unsubscribe = onDashboardRefresh(() => fetchDashboard());
     return unsubscribe;

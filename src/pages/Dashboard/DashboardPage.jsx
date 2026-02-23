@@ -14,7 +14,7 @@ import RecentOrdersTable from "../../components/dashboard/RecentOrdersTable";
 import "./DashboardPage.css";
 
 const DashboardPage = () => {
-  // ✅ Un seul hook ici (les enfants reçoivent data/props)
+  //   Un seul hook ici (les enfants reçoivent data/props)
   const {
     kpis,
     revenueData,
@@ -28,7 +28,7 @@ const DashboardPage = () => {
     // restaurantId, ...
   } = useDashboardData();
 
-  // ✅ Filtres pour "View all" (query params)
+  //   Filtres pour "View all" (query params)
   // Pour l’instant, pas de filtres => query vide. Plus tard: period/from/to/restaurant
   const linkFilters = useMemo(
     () => ({

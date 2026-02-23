@@ -11,7 +11,7 @@ const initialState = {
   isAuthenticated: false,
   isLoading: false,
 
-  // ✅ important: persist hydrate async
+  //  important: persist hydrate async
   hasHydrated: false,
 };
 
@@ -61,7 +61,7 @@ const pickRestaurantIdFromToken = (token) => {
   return (
     p?.restaurantId ??
     p?.restaurant_id ??
-    p?.restaurentId ?? // ✅ ton backend (JWT)
+    p?.restaurentId ?? //  ton backend (JWT)
     p?.restaurent_id ??
     p?.restuarentId ??
     p?.restuarent_id ??
@@ -92,7 +92,7 @@ const resolveRestaurantId = ({ user, token, currentRid }) => {
 
   let rid = currentRid ?? fromUser ?? fromToken ?? null;
 
-  // ✅ self-heal: si rid == uid mais token contient un vrai restaurentId différent
+  //  self-heal: si rid == uid mais token contient un vrai restaurentId différent
   if (
     uid &&
     rid &&
@@ -151,7 +151,7 @@ const useAuthStore = create(
     (set, get) => ({
       ...initialState,
 
-      // ✅ internal
+      //  internal
       setHydrated: (v) => set({ hasHydrated: Boolean(v) }),
 
       loginAdmin: ({ user, token }) => {
@@ -275,7 +275,7 @@ const useAuthStore = create(
     }),
     {
       name: "zamora-auth",
-      version: 4, // ✅ bump pour forcer migrate
+      version: 4, //  bump pour forcer migrate
       migrate: (persisted) => healPersisted(persisted),
       partialize: (s) => ({
         user: s.user,
@@ -285,7 +285,7 @@ const useAuthStore = create(
         restaurantName: s.restaurantName,
         isAuthenticated: s.isAuthenticated,
       }),
-      // ✅ marque l’hydration + self-heal post-hydrate
+      //  marque l’hydration + self-heal post-hydrate
       onRehydrateStorage: () => (state, error) => {
         if (error) {
           // évite un blocage UI si storage corrompu

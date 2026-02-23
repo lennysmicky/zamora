@@ -11,7 +11,6 @@ const toInt = (v, def) => {
   return Number.isFinite(n) && n > 0 ? n : def;
 };
 
-// ✅ centralise la détection d'annulation (StrictMode/dev + AbortController)
 const isCanceledError = (err) => {
   const msg = String(err?.message ?? "").toLowerCase();
   return (
@@ -26,14 +25,62 @@ const isCanceledError = (err) => {
   );
 };
 
+const parseJwt = (token) => {
+  try {
+    if (!token || typeof token !== "string") return null;
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+
+    const payload = parts[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
+
+    // atob -> unicode safe
+    const json = decodeURIComponent(
+      atob(padded)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+};
+
+const getTokenFallback = (storeToken) => {
+  if (storeToken) return storeToken;
+
+  // persist Zustand
+  const raw = localStorage.getItem("zamora-auth");
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw);
+      const token = parsed?.state?.token ?? null;
+      if (token) return token;
+    } catch {
+      // ignore
+    }
+  }
+
+  return localStorage.getItem("auth_token");
+};
+
+const normalizeMode = (m) => {
+  const v = String(m ?? "").toLowerCase();
+  return v === "restaurant" ? "restaurant" : "admin";
+};
+
 export const useOrders = (opts) => {
   const options = opts ?? {};
+
   const userType = useAuthStore((s) => s.userType);
   const storeRestaurantId = useAuthStore((s) => s.restaurantId);
+  const storeToken = useAuthStore((s) => s.token);
 
-  const mode = options.mode ?? userType ?? "admin";
+  const mode = useMemo(() => normalizeMode(options.mode ?? userType ?? "admin"), [options.mode, userType]);
 
-  // ---- initial state from URL (ordersQuery.js) ----
   const initPage = toInt(
     options.initialPagination?.page ?? options.initialPagination?.currentPage,
     1
@@ -70,7 +117,6 @@ export const useOrders = (opts) => {
     itemsPerPage: initLimit,
   });
 
-  // ✅ setFilters = reset page (user-driven)
   const setFilters = useCallback((next) => {
     _setFilters((prev) => (typeof next === "function" ? next(prev) : next));
     setPagination((p) => (p.currentPage === 1 ? p : { ...p, currentPage: 1 }));
@@ -78,17 +124,26 @@ export const useOrders = (opts) => {
 
   const abortRef = useRef(null);
 
-  // ✅ scope restaurant effectif
-  const effectiveRestaurantId = useMemo(() => {
-    if (mode === "restaurant") return options.restaurantId ?? storeRestaurantId ?? null;
-    return options.restaurantId ?? filters.restaurant ?? null;
-  }, [mode, options.restaurantId, storeRestaurantId, filters.restaurant]);
+  // RestaurantId fallback depuis token (utile si store pas encore hydraté)
+  const tokenRestaurantId = useMemo(() => {
+    const token = getTokenFallback(storeToken);
+    const jwt = parseJwt(token);
+    return jwt?.restaurentId ?? jwt?.restaurantId ?? jwt?.restaurent ?? jwt?.restaurant ?? null;
+  }, [storeToken]);
 
-  // ✅ sanitize filters before API
+  // scope restaurant effectif
+  const effectiveRestaurantId = useMemo(() => {
+    if (mode === "restaurant") {
+      return options.restaurantId ?? storeRestaurantId ?? tokenRestaurantId ?? null;
+    }
+    return options.restaurantId ?? filters.restaurant ?? null;
+  }, [mode, options.restaurantId, storeRestaurantId, tokenRestaurantId, filters.restaurant]);
+
+  // sanitize filters before API
   const apiFilters = useMemo(() => {
     const f = { ...(filters ?? {}) };
 
-    if (mode === "restaurant") delete f.restaurant; // ignore admin filter in restaurant mode
+    if (mode === "restaurant") delete f.restaurant;
     if (f.period !== "custom") {
       f.from = "";
       f.to = "";
@@ -97,7 +152,7 @@ export const useOrders = (opts) => {
     return f;
   }, [filters, mode]);
 
-  // ✅ sync when URL changes (back/forward or opened shared link)
+  // sync when URL changes (back/forward or opened shared link)
   const extKey = useMemo(
     () =>
       JSON.stringify({
@@ -108,6 +163,7 @@ export const useOrders = (opts) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [options.initialFilters, initPage, initLimit, mode]
   );
+
   const lastExtKeyRef = useRef(extKey);
 
   useEffect(() => {
@@ -126,11 +182,12 @@ export const useOrders = (opts) => {
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // guard: UNIQUEMENT en restaurant
+    // Restaurant: si pas de rid, on remonte une erreur explicite (pas silencieux)
     if (mode === "restaurant" && !effectiveRestaurantId) {
       setOrders([]);
       setStats(EMPTY_STATS);
       setPagination((p) => ({ ...p, totalPages: 1, totalItems: 0 }));
+      setError("MISSING_RESTAURANT_ID: impossible de charger les commandes restaurant");
       setLoading(false);
       return;
     }
@@ -158,17 +215,16 @@ export const useOrders = (opts) => {
         totalItems: res.totalItems ?? (res.data?.length ?? 0),
       }));
     } catch (err) {
-      // ✅ ignore les annulations (StrictMode/dev + abort lors des changements)
       if (isCanceledError(err) || controller.signal.aborted) return;
-
       setError(err?.message ?? "Erreur lors du chargement des commandes");
+      // eslint-disable-next-line no-console
       console.error("fetchOrders error:", err);
     } finally {
-      // ✅ si aborted, ne touche pas le state (évite flicker + warnings)
       if (!controller.signal.aborted) setLoading(false);
     }
   }, [mode, effectiveRestaurantId, apiFilters, pagination.currentPage, pagination.itemsPerPage]);
 
+  // Toujours appeler fetchOrders: le guard est géré à l'intérieur (sinon erreur jamais visible)
   useEffect(() => {
     fetchOrders();
     return () => abortRef.current?.abort();
@@ -183,6 +239,7 @@ export const useOrders = (opts) => {
         return true;
       } catch (err) {
         if (isCanceledError(err)) return false;
+        // eslint-disable-next-line no-console
         console.error("updateOrderStatus error:", err);
         return false;
       }
@@ -203,6 +260,7 @@ export const useOrders = (opts) => {
         return true;
       } catch (err) {
         if (isCanceledError(err)) return false;
+        // eslint-disable-next-line no-console
         console.error("updatePaymentStatus error:", err);
         return false;
       }

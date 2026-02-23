@@ -1,3 +1,4 @@
+// src/stores/authStore.js
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -21,7 +22,6 @@ const parseJwt = (token) => {
     const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
     const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
 
-    // atob -> unicode safe
     const json = decodeURIComponent(
       atob(padded)
         .split("")
@@ -34,14 +34,32 @@ const parseJwt = (token) => {
   }
 };
 
-const pickRestaurantIdFromUser = (u) =>
-  u?.restaurantId ??
-  u?.restaurant_id ??
-  u?.restaurentId ??
-  u?.restaurent_id ??
-  u?.restaurant?._id ??
-  u?.restaurant?.id ??
-  null;
+const pickId = (v) => {
+  if (!v) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "object") return v._id ?? v.id ?? v.restaurantId ?? v.restaurentId ?? null;
+  return null;
+};
+
+const pickRestaurantIdFromUser = (u) => {
+  const direct =
+    u?.restaurantId ??
+    u?.restaurant_id ??
+    u?.restaurentId ??
+    u?.restaurent_id ??
+    null;
+
+  if (direct) return direct;
+
+  // backend peut renvoyer "restaurant" ou "restaurent" string OU objet
+  const fromRestaurant = pickId(u?.restaurant);
+  if (fromRestaurant) return fromRestaurant;
+
+  const fromRestaurent = pickId(u?.restaurent);
+  if (fromRestaurent) return fromRestaurent;
+
+  return null;
+};
 
 const pickRestaurantName = (u) =>
   u?.restaurantName ??
@@ -49,23 +67,33 @@ const pickRestaurantName = (u) =>
   u?.restaurentName ??
   u?.restaurent_name ??
   u?.restaurant?.name ??
+  u?.restaurent?.name ??
   u?.name ??
   "";
 
 const computeRestaurantId = ({ user, token }) => {
-  // 1) user payload si présent
   const fromUser = pickRestaurantIdFromUser(user);
   if (fromUser) return fromUser;
 
-  // 2) sinon token payload (chez toi c’est la source fiable)
   const jwt = parseJwt(token);
-  return jwt?.restaurentId ?? jwt?.restaurantId ?? null;
+  if (!jwt) return null;
+
+  return (
+    jwt.restaurentId ??
+    jwt.restaurantId ??
+    jwt.restaurent ??
+    jwt.restaurant ??
+    jwt.rid ??
+    null
+  );
 };
 
 const useAuthStore = create(
   persist(
     (set, get) => ({
       ...initialState,
+
+      setRestaurantId: (rid) => set({ restaurantId: rid ?? null }),
 
       loginAdmin: ({ user, token }) => {
         if (!token || !user) return;
@@ -91,7 +119,7 @@ const useAuthStore = create(
         if (!token || !user) return;
 
         const uid = user.id ?? user._id ?? null;
-        const rid = computeRestaurantId({ user, token }); // ✅ NO uid fallback
+        const rid = computeRestaurantId({ user, token });
         const rname = pickRestaurantName(user);
 
         set({
@@ -104,7 +132,7 @@ const useAuthStore = create(
           },
           token,
           userType: "restaurant",
-          restaurantId: rid, // ✅ doit être 6989992008a1b331bb61f960 chez toi
+          restaurantId: rid,
           restaurantName: rname,
           isAuthenticated: true,
         });
@@ -115,7 +143,6 @@ const useAuthStore = create(
           user: s.user ? { ...s.user, ...userData } : userData,
         })),
 
-      // IMPORTANT: quand refresh token arrive, on recalcule restaurantId si besoin
       setToken: (token) => {
         if (!token) return;
         set((s) => {
@@ -148,6 +175,15 @@ const useAuthStore = create(
         restaurantName: s.restaurantName,
         isAuthenticated: s.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state, error) => {
+        if (error || !state) return;
+
+        // si restaurant + token présent mais restaurantId absent, on le recalcule
+        if (state.userType === "restaurant" && state.token && !state.restaurantId) {
+          const rid = computeRestaurantId({ user: state.user, token: state.token });
+          if (rid) state.setRestaurantId(rid);
+        }
+      },
     }
   )
 );

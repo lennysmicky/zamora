@@ -3,12 +3,16 @@ import axios from "axios";
 import env from "../config/env";
 import useAuthStore from "../stores/authStore";
 
+// ✅ normaliser (évite trailing slash -> double //)
+const API_URL = String(env.API_URL || "").replace(/\/+$/, "");
+const API_TIMEOUT = Number(env.API_TIMEOUT) || 20000;
+
 const client = axios.create({
-  baseURL: env.API_URL,
-  timeout: env.API_TIMEOUT,
+  baseURL: API_URL,
+  timeout: API_TIMEOUT,
   withCredentials: true,
   headers: {
-    "Content-Type": "application/json",
+    // ⚠️ ne pas figer Content-Type globalement (FormData)
     Accept: "application/json",
   },
 });
@@ -34,12 +38,12 @@ const mapFrontToBack = (obj) => {
 
   const next = { ...obj };
 
-  // admin filter "restaurant" (id) -> restaurentId
   if (next.restaurant && !next.restaurentId) {
     next.restaurentId = next.restaurant;
+    // optionnel mais safe: éviter d'envoyer 2 champs
+    delete next.restaurant;
   }
 
-  // front "restaurantId" -> restaurentId
   if (Object.prototype.hasOwnProperty.call(next, "restaurantId")) {
     if (!Object.prototype.hasOwnProperty.call(next, "restaurentId")) {
       next.restaurentId = next.restaurantId;
@@ -63,7 +67,7 @@ const mapBackToFront = (data) => {
     if (!Object.prototype.hasOwnProperty.call(next, "restaurantId")) {
       next.restaurantId = next.restaurentId;
     }
-    // on garde restaurentId si tu veux debug, sinon supprime:
+    // garde restaurentId si tu veux debug
     // delete next.restaurentId;
   }
 
@@ -73,18 +77,40 @@ const mapBackToFront = (data) => {
 // ---------------- Request interceptor ----------------
 client.interceptors.request.use(
   (config) => {
-    const storeToken = useAuthStore.getState()?.token;
+    const storeToken = useAuthStore.getState?.()?.token;
     const lsToken = localStorage.getItem("auth_token");
     const token = storeToken || lsToken;
 
     config.headers = config.headers ?? {};
-    if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    // MAPPING (sans muter les refs)
+    // ✅ headers compatibles AxiosHeaders (v1)
+    const h = config.headers;
+    const setHeader = (k, v) => (h?.set ? h.set(k, v) : (h[k] = v));
+    const delHeader = (k) => {
+      if (h?.delete) h.delete(k);
+      else {
+        delete h[k];
+        delete h[String(k).toLowerCase()];
+      }
+    };
+
+    if (token) setHeader("Authorization", `Bearer ${token}`);
+
+    // ✅ MAPPING (sans muter les refs)
     if (config.params) config.params = mapFrontToBack(cloneIfPlain(config.params));
 
     const d = config.data;
-    if (isPlainObject(d)) config.data = mapFrontToBack(cloneIfPlain(d));
+
+    // ✅ Content-Type : JSON uniquement pour plain object, sinon laisser Axios gérer (FormData)
+    const isForm =
+      typeof FormData !== "undefined" && d instanceof FormData;
+
+    if (isForm) {
+      delHeader("Content-Type");
+    } else if (isPlainObject(d)) {
+      setHeader("Content-Type", "application/json");
+      config.data = mapFrontToBack(cloneIfPlain(d));
+    }
 
     if (env.DEBUG) console.log(`[${config.method?.toUpperCase()}] ${config.url}`);
     return config;
@@ -108,7 +134,7 @@ client.interceptors.response.use(
     const isCanceled =
       error?.name === "CanceledError" ||
       error?.code === "ERR_CANCELED" ||
-      axios.isCancel?.(error);
+      (typeof axios.isCancel === "function" && axios.isCancel(error));
 
     if (isCanceled) return Promise.reject(error);
 
@@ -123,7 +149,7 @@ client.interceptors.response.use(
 
       try {
         const response = await axios.post(
-          `${env.API_URL}/auth/refresh`,
+          `${API_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         );
@@ -135,7 +161,9 @@ client.interceptors.response.use(
         localStorage.setItem("auth_token", token);
 
         originalRequest.headers = originalRequest.headers ?? {};
-        originalRequest.headers.Authorization = `Bearer ${token}`;
+        // compat AxiosHeaders
+        if (originalRequest.headers?.set) originalRequest.headers.set("Authorization", `Bearer ${token}`);
+        else originalRequest.headers.Authorization = `Bearer ${token}`;
 
         return client(originalRequest);
       } catch (refreshError) {
@@ -160,7 +188,9 @@ client.interceptors.response.use(
 export const getImageUrl = (path) => {
   if (!path) return null;
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  return `${env.UPLOAD_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+
+  const upload = String(env.UPLOAD_URL || "").replace(/\/+$/, "");
+  return `${upload}${path.startsWith("/") ? "" : "/"}${path}`;
 };
 
 export default client;

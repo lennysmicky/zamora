@@ -68,7 +68,7 @@ const pick = (obj, keys) => {
   return undefined;
 };
 
-// ✅ IMPORTANT: ne JAMAIS fallback sur src.id (souvent user.id)
+//  IMPORTANT: ne JAMAIS fallback sur src.id (souvent user.id)
 const resolveRestaurantId = (src = {}) => {
   const s = src ?? {};
 
@@ -173,18 +173,21 @@ const assertNotAllRejected = (results) => {
 
 const readSettled = (r, label) => {
   if (r.status === "fulfilled") return r.value;
-  // log ciblé (sinon tu “masques” le bug top_sell)
   console.warn(`[dashboard] ${label} failed:`, toAxiosErrorMessage(r.reason));
   return null;
 };
 
 // ---------------- bases ----------------
 const ADMIN_BASE = "/admin/dashboard";
-const restoBase = (id) => `/commande/${encodeURIComponent(id)}`;
+
+// RESTAURANT: backend actuel en mix
+// - stats déplacé sur /order/:id/stats
+// - le reste répond encore sur /commande/:id/*
+const restoCommandeBase = (id) => `/commande/${encodeURIComponent(id)}`;
+const restoOrderBase = (id) => `/order/${encodeURIComponent(id)}`;
 
 const buildAdminParams = (src, restaurantId) =>
   clean({
-    // ✅ compat max (selon backend)
     restaurantId: restaurantId || undefined,
     restaurentId: restaurantId || undefined,
     restaurant_id: restaurantId || undefined,
@@ -240,11 +243,10 @@ const dashboardAPI = {
     };
   },
 
-  // RESTAURANT: routes existantes
+  // RESTAURANT: routes existantes (stats sur /order, reste sur /commande)
   getRestaurantDashboard: async (args = {}) => {
     const src = args.filters ?? args;
 
-    // ✅ priorité aux args explicites
     const restaurantId = args.restaurantId ?? args.restaurentId ?? resolveRestaurantId(src);
 
     if (!restaurantId) {
@@ -261,11 +263,11 @@ const dashboardAPI = {
     const params = buildRestaurantParams(src);
 
     const results = await Promise.allSettled([
-      safeGet(`${restoBase(restaurantId)}/stats`, params, args.signal),
-      safeGet(`${restoBase(restaurantId)}/revenus`, params, args.signal),
-      safeGet(`${restoBase(restaurantId)}/status`, params, args.signal),
-      safeGet(`${restoBase(restaurantId)}/meilleurs_ventes`, params, args.signal),
-      safeGet(`${restoBase(restaurantId)}/commandes_recente`, params, args.signal),
+      safeGet(`${restoOrderBase(restaurantId)}/stats`, params, args.signal), // FIX: /order/:id/stats
+      safeGet(`${restoCommandeBase(restaurantId)}/revenus`, params, args.signal),
+      safeGet(`${restoCommandeBase(restaurantId)}/status`, params, args.signal),
+      safeGet(`${restoCommandeBase(restaurantId)}/meilleurs_ventes`, params, args.signal),
+      safeGet(`${restoCommandeBase(restaurantId)}/commandes_recente`, params, args.signal),
     ]);
 
     assertNotAllRejected(results);

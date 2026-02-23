@@ -61,14 +61,14 @@ const RestaurantLoginPage = () => {
         return;
       }
 
-      // ✅ Bloque un ADMIN qui tenterait le login Restaurant
+      //  Bloque un ADMIN qui tenterait le login Restaurant
       const role = String(user.role ?? user.userType ?? user.type ?? "").toLowerCase();
       if (role && role !== "restaurant") {
         setErrors({ general: "accessDenied" });
         return;
       }
 
-      // ✅ Persist session (ne touche pas restaurantId ici)
+      //  Persist session (ne touche pas restaurantId ici)
       localStorage.setItem("auth_token", token);
       localStorage.setItem("user_role", "restaurant");
 
@@ -79,13 +79,13 @@ const RestaurantLoginPage = () => {
       }
 
       /**
-       * ✅ IMPORTANT:
+       *  IMPORTANT:
        * On passe le user brut + token.
        * L'authStore déduit restaurantId depuis user ou JWT (restaurentId).
        */
       loginRestaurant({ user, token });
 
-      // ✅ Debug minimal (à retirer plus tard)
+      //  Debug minimal (à retirer plus tard)
       const rid = useAuthStore.getState().restaurantId;
       console.log("[AUTH] restaurantId resolved =", rid);
 

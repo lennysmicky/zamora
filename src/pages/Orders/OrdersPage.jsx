@@ -20,7 +20,6 @@ import Modal from "../../components/common/Modal";
 import OrderCreateForm from "../../components/orders/OrderCreateForm";
 
 import { readOrdersSearchParams, writeOrdersSearchParams } from "../../utils/ordersQuery";
-
 import "./OrdersPage.css";
 
 const DEFAULT_FILTERS = {
@@ -37,11 +36,14 @@ const DEFAULT_FILTERS = {
 
 const getOrderId = (o) => o?.id ?? o?._id ?? null;
 
-const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
+const OrdersPage = ({
+  restaurantId: restaurantIdProp = null,
+  mode: modeProp = null,
+  disableUrlSync = false,
+}) => {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // stable string (évite deps instables)
   const currentQS = useMemo(() => searchParams.toString(), [searchParams]);
   const lastWrittenQSRef = useRef(null);
 
@@ -55,20 +57,27 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
   const userType = useAuthStore((s) => s.userType);
   const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
-  const isRestaurantMode = userType === "restaurant" || Boolean(restaurantIdProp);
-  const mode = isRestaurantMode ? "restaurant" : "admin";
+  const forcedMode =
+    modeProp === "restaurant" ? "restaurant" : modeProp === "admin" ? "admin" : null;
+
+  const isRestaurantMode =
+    forcedMode === "restaurant" || userType === "restaurant" || Boolean(restaurantIdProp);
+
+  const mode = forcedMode ?? (isRestaurantMode ? "restaurant" : "admin");
 
   const restaurantIdForHook = useMemo(() => {
-    if (!isRestaurantMode) return null;
+    if (mode !== "restaurant") return null;
     return restaurantIdProp || storeRestaurantId || null;
-  }, [isRestaurantMode, restaurantIdProp, storeRestaurantId]);
+  }, [mode, restaurantIdProp, storeRestaurantId]);
 
-  // URL -> initial state (first mount)
-  const { initialFilters, initialPagination } = useMemo(
-    () => readOrdersSearchParams(searchParams, { defaults: DEFAULT_FILTERS, mode }),
+  // URL -> initial state (admin only, sinon on prend defaults)
+  const { initialFilters, initialPagination } = useMemo(() => {
+    if (disableUrlSync || mode === "restaurant") {
+      return { initialFilters: DEFAULT_FILTERS, initialPagination: { currentPage: 1, itemsPerPage: 10 } };
+    }
+    return readOrdersSearchParams(searchParams, { defaults: DEFAULT_FILTERS, mode });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentQS, mode]
-  );
+  }, [currentQS, mode, disableUrlSync]);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -92,7 +101,6 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     initialPagination,
   });
 
-  // ✅ UI change filters => reset page 1 (pas dans useOrders sinon URL page casse)
   const setFiltersUI = useCallback(
     (updater) => {
       setFilters((prev) => (typeof updater === "function" ? updater(prev) : updater));
@@ -101,8 +109,9 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     [setFilters, setPagination]
   );
 
-  // ✅ URL -> State (back/forward / lien copié / édition URL)
+  // URL -> State (admin only)
   useEffect(() => {
+    if (disableUrlSync || mode === "restaurant") return;
     if (lastWrittenQSRef.current === currentQS) return;
 
     const { initialFilters: fFromUrl, initialPagination: pFromUrl } = readOrdersSearchParams(
@@ -117,10 +126,12 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
       itemsPerPage: pFromUrl.itemsPerPage,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQS, mode]);
+  }, [currentQS, mode, disableUrlSync]);
 
-  // ✅ State -> URL
+  // State -> URL (admin only)
   useEffect(() => {
+    if (disableUrlSync || mode === "restaurant") return;
+
     const nextQS = writeOrdersSearchParams({
       filters,
       pagination: { page: pagination.currentPage, limit: pagination.itemsPerPage },
@@ -131,11 +142,8 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
       lastWrittenQSRef.current = nextQS;
       setSearchParams(nextQS, { replace: true });
     }
-  }, [filters, pagination.currentPage, pagination.itemsPerPage, mode, currentQS, setSearchParams]);
+  }, [filters, pagination.currentPage, pagination.itemsPerPage, mode, currentQS, setSearchParams, disableUrlSync]);
 
-  // ================================
-  // HANDLERS UI
-  // ================================
   const handleViewDetails = useCallback((order) => {
     setSelectedOrder(order);
     setIsModalOpen(true);
@@ -163,7 +171,8 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     setSelectedOrders((prev) => {
       const arr = Array.isArray(prev) ? prev : [];
       const prevSet = new Set(arr);
-      const allSelected = ids.length > 0 && ids.every((id) => prevSet.has(id)) && arr.length === ids.length;
+      const allSelected =
+        ids.length > 0 && ids.every((id) => prevSet.has(id)) && arr.length === ids.length;
       return allSelected ? [] : ids;
     });
   }, [orders, setSelectedOrders]);
@@ -172,9 +181,6 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     setFiltersUI((prev) => ({ ...prev, ...DEFAULT_FILTERS }));
   }, [setFiltersUI]);
 
-  // ================================
-  // HANDLERS STORE (stables => refs)
-  // ================================
   const fetchOrdersRef = useRef(fetchOrders);
   useEffect(() => {
     fetchOrdersRef.current = fetchOrders;
@@ -216,7 +222,6 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
     };
   }, [handleRefresh, handleExport, handleBulkAction, handleNewOrder]);
 
-  // Sync orders -> store + prune selection
   useEffect(() => {
     ordersStore.setOrders(orders);
 
@@ -263,7 +268,11 @@ const OrdersPage = ({ restaurantId: restaurantIdProp = null }) => {
               isRestaurantMode={isRestaurantMode}
             />
 
-            <OrdersPagination pagination={pagination} onPaginationChange={setPagination} isLoading={loading} />
+            <OrdersPagination
+              pagination={pagination}
+              onPaginationChange={setPagination}
+              isLoading={loading}
+            />
           </>
         )}
       </div>
