@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ordersStore } from "../stores/ordersStore";
 
-// ✅ hook générique selector
+//  hook générique selector
 const useOrdersSelector = (selector) => {
   const [state, setState] = useState(() => selector(ordersStore.getState()));
 
@@ -16,7 +16,7 @@ const useOrdersSelector = (selector) => {
   return state;
 };
 
-// ✅ selectors demandés
+//  selectors demandés
 export const useSelectedOrders = () =>
   useOrdersSelector((s) => (Array.isArray(s.selectedOrders) ? s.selectedOrders : []));
 
@@ -26,7 +26,7 @@ export const useIsCreateModalOpen = () =>
 export const useOrdersHandlers = () =>
   useOrdersSelector((s) => s.handlers);
 
-// ✅ ton hook existant (compatible)
+//  ton hook existant (compatible)
 export const useOrdersStore = () => {
   const fullState = useOrdersSelector((s) => s);
 

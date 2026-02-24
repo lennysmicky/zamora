@@ -1,70 +1,68 @@
 // src/api/restaurants.js
 import client from "./client";
 
-const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
-
-const isNotFound = (err) => {
-  const s = err?.response?.status;
-  const msg = String(err?.response?.data?.message ?? err?.message ?? "");
-  return s === 404 || /not found/i.test(msg);
+const ensureId = (id) => {
+  if (id == null || id === "") throw new Error("[restaurantsAPI] Missing id");
+  return String(id);
 };
 
-const ensureId = (name, v) => {
-  if (v == null || v === "") throw new Error(`[restaurantsAPI] Missing ${name}`);
-  return String(v);
+const statusOf = (e) => e?.response?.status;
+const msgOf = (e) => String(e?.response?.data?.message ?? e?.message ?? "");
+
+const isFallbackable = (e) => {
+  const s = statusOf(e);
+  const m = msgOf(e);
+  // si /admin/* renvoie 401/403, on tente /restaurent (souvent autorisé)
+  return (
+    s === 404 ||
+    s === 405 ||
+    s === 401 ||
+    s === 403 ||
+    /not found|cannot|unauthorized|forbidden/i.test(m)
+  );
 };
 
-// Normalisation pour <select>
-export const normRestaurant = (r = {}) => {
-  const id = r?.id ?? r?._id ?? null;
-  return {
-    ...r,
-    id,
-    name: r?.name ?? r?.nom ?? r?.title ?? r?.restaurantName ?? "",
-  };
+const BASES = [
+  "/admin/register",
+  "/restaurent",
+
+];
+
+let cachedBase = null;
+
+const withBase = async (callPerBase) => {
+  const bases = cachedBase
+    ? [cachedBase, ...BASES.filter((b) => b !== cachedBase)]
+    : BASES;
+
+  let lastErr = null;
+  for (const base of bases) {
+    try {
+      const res = await callPerBase(base);
+      cachedBase = base;
+      return res; // IMPORTANT: on retourne AxiosResponse (comme avant)
+    } catch (e) {
+      lastErr = e;
+      if (!isFallbackable(e)) throw e; // 500 etc.
+    }
+  }
+  throw lastErr;
 };
 
 export const restaurantsAPI = {
-  // ========== Public/Admin (selon droits token) ==========
-  getAll: async (params = {}) => unwrap(await client.get("/restaurent", { params })),
-  getById: async (id) => unwrap(await client.get(`/restaurent/${ensureId("id", id)}`)),
-  create: async (data) => unwrap(await client.post("/restaurent", data)),
-  update: async (id, data) => unwrap(await client.put(`/restaurent/${ensureId("id", id)}`, data)),
-  delete: async (id) => unwrap(await client.delete(`/restaurent/${ensureId("id", id)}`)),
-
-  toggleStatus: async (id, status) =>
-    unwrap(await client.patch(`/restaurent/${ensureId("id", id)}/status`, { status })),
-
-  uploadLogo: async (id, formData) =>
-    unwrap(
-      await client.post(`/restaurent/${ensureId("id", id)}/logo`, formData, {
+  getAll: (params = {}) => withBase((base) => client.get(base, { params })),
+  getById: (id) => withBase((base) => client.get(`${base}/${ensureId(id)}`)),
+  create: (data) => withBase((base) => client.post(base, data)),
+  update: (id, data) => withBase((base) => client.put(`${base}/${ensureId(id)}`, data)),
+  delete: (id) => withBase((base) => client.delete(`${base}/${ensureId(id)}`)),
+  toggleStatus: (id, status) =>
+    withBase((base) => client.patch(`${base}/${ensureId(id)}/status`, { status })),
+  uploadLogo: (id, formData) =>
+    withBase((base) =>
+      client.post(`${base}/${ensureId(id)}/logo`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       })
     ),
-
-  // ========== ADMIN SAFE ==========
-  // Certains backends exposent /admin/restaurent, d'autres non.
-  // On essaie /admin/restaurent puis fallback /restaurent.
-  getAllAdmin: async (params = {}) => {
-    try {
-      return unwrap(await client.get("/admin/restaurent", { params }));
-    } catch (e) {
-      if (!isNotFound(e)) throw e;
-      return unwrap(await client.get("/restaurent", { params }));
-    }
-  },
-
-  // Prêt pour remplir un select
-  listForSelect: async () => {
-    const payload = await restaurantsAPI.getAllAdmin();
-    const list =
-      Array.isArray(payload?.restaurants) ? payload.restaurants :
-      Array.isArray(payload?.data) ? payload.data :
-      Array.isArray(payload) ? payload :
-      [];
-    return list.map(normRestaurant);
-  },
-  getRestaurants: async () => restaurantsAPI.listForSelect(),
 };
 
 export default restaurantsAPI;
