@@ -82,7 +82,8 @@ const MealList = ({
         </div>
 
         {/*  Bouton toujours visible */}
-        <button
+        <button 
+          type="button"
           className="meal-add-btn"
           onClick={onAddMeal}
           disabled={!canAddMeal}

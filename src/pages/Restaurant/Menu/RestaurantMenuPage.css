@@ -1,0 +1,76 @@
+/* src/pages/Restaurant/Menu/RestaurantMenuPage.css */
+
+.restaurant-menu-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.restaurant-menu-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.restaurant-menu-tab {
+  border: 0;
+  background: transparent;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.restaurant-menu-tab.active {
+  background: #fff;
+  opacity: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.menus-page .menus-page-title {
+  display: none;
+}
+.restaurant-menu-page .restaurant-tabs-header {
+  align-items: center;
+}
+
+.restaurant-menu-page .rm-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #f4f6fb;
+  border: 1px solid #e7ecf3;
+}
+
+.restaurant-menu-page .rm-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  padding: 8px 12px;
+  border-radius: 10px;
+
+  font-size: 13px;
+  font-weight: 600;
+  color: #5b677a;
+  line-height: 1;
+}
+
+.restaurant-menu-page .rm-tab .rm-tab-icon {
+  font-size: 16px;
+}
+
+.restaurant-menu-page .rm-tab.active {
+  background: #fff;
+  color: #1f2a37;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}

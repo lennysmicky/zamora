@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
+// src/components/menus/MealForm.jsx
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { RiImageAddLine, RiCloseLine } from "react-icons/ri";
+import { RiCloseLine, RiImageAddLine } from "react-icons/ri";
 import Modal from "../common/Modal";
 import "./MealForm.css";
 
@@ -12,19 +13,21 @@ const MealForm = ({
   onSubmit,
   meal = null,
   categories = [],
+  menus = [], // ✅ NEW
   selectedCategoryId = null,
   isLoading = false,
 }) => {
   const { t } = useTranslation();
   const isEditing = !!meal;
 
-  //  hooks toujours exécutés (pas de return conditionnel)
   const cats = useMemo(() => (Array.isArray(categories) ? categories : []), [categories]);
+  const menusSafe = useMemo(() => (Array.isArray(menus) ? menus : []), [menus]);
   const mealId = useMemo(() => idOf(meal), [meal]);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
+    menuId: "", // ✅ NEW
     categoryId: "",
     price: "",
     isAvailable: true,
@@ -34,11 +37,19 @@ const MealForm = ({
   const [errors, setErrors] = useState({});
   const [imagePreview, setImagePreview] = useState(null);
 
-  //  reset quand on ouvre + quand meal change
   useEffect(() => {
     if (!isOpen) return;
 
     if (meal) {
+      const mid =
+        String(
+          meal.menuId ??
+            meal.menu ??
+            idOf(meal.menu) ??
+            meal?.menu?._id ??
+            ""
+        ) || "";
+
       const cid =
         String(
           meal.categoryId ??
@@ -51,6 +62,7 @@ const MealForm = ({
       setFormData({
         name: meal.name || meal.nom || "",
         description: meal.description || "",
+        menuId: mid,
         categoryId: cid,
         price: meal.price != null ? String(meal.price) : "",
         isAvailable: meal.isAvailable ?? meal.isAvaible ?? true,
@@ -58,10 +70,15 @@ const MealForm = ({
       });
       setImagePreview(meal.image || null);
     } else {
+      const fallbackCid = String(selectedCategoryId || idOf(cats[0]) || "");
+      const fallbackMenuId =
+        menusSafe.length === 1 ? String(idOf(menusSafe[0]) || "") : "";
+
       setFormData({
         name: "",
         description: "",
-        categoryId: String(selectedCategoryId || ""),
+        menuId: fallbackMenuId,
+        categoryId: fallbackCid,
         price: "",
         isAvailable: true,
         image: "",
@@ -70,15 +87,17 @@ const MealForm = ({
     }
 
     setErrors({});
-  }, [isOpen, mealId, selectedCategoryId, meal]);
+    // volontairement pas de deps sur cats/menusSafe pour éviter reset si data arrive après ouverture
+  }, [isOpen, mealId, selectedCategoryId]);
+
+  const setField = (name, value) => {
+    setFormData((p) => ({ ...p, [name]: value }));
+    if (errors[name]) setErrors((p) => ({ ...p, [name]: null }));
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
+    setField(name, type === "checkbox" ? checked : value);
   };
 
   const handleImageChange = (e) => {
@@ -86,43 +105,45 @@ const MealForm = ({
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setErrors((prev) => ({ ...prev, image: "invalidType" }));
+      setErrors((p) => ({ ...p, image: "invalidType" }));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setErrors((prev) => ({ ...prev, image: "tooLarge" }));
+      setErrors((p) => ({ ...p, image: "tooLarge" }));
       return;
     }
 
     const reader = new FileReader();
     reader.onloadend = () => {
       setImagePreview(reader.result);
-      setFormData((prev) => ({ ...prev, image: reader.result }));
+      setField("image", reader.result);
     };
     reader.readAsDataURL(file);
 
-    setErrors((prev) => ({ ...prev, image: null }));
+    setErrors((p) => ({ ...p, image: null }));
   };
 
   const handleRemoveImage = () => {
     setImagePreview(null);
-    setFormData((prev) => ({ ...prev, image: "" }));
+    setField("image", "");
   };
 
   const validate = () => {
-    const newErrors = {};
+    const next = {};
 
-    if (!formData.name.trim()) newErrors.name = "required";
-    else if (formData.name.trim().length < 2) newErrors.name = "tooShort";
+    if (!formData.name.trim()) next.name = "required";
+    else if (formData.name.trim().length < 2) next.name = "tooShort";
 
-    if (!formData.categoryId) newErrors.categoryId = "required";
+    // ✅ required menu
+    if (!formData.menuId) next.menuId = "required";
 
-    if (formData.price === "") newErrors.price = "required";
-    else if (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0)
-      newErrors.price = "invalid";
+    if (!formData.categoryId) next.categoryId = "required";
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    if (formData.price === "") next.price = "required";
+    else if (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0) next.price = "invalid";
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -131,6 +152,7 @@ const MealForm = ({
 
     const payload = {
       ...formData,
+      menuId: String(formData.menuId),       // ✅ NEW
       categoryId: String(formData.categoryId),
       price: Number(formData.price),
     };
@@ -141,8 +163,10 @@ const MealForm = ({
 
   const title = isEditing ? t("menu.meals.edit") : t("menu.meals.add");
 
+  if (!isOpen) return null;
+
   return (
-    <Modal isOpen={!!isOpen} onClose={onClose} title={title} size="medium">
+    <Modal isOpen={true} onClose={onClose} title={title} size="medium">
       <form className="meal-form" onSubmit={handleSubmit}>
         <div className="meal-form-grid">
           <div className="meal-form-left">
@@ -160,9 +184,7 @@ const MealForm = ({
                 autoFocus
                 disabled={isLoading}
               />
-              {errors.name && (
-                <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>
-              )}
+              {errors.name && <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>}
             </div>
 
             <div className="form-group">
@@ -178,6 +200,36 @@ const MealForm = ({
               />
             </div>
 
+            {/* ✅ MENU SELECT (required) */}
+            <div className={`form-group ${errors.menuId ? "error" : ""}`}>
+              <label htmlFor="meal-menu">
+                {t("menu.menus.title", { defaultValue: "Menu" })} <span className="required">*</span>
+              </label>
+              <select
+                id="meal-menu"
+                name="menuId"
+                value={formData.menuId || ""}
+                onChange={handleChange}
+                className="custom-select"
+                disabled={isLoading}
+              >
+                <option value="">
+                  {t("menu.menus.selectMenu", { defaultValue: "Sélectionner un menu" })}
+                </option>
+                {menusSafe.map((m, idx) => {
+                  const id = idOf(m);
+                  const key = id != null ? String(id) : `menu-${idx}`;
+                  const label = m.name ?? m.nom ?? m.title ?? key;
+                  return (
+                    <option key={key} value={id != null ? String(id) : ""}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+              {errors.menuId && <span className="form-error">{t(`menu.errors.${errors.menuId}`)}</span>}
+            </div>
+
             <div className={`form-group ${errors.categoryId ? "error" : ""}`}>
               <label htmlFor="meal-category">
                 {t("menu.meals.category")} <span className="required">*</span>
@@ -191,19 +243,18 @@ const MealForm = ({
                 disabled={isLoading}
               >
                 <option value="">{t("menu.meals.selectCategory")}</option>
-                {cats.map((cat) => {
+                {cats.map((cat, idx) => {
                   const id = idOf(cat);
-                  const label = cat.name ?? cat.nom ?? cat.title ?? id;
+                  const key = id != null ? String(id) : `cat-${idx}`;
+                  const label = cat.name ?? cat.nom ?? cat.title ?? key;
                   return (
-                    <option key={id} value={id}>
+                    <option key={key} value={id != null ? String(id) : ""}>
                       {label}
                     </option>
                   );
                 })}
               </select>
-              {errors.categoryId && (
-                <span className="form-error">{t(`menu.errors.${errors.categoryId}`)}</span>
-              )}
+              {errors.categoryId && <span className="form-error">{t(`menu.errors.${errors.categoryId}`)}</span>}
             </div>
 
             <div className={`form-group ${errors.price ? "error" : ""}`}>
@@ -224,9 +275,7 @@ const MealForm = ({
                 />
                 <span className="price-currency">{t("menu.meals.currency")}</span>
               </div>
-              {errors.price && (
-                <span className="form-error">{t(`menu.errors.${errors.price}`)}</span>
-              )}
+              {errors.price && <span className="form-error">{t(`menu.errors.${errors.price}`)}</span>}
             </div>
 
             <div className="form-group checkbox-group">
@@ -263,13 +312,7 @@ const MealForm = ({
                   </div>
                 ) : (
                   <label className="image-upload-area">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      hidden
-                      disabled={isLoading}
-                    />
+                    <input type="file" accept="image/*" onChange={handleImageChange} hidden disabled={isLoading} />
                     <RiImageAddLine className="upload-icon" />
                     <span>{t("menu.meals.imageUpload")}</span>
                     <span className="upload-hint">PNG, JPG (max 5MB)</span>
@@ -277,9 +320,7 @@ const MealForm = ({
                 )}
               </div>
 
-              {errors.image && (
-                <span className="form-error">{t(`menu.errors.${errors.image}`)}</span>
-              )}
+              {errors.image && <span className="form-error">{t(`menu.errors.${errors.image}`)}</span>}
             </div>
           </div>
         </div>

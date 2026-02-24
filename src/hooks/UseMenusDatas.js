@@ -8,11 +8,7 @@ const eqId = (a, b) => String(a ?? "") === String(b ?? "");
 const asArray = (v) => (Array.isArray(v) ? v : []);
 
 const normalizeRole = (v) => String(v ?? "").trim().toLowerCase();
-const isRestaurantRole = (role) => {
-  const r = normalizeRole(role);
-  // tolère: "restaurant", "ROLE_RESTAURANT", "Restaurant", "resto", "restaurent" etc.
-  return /restaurant|restaurent|resto/.test(r);
-};
+const isRestaurantRole = (role) => /restaurant|restaurent|resto/.test(normalizeRole(role));
 
 const readLocal = (...keys) => {
   for (const k of keys) {
@@ -22,6 +18,7 @@ const readLocal = (...keys) => {
   return null;
 };
 
+// ---------------- pickers ----------------
 const pickCategories = (payload) => {
   if (Array.isArray(payload?.categories)) return payload.categories;
   if (Array.isArray(payload?.categorie)) return payload.categorie;
@@ -50,11 +47,14 @@ const pickMenusList = (payload) => {
   return [];
 };
 
+// ---------------- normalizers ----------------
 const normId = (x) => ({ ...x, id: idOf(x) });
 
 const normMeal = (m) => ({
   ...m,
   id: idOf(m),
+  // ✅ important pour pré-remplir le select "menu" en édition
+  menuId: m?.menuId ?? m?.menu?._id ?? m?.menu?.id ?? m?.menu ?? null,
   categoryId:
     m?.categoryId ??
     m?.categorieId ??
@@ -106,10 +106,9 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
   const userTypeStore = useAuthStore((s) => s?.userType ?? s?.role ?? s?.user?.role ?? null);
 
-  // localStorage fallbacks (tes projets varient souvent)
+  // localStorage fallbacks
   const userType =
-    userTypeStore ??
-    readLocal("user_role", "userType", "role", "user_type", "auth_role");
+    userTypeStore ?? readLocal("user_role", "userType", "role", "user_type", "auth_role");
 
   const restaurantId =
     restaurantIdProp ??
@@ -132,51 +131,41 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
       ...baseApi,
 
       // -------- CATEGORIES LIST (restaurant) --------
-      getCategories: async () => {
-        // si ton backend expose GET /categorie/:restaurentId via menus.js, on passe rid en param/typo
-        return baseApi.getCategories?.({ restaurent: rid, restaurantId: rid });
-      },
+      getCategories: async () => baseApi.getCategories?.({ restaurent: rid, restaurantId: rid }),
 
       // -------- MEALS LIST (restaurant) --------
-      getMealsByCategory:
-        menusAPI.getMealsByCategoryForRestaurant
-          ? (categorieId) => menusAPI.getMealsByCategoryForRestaurant(rid, categorieId)
-          : baseApi.getMealsByCategory,
+      getMealsByCategory: menusAPI.getMealsByCategoryForRestaurant
+        ? (categorieId) => menusAPI.getMealsByCategoryForRestaurant(rid, categorieId)
+        : baseApi.getMealsByCategory,
 
       // -------- MEALS CRUD (restaurant) --------
-      createMeal:
-        menusAPI.createMealForRestaurant
-          ? (payload) => menusAPI.createMealForRestaurant(rid, payload)
-          : (payload) => baseApi.createMeal?.({ ...payload, restaurent: rid, restaurantId: rid }),
+      createMeal: menusAPI.createMealForRestaurant
+        ? (payload) => menusAPI.createMealForRestaurant(rid, payload)
+        : (payload) => baseApi.createMeal?.({ ...payload, restaurent: rid, restaurantId: rid }),
 
-      updateMeal:
-        menusAPI.updateMealForRestaurant
-          ? (id, payload) => menusAPI.updateMealForRestaurant(rid, id, payload)
-          : (id, payload) => baseApi.updateMeal?.(id, { ...payload, restaurent: rid, restaurantId: rid }),
+      updateMeal: menusAPI.updateMealForRestaurant
+        ? (id, payload) => menusAPI.updateMealForRestaurant(rid, id, payload)
+        : (id, payload) => baseApi.updateMeal?.(id, { ...payload, restaurent: rid, restaurantId: rid }),
 
-      deleteMeal:
-        menusAPI.deleteMealForRestaurant
-          ? (id) => menusAPI.deleteMealForRestaurant(rid, id)
-          : (id) => baseApi.deleteMeal?.(id),
+      deleteMeal: menusAPI.deleteMealForRestaurant
+        ? (id) => menusAPI.deleteMealForRestaurant(rid, id)
+        : (id) => baseApi.deleteMeal?.(id),
 
       // -------- CATEGORIES CRUD (restaurant) --------
-      // IMPORTANT: on force rid (sinon ça tape /categorie)
-      createCategory:
-        menusAPI.createCategoryForRestaurant
-          ? (payload) => menusAPI.createCategoryForRestaurant(rid, payload)
-          : (payload) => baseApi.createCategory?.({ ...payload, restaurent: rid, restaurantId: rid }),
+      createCategory: menusAPI.createCategoryForRestaurant
+        ? (payload) => menusAPI.createCategoryForRestaurant(rid, payload)
+        : (payload) => baseApi.createCategory?.({ ...payload, restaurent: rid, restaurantId: rid }),
 
-      updateCategory:
-        menusAPI.updateCategoryForRestaurant
-          ? (id, payload) => menusAPI.updateCategoryForRestaurant(rid, id, payload)
-          : (id, payload) => baseApi.updateCategory?.(id, { ...payload, restaurent: rid, restaurantId: rid }),
+      updateCategory: menusAPI.updateCategoryForRestaurant
+        ? (id, payload) => menusAPI.updateCategoryForRestaurant(rid, id, payload)
+        : (id, payload) => baseApi.updateCategory?.(id, { ...payload, restaurent: rid, restaurantId: rid }),
 
-      deleteCategory:
-        menusAPI.deleteCategoryForRestaurant
-          ? (id) => menusAPI.deleteCategoryForRestaurant(rid, id)
-          : (id) => baseApi.deleteCategory?.(id),
+      // ✅ IMPORTANT: baseApi.deleteCategory(id) a besoin du rid pour son fallback
+      deleteCategory: menusAPI.deleteCategoryForRestaurant
+        ? (id) => menusAPI.deleteCategoryForRestaurant(rid, id)
+        : (id) => baseApi.deleteCategory?.(id, rid),
 
-      // -------- MENUS (souvent global, mais on filtre si possible) --------
+      // -------- MENUS (filtrés si possible) --------
       getMenus: (params = {}) => baseApi.getMenus?.({ ...params, restaurent: rid, restaurantId: rid }),
     };
   }, [isRestaurantScope, restaurantId]);
@@ -362,7 +351,6 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         const payload = {
           ...categoryData,
           ...(menuId && !categoryData.menu ? { menu: menuId } : {}),
-          // clé tolérée (sert aussi aux fallbacks/futures migrations)
           ...(isRestaurantScope ? { restaurent: restaurantId } : {}),
           ...(!isRestaurantScope &&
           restaurantId &&
@@ -375,12 +363,8 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         const res = await api.createCategory(payload);
         const cat = normId(res?.category ?? res?.categorie ?? res);
 
-        setCategories((prev) => {
-          const next = [...prev, cat];
-          // auto-select si rien
-          if (!selectedCategoryId) setSelectedCategory(cat);
-          return next;
-        });
+        setCategories((prev) => [...prev, cat]);
+        if (!selectedCategoryId) setSelectedCategory(cat);
 
         return { success: true, data: cat };
       } catch (e) {
@@ -395,7 +379,6 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
       try {
         if (!api.updateCategory) throw new Error("API updateCategory manquante");
 
-        // IMPORTANT: en restaurant scope, on injecte rid pour éviter /categorie/:id
         const payload = isRestaurantScope ? { ...categoryData, restaurent: restaurantId } : categoryData;
 
         const res = await api.updateCategory(categoryId, payload);
@@ -423,23 +406,16 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
         await api.deleteCategory(categoryId);
 
-        setCategories((prev) => {
-          const next = prev.filter((c) => !eqId(c.id, categoryId));
+        setCategories((prev) => prev.filter((c) => !eqId(c.id, categoryId)));
 
-          // nettoie cache
-          const cache = { ...mealsByCategoryRef.current };
-          delete cache[categoryId];
-          mealsByCategoryRef.current = cache;
+        const next = { ...mealsByCategoryRef.current };
+        delete next[categoryId];
+        mealsByCategoryRef.current = next;
 
-          // si on supprime la sélection, on bascule sur la 1ère restante
-          if (eqId(selectedCategoryId, categoryId)) {
-            const nextSelected = next[0] ?? null;
-            setSelectedCategory(nextSelected);
-            setMeals([]);
-          }
-
-          return next;
-        });
+        if (eqId(selectedCategoryId, categoryId)) {
+          setSelectedCategory(null);
+          setMeals([]);
+        }
 
         return { success: true };
       } catch (e) {
@@ -457,7 +433,10 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
         const payload = {
           ...mealData,
-          ...(menuId && !mealData.menu ? { menu: menuId } : {}),
+
+          // ✅ si page "menuId", on injecte seulement si le form n'a pas déjà menu/menuId
+          ...(menuId && !mealData.menu && !mealData.menuId ? { menu: menuId } : {}),
+
           ...(isRestaurantScope ? { restaurent: restaurantId } : {}),
           ...(!isRestaurantScope &&
           restaurantId &&
@@ -554,7 +533,6 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
       try {
         if (!api.createMenu) throw new Error("API createMenu manquante");
 
-        // /menu souvent global => on garde restaurantId en payload
         const payload = {
           ...menuData,
           ...(restaurantId && !menuData.restaurantId && !menuData.restaurent ? { restaurantId } : {}),
@@ -624,8 +602,6 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
 
     isLoading,
     isRefreshing,
-
-    // en mode restaurant, error reste silencieuse pour les fetch
     error,
 
     addCategory,
