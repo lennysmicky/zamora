@@ -10,7 +10,7 @@ import {
   RiToggleFill,
 } from "react-icons/ri";
 import ConfirmDialog from "../common/ConfirmDialog";
-import { getImageUrl } from "../../api/client";
+import resolveImageSrc from "../../utils/resolveImageSrc";
 import "./MealList.css";
 
 const MealList = ({
@@ -81,15 +81,13 @@ const MealList = ({
           ) : null}
         </div>
 
-        {/*  Bouton toujours visible */}
-        <button 
+        {/* Bouton toujours visible */}
+        <button
           type="button"
           className="meal-add-btn"
           onClick={onAddMeal}
           disabled={!canAddMeal}
-          title={
-            canAddMeal ? t("menu.meals.add") : t("menu.meals.selectCategory")
-          }
+          title={canAddMeal ? t("menu.meals.add") : t("menu.meals.selectCategory")}
         >
           <RiAddLine />
           <span>{t("menu.meals.add")}</span>
@@ -121,32 +119,17 @@ const MealList = ({
                 {[1, 2, 3, 4].map((i) => (
                   <tr key={i} className="skeleton-row">
                     <td>
-                      <div
-                        className="skeleton-text"
-                        style={{ width: "150px" }}
-                      ></div>
-                      <div
-                        className="skeleton-text small"
-                        style={{ width: "200px" }}
-                      ></div>
+                      <div className="skeleton-text" style={{ width: "150px" }} />
+                      <div className="skeleton-text small" style={{ width: "200px" }} />
                     </td>
                     <td>
-                      <div
-                        className="skeleton-text"
-                        style={{ width: "60px" }}
-                      ></div>
+                      <div className="skeleton-text" style={{ width: "60px" }} />
                     </td>
                     <td>
-                      <div
-                        className="skeleton-text"
-                        style={{ width: "80px" }}
-                      ></div>
+                      <div className="skeleton-text" style={{ width: "80px" }} />
                     </td>
                     <td>
-                      <div
-                        className="skeleton-text"
-                        style={{ width: "100px" }}
-                      ></div>
+                      <div className="skeleton-text" style={{ width: "100px" }} />
                     </td>
                   </tr>
                 ))}
@@ -174,28 +157,29 @@ const MealList = ({
               </thead>
               <tbody>
                 {meals.map((meal) => {
-                  const img = meal.image ? getImageUrl(meal.image) : null;
+                  const img = resolveImageSrc(meal.image);
 
                   return (
-                    <tr
-                      key={meal.id}
-                      className={!meal.isAvailable ? "unavailable" : ""}
-                    >
+                    <tr key={meal.id} className={!meal.isAvailable ? "unavailable" : ""}>
                       <td className="meal-info-cell">
                         <div className="meal-info">
-                          {img && (
+                          {img ? (
                             <img
                               src={img}
                               alt={meal.name}
                               className="meal-image"
+                              loading="lazy"
+                              onError={(e) => {
+                                // évite boucle d’erreur / cassage layout
+                                e.currentTarget.style.display = "none";
+                              }}
                             />
-                          )}
+                          ) : null}
+
                           <div className="meal-details">
                             <span className="meal-name">{meal.name}</span>
                             {meal.description && (
-                              <span className="meal-description">
-                                {meal.description}
-                              </span>
+                              <span className="meal-description">{meal.description}</span>
                             )}
                           </div>
                         </div>
@@ -217,7 +201,7 @@ const MealList = ({
                           title={t("menu.actions.toggleAvailability")}
                         >
                           {togglingId === meal.id ? (
-                            <span className="toggle-spinner"></span>
+                            <span className="toggle-spinner" />
                           ) : meal.isAvailable ? (
                             <>
                               <RiToggleFill />

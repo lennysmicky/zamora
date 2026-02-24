@@ -113,13 +113,42 @@ client.interceptors.response.use(
   }
 );
 
-// Helper URLs images
+// ---------------- Helper URLs images ----------------
+const isAbsHttp = (s) => /^https?:\/\//i.test(s);
+const isDataOrBlob = (s) => /^(data:|blob:)/i.test(s);
+
+const getUploadBase = () => {
+  const explicit = String(env.UPLOAD_URL || "").trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+
+  // fallback si UPLOAD_URL non défini
+  // ex: API_URL = https://host/api => upload = https://host/uploads
+  const base = API_URL.replace(/\/api\/?$/i, "");
+  return `${base}/uploads`;
+};
+
 export const getImageUrl = (path) => {
   if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
 
-  const upload = String(env.UPLOAD_URL || "").replace(/\/+$/, "");
-  return `${upload}${path.startsWith("/") ? "" : "/"}${path}`;
+  const raw = String(path).trim();
+  if (!raw) return null;
+
+  // ne surtout pas préfixer une data URI / blob URL
+  if (isDataOrBlob(raw)) return raw;
+
+  // déjà absolu
+  if (isAbsHttp(raw)) return raw;
+
+  const upload = getUploadBase();
+
+  // évite doubles /uploads/uploads si le backend renvoie "/uploads/xxx"
+  let p = raw;
+  if (/\/uploads\/?$/i.test(upload)) {
+    p = p.replace(/^\/?uploads\/+/i, "");
+  }
+  p = p.replace(/^\/+/, "");
+
+  return `${upload}/${p}`;
 };
 
 export default client;

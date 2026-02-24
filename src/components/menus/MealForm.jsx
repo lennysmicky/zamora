@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiCloseLine, RiImageAddLine } from "react-icons/ri";
 import Modal from "../common/Modal";
+import resolveImageSrc from "../../utils/resolveImageSrc";
 import "./MealForm.css";
 
 const idOf = (x) => x?.id ?? x?._id ?? null;
@@ -13,21 +14,24 @@ const MealForm = ({
   onSubmit,
   meal = null,
   categories = [],
-  menus = [], // ✅ NEW
+  menus = [], // NEW
   selectedCategoryId = null,
   isLoading = false,
 }) => {
   const { t } = useTranslation();
   const isEditing = !!meal;
 
-  const cats = useMemo(() => (Array.isArray(categories) ? categories : []), [categories]);
+  const cats = useMemo(
+    () => (Array.isArray(categories) ? categories : []),
+    [categories]
+  );
   const menusSafe = useMemo(() => (Array.isArray(menus) ? menus : []), [menus]);
   const mealId = useMemo(() => idOf(meal), [meal]);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    menuId: "", // ✅ NEW
+    menuId: "", // NEW
     categoryId: "",
     price: "",
     isAvailable: true,
@@ -68,7 +72,9 @@ const MealForm = ({
         isAvailable: meal.isAvailable ?? meal.isAvaible ?? true,
         image: meal.image || "",
       });
-      setImagePreview(meal.image || null);
+
+      //  IMPORTANT: preview doit être une vraie src (data:, blob:, http(s) ou /uploads/...)
+      setImagePreview(meal.image ? resolveImageSrc(meal.image) : null);
     } else {
       const fallbackCid = String(selectedCategoryId || idOf(cats[0]) || "");
       const fallbackMenuId =
@@ -115,6 +121,7 @@ const MealForm = ({
 
     const reader = new FileReader();
     reader.onloadend = () => {
+      // reader.result => data:image/... (OK)
       setImagePreview(reader.result);
       setField("image", reader.result);
     };
@@ -134,13 +141,14 @@ const MealForm = ({
     if (!formData.name.trim()) next.name = "required";
     else if (formData.name.trim().length < 2) next.name = "tooShort";
 
-    // ✅ required menu
+    // required menu
     if (!formData.menuId) next.menuId = "required";
 
     if (!formData.categoryId) next.categoryId = "required";
 
     if (formData.price === "") next.price = "required";
-    else if (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0) next.price = "invalid";
+    else if (Number.isNaN(Number(formData.price)) || Number(formData.price) < 0)
+      next.price = "invalid";
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -152,9 +160,10 @@ const MealForm = ({
 
     const payload = {
       ...formData,
-      menuId: String(formData.menuId),       // ✅ NEW
+      menuId: String(formData.menuId),
       categoryId: String(formData.categoryId),
       price: Number(formData.price),
+      // image: on envoie tel quel (data:... ou filename) -> resolveImageSrc ne touche pas au payload
     };
 
     const result = await onSubmit?.(payload);
@@ -162,7 +171,6 @@ const MealForm = ({
   };
 
   const title = isEditing ? t("menu.meals.edit") : t("menu.meals.add");
-
   if (!isOpen) return null;
 
   return (
@@ -184,11 +192,17 @@ const MealForm = ({
                 autoFocus
                 disabled={isLoading}
               />
-              {errors.name && <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>}
+              {errors.name && (
+                <span className="form-error">
+                  {t(`menu.errors.${errors.name}`)}
+                </span>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="meal-description">{t("menu.meals.description")}</label>
+              <label htmlFor="meal-description">
+                {t("menu.meals.description")}
+              </label>
               <textarea
                 id="meal-description"
                 name="description"
@@ -200,10 +214,11 @@ const MealForm = ({
               />
             </div>
 
-            {/* ✅ MENU SELECT (required) */}
+            {/* MENU SELECT (required) */}
             <div className={`form-group ${errors.menuId ? "error" : ""}`}>
               <label htmlFor="meal-menu">
-                {t("menu.menus.title", { defaultValue: "Menu" })} <span className="required">*</span>
+                {t("menu.menus.title", { defaultValue: "Menu" })}{" "}
+                <span className="required">*</span>
               </label>
               <select
                 id="meal-menu"
@@ -214,7 +229,9 @@ const MealForm = ({
                 disabled={isLoading}
               >
                 <option value="">
-                  {t("menu.menus.selectMenu", { defaultValue: "Sélectionner un menu" })}
+                  {t("menu.menus.selectMenu", {
+                    defaultValue: "Sélectionner un menu",
+                  })}
                 </option>
                 {menusSafe.map((m, idx) => {
                   const id = idOf(m);
@@ -227,12 +244,17 @@ const MealForm = ({
                   );
                 })}
               </select>
-              {errors.menuId && <span className="form-error">{t(`menu.errors.${errors.menuId}`)}</span>}
+              {errors.menuId && (
+                <span className="form-error">
+                  {t(`menu.errors.${errors.menuId}`)}
+                </span>
+              )}
             </div>
 
             <div className={`form-group ${errors.categoryId ? "error" : ""}`}>
               <label htmlFor="meal-category">
-                {t("menu.meals.category")} <span className="required">*</span>
+                {t("menu.meals.category")}{" "}
+                <span className="required">*</span>
               </label>
               <select
                 id="meal-category"
@@ -254,7 +276,11 @@ const MealForm = ({
                   );
                 })}
               </select>
-              {errors.categoryId && <span className="form-error">{t(`menu.errors.${errors.categoryId}`)}</span>}
+              {errors.categoryId && (
+                <span className="form-error">
+                  {t(`menu.errors.${errors.categoryId}`)}
+                </span>
+              )}
             </div>
 
             <div className={`form-group ${errors.price ? "error" : ""}`}>
@@ -273,9 +299,15 @@ const MealForm = ({
                   step="0.01"
                   disabled={isLoading}
                 />
-                <span className="price-currency">{t("menu.meals.currency")}</span>
+                <span className="price-currency">
+                  {t("menu.meals.currency")}
+                </span>
               </div>
-              {errors.price && <span className="form-error">{t(`menu.errors.${errors.price}`)}</span>}
+              {errors.price && (
+                <span className="form-error">
+                  {t(`menu.errors.${errors.price}`)}
+                </span>
+              )}
             </div>
 
             <div className="form-group checkbox-group">
@@ -300,7 +332,14 @@ const MealForm = ({
               <div className="image-upload-container">
                 {imagePreview ? (
                   <div className="image-preview">
-                    <img src={imagePreview} alt="Preview" />
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      onError={(e) => {
+                        // évite boucle / UI cassée
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
                     <button
                       type="button"
                       className="image-remove-btn"
@@ -312,7 +351,13 @@ const MealForm = ({
                   </div>
                 ) : (
                   <label className="image-upload-area">
-                    <input type="file" accept="image/*" onChange={handleImageChange} hidden disabled={isLoading} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      hidden
+                      disabled={isLoading}
+                    />
                     <RiImageAddLine className="upload-icon" />
                     <span>{t("menu.meals.imageUpload")}</span>
                     <span className="upload-hint">PNG, JPG (max 5MB)</span>
@@ -320,13 +365,22 @@ const MealForm = ({
                 )}
               </div>
 
-              {errors.image && <span className="form-error">{t(`menu.errors.${errors.image}`)}</span>}
+              {errors.image && (
+                <span className="form-error">
+                  {t(`menu.errors.${errors.image}`)}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         <div className="form-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isLoading}>
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={onClose}
+            disabled={isLoading}
+          >
             {t("common.cancel")}
           </button>
           <button type="submit" className="btn-submit" disabled={isLoading}>
