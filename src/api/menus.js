@@ -5,27 +5,7 @@ const unwrap = (res) => res?.data?.data ?? res?.data ?? res;
 
 const ensureId = (name, v) => {
   if (v == null || v === "") throw new Error(`[menusAPI] Missing ${name}`);
-  return v;
-};
-
-const statusOf = (e) => Number(e?.response?.status ?? 0);
-const isSkippableRouteError = (e) => {
-  const s = statusOf(e);
-  return s === 404 || s === 405; // 404 Not Found / 405 Method Not Allowed
-};
-
-const tryRoutes = async (calls = []) => {
-  let lastErr = null;
-  for (const fn of calls) {
-    try {
-      return await fn();
-    } catch (e) {
-      lastErr = e;
-      if (!isSkippableRouteError(e)) throw e; // erreurs "réelles" => stop
-      // sinon on tente la route suivante
-    }
-  }
-  throw lastErr ?? new Error("[menusAPI] All route candidates failed");
+  return String(v);
 };
 
 // ---- mapping (menus module only) ----
@@ -40,7 +20,7 @@ const mapRestaurant = (obj = {}) => {
     x.restaurant ??
     x.restaurant_id;
 
-  if (rid != null) x.restaurent = rid;
+  if (rid != null) x.restaurent = String(rid);
 
   delete x.restaurentId;
   delete x.restaurantId;
@@ -50,16 +30,61 @@ const mapRestaurant = (obj = {}) => {
   return x;
 };
 
-const getRid = (obj = {}) => mapRestaurant(obj)?.restaurent ?? null;
+const readLocal = (...keys) => {
+  try {
+    for (const k of keys) {
+      const v = localStorage.getItem(k);
+      if (v != null && v !== "") return v;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+};
 
-const mapMenuPayload = (obj = {}) => mapRestaurant(obj);
+const getRid = (obj = {}) => mapRestaurant(obj)?.restaurent ?? null;
+const getRidFallback = (obj = {}) =>
+  getRid(obj) ?? readLocal("restaurantId", "restaurentId", "auth_restaurantId");
+
+// ---------------- FIX: validDays normalization ----------------
+const normalizeValidDays = (v) => {
+  if (v == null) return v;
+  if (Array.isArray(v)) {
+    const arr = v.filter((x) => x != null && x !== "").map((x) => String(x));
+    if (arr.length === 0) return "";
+    if (arr.length === 1) return arr[0];
+    // backend field is String -> send CSV (minimal change)
+    return arr.join(",");
+  }
+  if (typeof v === "string") return v;
+  return String(v);
+};
+
+// ---------------- FIX: route fallback helpers ----------------
+const isNotFoundInvalidId = (err) => {
+  const status = err?.response?.status;
+  const msg = err?.response?.data?.message ?? err?.message ?? "";
+  return status === 404 && /id invalide|not found/i.test(String(msg));
+};
+
+const mapMenuPayload = (obj = {}) => {
+  if (!obj || typeof obj !== "object") return obj;
+  const x = mapRestaurant(obj);
+
+  // ✅ fix: backend expects String
+  if (Object.prototype.hasOwnProperty.call(x, "validDays")) {
+    x.validDays = normalizeValidDays(x.validDays);
+  }
+
+  return x;
+};
 
 const mapCategoryPayload = (obj = {}) => {
   if (!obj || typeof obj !== "object") return obj;
   const x = mapRestaurant(obj);
 
   const mid = x.menu ?? x.menuId;
-  if (mid != null) x.menu = mid;
+  if (mid != null) x.menu = String(mid);
   delete x.menuId;
 
   return x;
@@ -70,170 +95,99 @@ const mapRepasPayload = (obj = {}) => {
   const x = mapRestaurant(obj);
 
   const mid = x.menu ?? x.menuId;
-  if (mid != null) x.menu = mid;
+  if (mid != null) x.menu = String(mid);
   delete x.menuId;
 
   const cid = x.categorie ?? x.categoryId ?? x.categorieId ?? x.category;
-  if (cid != null) x.categorie = cid;
+  if (cid != null) x.categorie = String(cid);
   delete x.categoryId;
   delete x.categorieId;
   delete x.category;
 
   // backend typo: isAvaible
   if (Object.prototype.hasOwnProperty.call(x, "isAvailable")) {
-    x.isAvaible = x.isAvailable;
+    x.isAvaible = !!x.isAvailable;
     delete x.isAvailable;
   }
 
   return x;
 };
 
-// ================= MENUS =================
-export const getMenus = async (params = {}) =>
-  unwrap(await client.get("/menu", { params: mapRestaurant(params) }));
+// =======================================================
+// ======================= MENUS (RESTO) ==================
+//   POST   /menu/:restaurentId
+//   GET    /menu/:restaurentId
+//   GET    /menu/:restaurentId/:id
+//   PUT    /menu/:restaurentId/:id
+//   DELETE /menu/:restaurentId/:id
+//   (fallback) GET/PUT/DELETE /menu/:id
+// =======================================================
 
-export const createMenu = async (payload) =>
-  unwrap(await client.post("/menu", mapMenuPayload(payload)));
-
-export const updateMenu = async (id, payload) =>
-  unwrap(await client.put(`/menu/${ensureId("menuId", id)}`, mapMenuPayload(payload)));
-
-export const deleteMenu = async (id) =>
-  unwrap(await client.delete(`/menu/${ensureId("menuId", id)}`));
-
-// ================= CATEGORIES =================
-
-// GET: privilégie /categorie/:rid si rid existe (car ton backend l’a)
-export const getCategories = async (params = {}) => {
-  const p = mapRestaurant(params);
-  const rid = getRid(p);
-
-  return tryRoutes([
-    // restaurant route
-    ...(rid
-      ? [() => unwrap(client.get(`/categorie/${ensureId("restaurentId", rid)}`))]
-      : []),
-
-    // global route (si supportée)
-    () => unwrap(client.get("/categorie", { params: p })),
-  ]);
+export const getMenusForRestaurant = async (restaurentId) => {
+  const rid = ensureId("restaurentId", restaurentId);
+  return unwrap(await client.get(`/menu/${rid}`));
 };
 
-// POST: privilégie /categorie/:rid si rid existe
-export const createCategory = async (payload) => {
-  const body = mapCategoryPayload(payload);
-  const rid = getRid(body);
-
-  return tryRoutes([
-    ...(rid
-      ? [
-          () =>
-            unwrap(
-              client.post(`/categorie/${ensureId("restaurentId", rid)}`, body)
-            ),
-        ]
-      : []),
-
-    () => unwrap(client.post("/categorie", body)),
-  ]);
+export const createMenuForRestaurant = async (restaurentId, payload) => {
+  const rid = ensureId("restaurentId", restaurentId);
+  return unwrap(await client.post(`/menu/${rid}`, mapMenuPayload(payload)));
 };
 
-// PUT: privilégie /categorie/:rid/:id si rid existe
-export const updateCategory = async (id, payload) => {
-  const body = mapCategoryPayload(payload);
-  const rid = getRid(body);
+export const getMenuByIdForRestaurant = async (restaurentId, id) => {
+  const rid = ensureId("restaurentId", restaurentId);
+  const mid = ensureId("menuId", id);
 
-  return tryRoutes([
-    ...(rid
-      ? [
-          () =>
-            unwrap(
-              client.put(
-                `/categorie/${ensureId("restaurentId", rid)}/${ensureId("categoryId", id)}`,
-                body
-              )
-            ),
-        ]
-      : []),
-
-    () => unwrap(client.put(`/categorie/${ensureId("categoryId", id)}`, body)),
-  ]);
+  try {
+    return unwrap(await client.get(`/menu/${rid}/${mid}`));
+  } catch (err) {
+    if (isNotFoundInvalidId(err)) {
+      return unwrap(await client.get(`/menu/${mid}`));
+    }
+    throw err;
+  }
 };
 
-// DELETE: privilégie /categorie/:rid/:id si rid existe
-export const deleteCategory = async (id, restaurentId = null) => {
-  const rid = restaurentId ?? null;
+export const updateMenuForRestaurant = async (restaurentId, id, payload) => {
+  const rid = ensureId("restaurentId", restaurentId);
+  const mid = ensureId("menuId", id);
+  const body = mapMenuPayload(payload);
 
-  return tryRoutes([
-    ...(rid
-      ? [
-          () =>
-            unwrap(
-              client.delete(
-                `/categorie/${ensureId("restaurentId", rid)}/${ensureId("categoryId", id)}`
-              )
-            ),
-        ]
-      : []),
-
-    () => unwrap(client.delete(`/categorie/${ensureId("categoryId", id)}`)),
-  ]);
+  try {
+    return unwrap(await client.put(`/menu/${rid}/${mid}`, body));
+  } catch (err) {
+    if (isNotFoundInvalidId(err)) {
+      return unwrap(await client.put(`/menu/${mid}`, body));
+    }
+    throw err;
+  }
 };
 
-export const getMenuCategoriesWithMeals = async (menuId) =>
-  unwrap(await client.get(`/categorie/menu/${ensureId("menuId", menuId)}/repas`));
+export const deleteMenuForRestaurant = async (restaurentId, id) => {
+  const rid = ensureId("restaurentId", restaurentId);
+  const mid = ensureId("menuId", id);
 
-// ================= REPAS =================
-export const getRepasByCategory = async (categorieId) =>
-  unwrap(await client.get(`/repas/categorie/${ensureId("categorieId", categorieId)}/repas`));
+  try {
+    return unwrap(await client.delete(`/menu/${rid}/${mid}`));
+  } catch (err) {
+    if (isNotFoundInvalidId(err)) {
+      return unwrap(await client.delete(`/menu/${mid}`));
+    }
+    throw err;
+  }
+};
 
-export const createRepas = async (payload) =>
-  unwrap(await client.post("/repas", mapRepasPayload(payload)));
+// =======================================================
+// ===================== CATEGORIES (RESTO) ===============
+//   GET        /categorie/:restaurentId
+//   POST       /categorie/:restaurentId
+//   PUT        /categorie/:restaurentId/:id
+//   DELETE     /categorie/:restaurentId/:id
+//   GET        /categorie/menu/:restaurentId/:menuId
+// =======================================================
 
-export const updateRepas = async (id, payload) =>
-  unwrap(await client.put(`/repas/${ensureId("repasId", id)}`, mapRepasPayload(payload)));
+export const getCategoriesForRestaurant = async (restaurentId) =>
+  unwrap(await client.get(`/categorie/${ensureId("restaurentId", restaurentId)}`));
 
-export const deleteRepas = async (id) =>
-  unwrap(await client.delete(`/repas/${ensureId("repasId", id)}`));
-
-// aliases admin
-export const getMealsByCategory = getRepasByCategory;
-export const createMeal = createRepas;
-export const updateMeal = updateRepas;
-export const deleteMeal = deleteRepas;
-
-// ---------------- REPAS (RESTAURANT) ----------------
-export const createRepasForRestaurant = async (restaurentId, payload) =>
-  unwrap(
-    await client.post(
-      `/repas/${ensureId("restaurentId", restaurentId)}`,
-      mapRepasPayload(payload)
-    )
-  );
-
-export const updateRepasForRestaurant = async (restaurentId, id, payload) =>
-  unwrap(
-    await client.put(
-      `/repas/${ensureId("restaurentId", restaurentId)}/${ensureId("repasId", id)}`,
-      mapRepasPayload(payload)
-    )
-  );
-
-export const deleteRepasForRestaurant = async (restaurentId, id) =>
-  unwrap(
-    await client.delete(
-      `/repas/${ensureId("restaurentId", restaurentId)}/${ensureId("repasId", id)}`
-    )
-  );
-
-export const getRepasByCategoryForRestaurant = async (restaurentId, categorieId) =>
-  unwrap(
-    await client.get(
-      `/repas/categorie/${ensureId("restaurentId", restaurentId)}/${ensureId("categorieId", categorieId)}`
-    )
-  );
-
-// ---------------- CATEGORIES (RESTAURANT) ----------------
 export const createCategoryForRestaurant = async (restaurentId, payload) =>
   unwrap(
     await client.post(
@@ -257,45 +211,130 @@ export const deleteCategoryForRestaurant = async (restaurentId, id) =>
     )
   );
 
-// restaurant aliases
+// “Les catégories d’un menu”
+export const getMenuCategoriesForRestaurant = async (restaurentId, menuId) =>
+  unwrap(
+    await client.get(
+      `/categorie/menu/${ensureId("restaurentId", restaurentId)}/${ensureId("menuId", menuId)}`
+    )
+  );
+
+// Alias conservé (ton hook l’utilise)
+export const getMenuCategoriesWithMeals = async (restaurentId, menuId) =>
+  getMenuCategoriesForRestaurant(restaurentId, menuId);
+
+// =======================================================
+// ========================= REPAS (RESTO) =================
+//   POST       /repas/:restaurentId
+//   PUT        /repas/:restaurentId/:id
+//   DELETE     /repas/:restaurentId/:id
+//   GET        /repas/categorie/:restaurentId/:categorieId
+// =======================================================
+
+export const getRepasByCategoryForRestaurant = async (restaurentId, categorieId) =>
+  unwrap(
+    await client.get(
+      `/repas/categorie/${ensureId("restaurentId", restaurentId)}/${ensureId("categorieId", categorieId)}`
+    )
+  );
+
+export const createRepasForRestaurant = async (restaurentId, payload) =>
+  unwrap(
+    await client.post(
+      `/repas/${ensureId("restaurentId", restaurentId)}`,
+      mapRepasPayload(payload)
+    )
+  );
+
+export const updateRepasForRestaurant = async (restaurentId, id, payload) =>
+  unwrap(
+    await client.put(
+      `/repas/${ensureId("restaurentId", restaurentId)}/${ensureId("repasId", id)}`,
+      mapRepasPayload(payload)
+    )
+  );
+
+export const deleteRepasForRestaurant = async (restaurentId, id) =>
+  unwrap(
+    await client.delete(
+      `/repas/${ensureId("restaurentId", restaurentId)}/${ensureId("repasId", id)}`
+    )
+  );
+
+// Restaurant aliases (UI “meal”)
 export const getMealsByCategoryForRestaurant = getRepasByCategoryForRestaurant;
 export const createMealForRestaurant = createRepasForRestaurant;
 export const updateMealForRestaurant = updateRepasForRestaurant;
 export const deleteMealForRestaurant = deleteRepasForRestaurant;
 
-export default {
-  getMenus,
-  createMenu,
-  updateMenu,
-  deleteMenu,
+// --------------------------------------------------------
+// Compat (signatures proches de ton ancien code)
+// --------------------------------------------------------
+export const getMenus = async (params = {}) => {
+  const p = mapRestaurant(params);
+  const rid = getRidFallback(p);
+  if (!rid) throw new Error("[menusAPI] Missing restaurentId for getMenus()");
+  return getMenusForRestaurant(rid);
+};
 
-  getCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
+export const createMenu = async (payload, restaurentId = null) => {
+  const body = mapMenuPayload(payload);
+  const rid = restaurentId ?? getRidFallback(body);
+  if (!rid) throw new Error("[menusAPI] Missing restaurentId for createMenu()");
+  return createMenuForRestaurant(rid, body);
+};
+
+export const getMenuById = async (id, restaurentId = null) => {
+  const rid = restaurentId ?? getRidFallback({});
+  if (!rid) throw new Error("[menusAPI] Missing restaurentId for getMenuById()");
+  return getMenuByIdForRestaurant(rid, id);
+};
+
+export const updateMenu = async (id, payload, restaurentId = null) => {
+  const body = mapMenuPayload(payload);
+  const rid = restaurentId ?? getRidFallback(body);
+  if (!rid) throw new Error("[menusAPI] Missing restaurentId for updateMenu()");
+  return updateMenuForRestaurant(rid, id, body);
+};
+
+export const deleteMenu = async (id, restaurentId = null) => {
+  const rid = restaurentId ?? getRidFallback({});
+  if (!rid) throw new Error("[menusAPI] Missing restaurentId for deleteMenu()");
+  return deleteMenuForRestaurant(rid, id);
+};
+
+export default {
+  // menus
+  getMenusForRestaurant,
+  createMenuForRestaurant,
+  getMenuByIdForRestaurant,
+  updateMenuForRestaurant,
+  deleteMenuForRestaurant,
+
+  // categories
+  getCategoriesForRestaurant,
+  createCategoryForRestaurant,
+  updateCategoryForRestaurant,
+  deleteCategoryForRestaurant,
+  getMenuCategoriesForRestaurant,
   getMenuCategoriesWithMeals,
 
-  getRepasByCategory,
-  createRepas,
-  updateRepas,
-  deleteRepas,
-
-  getMealsByCategory,
-  createMeal,
-  updateMeal,
-  deleteMeal,
-
+  // repas
   getRepasByCategoryForRestaurant,
   createRepasForRestaurant,
   updateRepasForRestaurant,
   deleteRepasForRestaurant,
 
-  createCategoryForRestaurant,
-  updateCategoryForRestaurant,
-  deleteCategoryForRestaurant,
-
+  // meal aliases
   getMealsByCategoryForRestaurant,
   createMealForRestaurant,
   updateMealForRestaurant,
   deleteMealForRestaurant,
+
+  // compat
+  getMenus,
+  createMenu,
+  getMenuById,
+  updateMenu,
+  deleteMenu,
 };
