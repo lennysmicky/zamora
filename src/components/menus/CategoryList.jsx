@@ -1,12 +1,15 @@
 // src/components/menus/CategoryList.jsx
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiAddLine, RiEditLine, RiDeleteBinLine, RiFolderLine } from "react-icons/ri";
 import ConfirmDialog from "../common/ConfirmDialog";
 import "./CategoryList.css";
 
+const idOf = (x) => x?.id ?? x?._id ?? null;
+const eqId = (a, b) => String(a ?? "") === String(b ?? "");
+
 const CategoryList = ({
-  categories,
+  categories = [],
   selectedCategory,
   onSelectCategory,
   onAddCategory,
@@ -20,6 +23,8 @@ const CategoryList = ({
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const selectedId = useMemo(() => idOf(selectedCategory), [selectedCategory]);
+
   const handleDeleteClick = (e, category) => {
     e.stopPropagation();
     setCategoryToDelete(category);
@@ -27,21 +32,24 @@ const CategoryList = ({
   };
 
   const handleConfirmDelete = async () => {
-    if (!categoryToDelete) return;
+    const cid = idOf(categoryToDelete);
+    if (!cid) return;
 
     setIsDeleting(true);
-    const res = await onDeleteCategory(categoryToDelete.id);
-    setIsDeleting(false);
-
-    if (res?.success) {
-      setShowConfirmDelete(false);
-      setCategoryToDelete(null);
+    try {
+      const res = await onDeleteCategory?.(String(cid));
+      if (res?.success) {
+        setShowConfirmDelete(false);
+        setCategoryToDelete(null);
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleEditClick = (e, category) => {
     e.stopPropagation();
-    onEditCategory(category);
+    onEditCategory?.(category);
   };
 
   if (isLoading) {
@@ -53,10 +61,10 @@ const CategoryList = ({
         <div className="category-list-content">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="category-item skeleton">
-              <div className="skeleton-icon"></div>
+              <div className="skeleton-icon" />
               <div className="skeleton-text">
-                <div className="skeleton-title"></div>
-                <div className="skeleton-subtitle"></div>
+                <div className="skeleton-title" />
+                <div className="skeleton-subtitle" />
               </div>
             </div>
           ))}
@@ -69,7 +77,12 @@ const CategoryList = ({
     <div className="category-list">
       <div className="category-list-header">
         <h3>{t("menu.categories.title")}</h3>
-        <button className="category-add-btn" onClick={onAddCategory} title={t("menu.categories.add")}>
+        <button
+          type="button"
+          className="category-add-btn"
+          onClick={onAddCategory}
+          title={t("menu.categories.add")}
+        >
           <RiAddLine />
         </button>
       </div>
@@ -82,42 +95,54 @@ const CategoryList = ({
             <span>{t("menu.categories.emptyDesc")}</span>
           </div>
         ) : (
-          categories.map((category) => (
-            <div
-              key={category.id}
-              className={`category-item ${selectedCategory?.id === category.id ? "active" : ""} ${
-                !category.isActive ? "inactive" : ""
-              }`}
-              onClick={() => onSelectCategory(category)}
-            >
-              <div className="category-item-info">
-                <div className="category-item-name">
-                  {category.name}
-                  {!category.isActive && (
-                    <span className="category-status-badge inactive">{t("menu.categories.inactive")}</span>
-                  )}
-                </div>
-                {category.description && <div className="category-item-description">{category.description}</div>}
-              </div>
+          categories.map((category, idx) => {
+            const cid = idOf(category);
+            const key = cid != null ? String(cid) : `cat-${idx}`;
+            const isActive = eqId(selectedId, cid);
+            const isActiveFlag = category?.isActive ?? true;
 
-              <div className="category-item-actions">
-                <button
-                  className="category-action-btn edit"
-                  onClick={(e) => handleEditClick(e, category)}
-                  title={t("menu.actions.edit")}
-                >
-                  <RiEditLine />
-                </button>
-                <button
-                  className="category-action-btn delete"
-                  onClick={(e) => handleDeleteClick(e, category)}
-                  title={t("menu.actions.delete")}
-                >
-                  <RiDeleteBinLine />
-                </button>
+            return (
+              <div
+                key={key}
+                className={`category-item ${isActive ? "active" : ""} ${!isActiveFlag ? "inactive" : ""}`}
+                onClick={() => onSelectCategory?.(category)}
+              >
+                <div className="category-item-info">
+                  <div className="category-item-name">
+                    {category?.name ?? category?.nom ?? ""}
+                    {!isActiveFlag && (
+                      <span className="category-status-badge inactive">
+                        {t("menu.categories.inactive")}
+                      </span>
+                    )}
+                  </div>
+
+                  {category?.description ? (
+                    <div className="category-item-description">{category.description}</div>
+                  ) : null}
+                </div>
+
+                <div className="category-item-actions">
+                  <button
+                    type="button"
+                    className="category-action-btn edit"
+                    onClick={(e) => handleEditClick(e, category)}
+                    title={t("menu.actions.edit")}
+                  >
+                    <RiEditLine />
+                  </button>
+                  <button
+                    type="button"
+                    className="category-action-btn delete"
+                    onClick={(e) => handleDeleteClick(e, category)}
+                    title={t("menu.actions.delete")}
+                  >
+                    <RiDeleteBinLine />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

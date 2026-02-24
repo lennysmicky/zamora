@@ -1,10 +1,21 @@
+// src/components/menus/MenuForm.jsx
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { RiImageAddLine, RiCloseLine } from "react-icons/ri";
 import Modal from "../common/Modal";
-import "./MealForm.css"; //  réutilise le design existant
+import useAuthStore from "../../stores/authStore";
+import "./MealForm.css"; // réutilise le design existant
 
 const DAYS = ["lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"];
+const idOf = (x) => x?.id ?? x?._id ?? null;
+
+const getRole = () => {
+  try {
+    return localStorage.getItem("user_role");
+  } catch {
+    return null;
+  }
+};
 
 const toInputDate = (v) => {
   if (!v) return "";
@@ -18,13 +29,19 @@ const MenuForm = ({
   onClose,
   onSubmit,
   menu = null,
+  restaurants = [], // NEW
   isLoading = false,
 }) => {
   const { t } = useTranslation();
 
+  const storeUserType = useAuthStore((s) => s?.userType ?? null);
+  const isAdminMode = (storeUserType ?? getRole()) === "admin";
+
+  const restosSafe = useMemo(() => (Array.isArray(restaurants) ? restaurants : []), [restaurants]);
   const isEditing = !!menu;
 
   const [formData, setFormData] = useState({
+    restaurantId: "", // NEW (admin required)
     name: "",
     description: "",
     isActive: true,
@@ -39,14 +56,32 @@ const MenuForm = ({
   const [imagePreview, setImagePreview] = useState(null);
 
   const title = useMemo(
-    () => (isEditing ? t("menu.menus.edit", { defaultValue: "Modifier un menu" }) : t("menu.menus.add", { defaultValue: "Ajouter un menu" })),
+    () =>
+      isEditing
+        ? t("menu.menus.edit", { defaultValue: "Modifier un menu" })
+        : t("menu.menus.add", { defaultValue: "Ajouter un menu" }),
     [isEditing, t]
   );
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (menu) {
       const days = Array.isArray(menu.validDays) ? menu.validDays : menu.validDays ? [menu.validDays] : [];
+
+      const rid =
+        String(
+          menu.restaurantId ??
+            menu.restaurentId ??
+            menu.restaurent ??
+            menu.restaurant ??
+            menu?.restaurant?._id ??
+            menu?.restaurent?._id ??
+            ""
+        ) || "";
+
       setFormData({
+        restaurantId: rid,
         name: menu.name || "",
         description: menu.description || "",
         isActive: menu.isActive ?? true,
@@ -56,9 +91,13 @@ const MenuForm = ({
         validDays: days,
         image: menu.image || "",
       });
+
       setImagePreview(menu.image || null);
     } else {
+      const fallbackRestId = restosSafe.length === 1 ? String(idOf(restosSafe[0]) || "") : "";
+
       setFormData({
+        restaurantId: fallbackRestId,
         name: "",
         description: "",
         isActive: true,
@@ -68,9 +107,12 @@ const MenuForm = ({
         validDays: [],
         image: "",
       });
+
       setImagePreview(null);
     }
+
     setErrors({});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [menu, isOpen]);
 
   const setField = (name, value) => {
@@ -126,6 +168,9 @@ const MenuForm = ({
   const validate = () => {
     const next = {};
 
+    // Admin: restaurant obligatoire
+    if (isAdminMode && !formData.restaurantId) next.restaurantId = "required";
+
     if (!formData.name.trim()) next.name = "required";
     else if (formData.name.trim().length < 2) next.name = "tooShort";
 
@@ -154,8 +199,8 @@ const MenuForm = ({
 
     const payload = {
       ...formData,
-      // startTime/endTime restent "YYYY-MM-DD" (mapping backend après)
-      validDays: formData.validDays,
+      restaurantId: formData.restaurantId ? String(formData.restaurantId) : undefined,
+      validDays: formData.validDays, // mapping backend géré côté api/menus.js
     };
 
     const result = await onSubmit?.(payload);
@@ -168,6 +213,37 @@ const MenuForm = ({
         <div className="meal-form-grid">
           {/* Colonne gauche */}
           <div className="meal-form-left">
+            {/* Restaurant (admin only) */}
+            {isAdminMode && (
+              <div className={`form-group ${errors.restaurantId ? "error" : ""}`}>
+                <label>
+                  Restaurant <span className="required">*</span>
+                </label>
+                <select
+                  name="restaurantId"
+                  value={formData.restaurantId || ""}
+                  onChange={handleChange}
+                  className="custom-select"
+                  disabled={isLoading}
+                >
+                  <option value="">Sélectionner un restaurant</option>
+                  {restosSafe.map((r, idx) => {
+                    const id = idOf(r);
+                    const key = id != null ? String(id) : `resto-${idx}`;
+                    const label = r.name ?? r.nom ?? r.title ?? key;
+                    return (
+                      <option key={key} value={id != null ? String(id) : ""}>
+                        {label}
+                      </option>
+                    );
+                  })}
+                </select>
+                {errors.restaurantId && (
+                  <span className="form-error">{t("menu.errors.required", { defaultValue: "Obligatoire" })}</span>
+                )}
+              </div>
+            )}
+
             {/* Nom */}
             <div className={`form-group ${errors.name ? "error" : ""}`}>
               <label>
@@ -180,11 +256,10 @@ const MenuForm = ({
                 onChange={handleChange}
                 placeholder={t("menu.menus.namePlaceholder", { defaultValue: "Ex: Dîner" })}
                 autoFocus
+                disabled={isLoading}
               />
               {errors.name && (
-                <span className="form-error">
-                  {t(`menu.errors.${errors.name}`, { defaultValue: "Champ invalide" })}
-                </span>
+                <span className="form-error">{t(`menu.errors.${errors.name}`, { defaultValue: "Champ invalide" })}</span>
               )}
             </div>
 
@@ -197,6 +272,7 @@ const MenuForm = ({
                 onChange={handleChange}
                 placeholder={t("menu.menus.descriptionPlaceholder", { defaultValue: "Optionnel" })}
                 rows={3}
+                disabled={isLoading}
               />
             </div>
 
@@ -206,7 +282,13 @@ const MenuForm = ({
                 <label>
                   {t("menu.menus.startTime", { defaultValue: "Début" })} <span className="required">*</span>
                 </label>
-                <input type="date" name="startTime" value={formData.startTime} onChange={handleChange} />
+                <input
+                  type="date"
+                  name="startTime"
+                  value={formData.startTime}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
                 {errors.startTime && (
                   <span className="form-error">{t("menu.errors.required", { defaultValue: "Obligatoire" })}</span>
                 )}
@@ -216,7 +298,13 @@ const MenuForm = ({
                 <label>
                   {t("menu.menus.endTime", { defaultValue: "Fin" })} <span className="required">*</span>
                 </label>
-                <input type="date" name="endTime" value={formData.endTime} onChange={handleChange} />
+                <input
+                  type="date"
+                  name="endTime"
+                  value={formData.endTime}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
                 {errors.endTime && (
                   <span className="form-error">
                     {errors.endTime === "endBeforeStart"
@@ -230,7 +318,13 @@ const MenuForm = ({
             {/* Statuts */}
             <div className="form-group checkbox-group">
               <label className="checkbox-label">
-                <input type="checkbox" name="isActive" checked={formData.isActive} onChange={handleChange} />
+                <input
+                  type="checkbox"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
                 <span className="checkmark"></span>
                 <span>{t("menu.menus.isActive", { defaultValue: "Actif" })}</span>
               </label>
@@ -238,7 +332,13 @@ const MenuForm = ({
 
             <div className="form-group checkbox-group">
               <label className="checkbox-label">
-                <input type="checkbox" name="isDefault" checked={formData.isDefault} onChange={handleChange} />
+                <input
+                  type="checkbox"
+                  name="isDefault"
+                  checked={formData.isDefault}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                />
                 <span className="checkmark"></span>
                 <span>{t("menu.menus.isDefault", { defaultValue: "Menu par défaut" })}</span>
               </label>
@@ -255,7 +355,7 @@ const MenuForm = ({
                   const checked = (formData.validDays || []).includes(d);
                   return (
                     <label key={d} style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
-                      <input type="checkbox" checked={checked} onChange={() => toggleDay(d)} />
+                      <input type="checkbox" checked={checked} onChange={() => toggleDay(d)} disabled={isLoading} />
                       <span style={{ textTransform: "capitalize" }}>{d}</span>
                     </label>
                   );
@@ -277,13 +377,18 @@ const MenuForm = ({
                 {imagePreview ? (
                   <div className="image-preview">
                     <img src={imagePreview} alt="Preview" />
-                    <button type="button" className="image-remove-btn" onClick={handleRemoveImage}>
+                    <button
+                      type="button"
+                      className="image-remove-btn"
+                      onClick={handleRemoveImage}
+                      disabled={isLoading}
+                    >
                       <RiCloseLine />
                     </button>
                   </div>
                 ) : (
                   <label className="image-upload-area">
-                    <input type="file" accept="image/*" onChange={handleImageChange} hidden />
+                    <input type="file" accept="image/*" onChange={handleImageChange} hidden disabled={isLoading} />
                     <RiImageAddLine className="upload-icon" />
                     <span>{t("menu.menus.imageUpload", { defaultValue: "Ajouter une image" })}</span>
                     <span className="upload-hint">PNG, JPG (max 5MB)</span>

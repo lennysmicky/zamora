@@ -1,7 +1,10 @@
 // src/hooks/useMenusData.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import menusAPI from "../api/menus";
+import restaurantsAPI from "../api/restaurants";
 import useAuthStore from "../stores/authStore";
+
+const ALL_REST = "__ALL__";
 
 const idOf = (x) => x?.id ?? x?._id ?? null;
 const eqId = (a, b) => String(a ?? "") === String(b ?? "");
@@ -46,6 +49,14 @@ const pickMenusList = (payload) => {
   return [];
 };
 
+const pickRestaurantsList = (payload) => {
+  if (Array.isArray(payload?.restaurants)) return payload.restaurants;
+  if (Array.isArray(payload?.data?.restaurants)) return payload.data.restaurants;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload)) return payload;
+  return [];
+};
+
 // ---------------- normalizers ----------------
 const normId = (x) => ({ ...x, id: idOf(x) });
 
@@ -65,10 +76,14 @@ const normMeal = (m) => ({
 
 const ensureId = (name, v) => {
   if (v == null || v === "") throw new Error(`[useMenusData] Missing ${name}`);
-  return v;
+  return String(v);
 };
 
 export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = null } = {}) => {
+  const userTypeStore = useAuthStore((s) => s?.userType ?? null);
+  const roleLS = readLocal("user_role");
+  const isAdmin = (userTypeStore ?? roleLS) === "admin";
+
   const restaurantIdStore = useAuthStore(
     (s) =>
       s?.restaurantId ??
@@ -83,39 +98,68 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     restaurantIdStore ??
     readLocal("restaurantId", "restaurentId", "auth_restaurantId");
 
-  // ======================= API (restaurant-only) =======================
+  // ======================= API (admin OR restaurant) =======================
   const api = useMemo(() => {
+    if (isAdmin) {
+      return {
+        // menus (admin)
+        getMenus: () => menusAPI.getMenusForAdmin(),
+        createMenu: (payload) => menusAPI.createMenuForAdmin(payload),
+        updateMenu: (id, payload) => menusAPI.updateMenuForAdmin(id, payload),
+        deleteMenu: (id) => menusAPI.deleteMenuForAdmin(id),
+
+        // categories (admin)
+        getCategories: () => menusAPI.getCategoriesForAdmin(),
+        createCategory: (payload) => menusAPI.createCategoryForAdmin(payload),
+        updateCategory: (id, payload) => menusAPI.updateCategoryForAdmin(id, payload),
+        deleteCategory: (id) => menusAPI.deleteCategoryForAdmin(id),
+
+        // categories d'un menu (admin)
+        getMenuCategoriesWithMeals: (mid) => menusAPI.getMenuCategoriesForAdmin(mid),
+
+        // repas (admin)
+        getMealsByCategory: (categorieId) => menusAPI.getMealsByCategoryForAdmin(categorieId),
+        createMeal: (payload) => menusAPI.createMealForAdmin(payload),
+        updateMeal: (id, payload) => menusAPI.updateMealForAdmin(id, payload),
+        deleteMeal: (id) => menusAPI.deleteMealForAdmin(id),
+
+        // restaurants (admin)
+        getRestaurants: () => restaurantsAPI.getRestaurants(),
+      };
+    }
+
     const rid = String(restaurentId ?? "");
     if (!rid) return null;
 
     return {
-      // menus
+      // menus (restaurant)
       getMenus: () => menusAPI.getMenusForRestaurant(rid),
       createMenu: (payload) => menusAPI.createMenuForRestaurant(rid, payload),
       updateMenu: (id, payload) => menusAPI.updateMenuForRestaurant(rid, id, payload),
       deleteMenu: (id) => menusAPI.deleteMenuForRestaurant(rid, id),
 
-      // categories
+      // categories (restaurant)
       getCategories: () => menusAPI.getCategoriesForRestaurant(rid),
       createCategory: (payload) => menusAPI.createCategoryForRestaurant(rid, payload),
       updateCategory: (id, payload) => menusAPI.updateCategoryForRestaurant(rid, id, payload),
       deleteCategory: (id) => menusAPI.deleteCategoryForRestaurant(rid, id),
 
-      // categories d’un menu
+      // categories d'un menu (restaurant)
       getMenuCategoriesWithMeals: (mid) => menusAPI.getMenuCategoriesWithMeals(rid, mid),
 
-      // repas
+      // repas (restaurant)
       getMealsByCategory: (categorieId) => menusAPI.getMealsByCategoryForRestaurant(rid, categorieId),
       createMeal: (payload) => menusAPI.createMealForRestaurant(rid, payload),
       updateMeal: (id, payload) => menusAPI.updateMealForRestaurant(rid, id, payload),
       deleteMeal: (id) => menusAPI.deleteMealForRestaurant(rid, id),
     };
-  }, [restaurentId]);
+  }, [isAdmin, restaurentId]);
 
   // ======================= State =======================
   const [categories, setCategories] = useState([]);
   const [meals, setMeals] = useState([]);
   const [menus, setMenus] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -126,6 +170,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
   const seqCats = useRef(0);
   const seqMeals = useRef(0);
   const seqMenus = useRef(0);
+  const seqRestaurants = useRef(0);
 
   const loadingCount = useRef(0);
   const refreshingCount = useRef(0);
@@ -133,9 +178,20 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
   const categoriesRef = useRef([]);
   const mealsRef = useRef([]);
   const menusRef = useRef([]);
-  useEffect(() => void (categoriesRef.current = categories), [categories]);
-  useEffect(() => void (mealsRef.current = meals), [meals]);
-  useEffect(() => void (menusRef.current = menus), [menus]);
+  const restaurantsRef = useRef([]);
+
+  useEffect(() => {
+    categoriesRef.current = categories;
+  }, [categories]);
+  useEffect(() => {
+    mealsRef.current = meals;
+  }, [meals]);
+  useEffect(() => {
+    menusRef.current = menus;
+  }, [menus]);
+  useEffect(() => {
+    restaurantsRef.current = restaurants;
+  }, [restaurants]);
 
   const selectedCategoryId = useMemo(() => idOf(selectedCategory), [selectedCategory]);
 
@@ -164,7 +220,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
   // ======================= Fetchers =======================
   const fetchCategories = useCallback(async () => {
     if (!api) {
-      setError("restaurantId manquant (auth/localStorage)");
+      setError(isAdmin ? "API admin non initialisée" : "restaurantId manquant (auth/localStorage)");
       setIsLoading(false);
       return;
     }
@@ -186,7 +242,6 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
       const cats = asArray(catsRaw).map(normId);
       setCategories(cats);
 
-      // si endpoint /categorie/menu retourne déjà les repas dans chaque categorie
       if (menuId) {
         const map = {};
         for (const c of asArray(catsRaw)) {
@@ -215,7 +270,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     } finally {
       endFetch(mode);
     }
-  }, [api, menuId]);
+  }, [api, isAdmin, menuId]);
 
   const fetchMeals = useCallback(
     async (categorieId) => {
@@ -278,15 +333,73 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     }
   }, [api]);
 
+  const fetchRestaurants = useCallback(async () => {
+    if (!api || !isAdmin) return;
+
+    const mode = restaurantsRef.current.length === 0 ? "loading" : "refresh";
+    startFetch(mode);
+    setError(null);
+
+    const mySeq = ++seqRestaurants.current;
+
+    try {
+      const payload = await api.getRestaurants();
+      if (mySeq !== seqRestaurants.current) return;
+
+      const list = pickRestaurantsList(payload);
+      setRestaurants(asArray(list).map(normId));
+    } catch (e) {
+      setFetchError(e, "Erreur chargement restaurants");
+      if (restaurantsRef.current.length === 0) setRestaurants([]);
+    } finally {
+      endFetch(mode);
+    }
+  }, [api, isAdmin]);
+
   // ======================= CRUD Categories =======================
   const addCategory = useCallback(
     async (categoryData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
+        // ✅ mode "Tous les restaurants" (admin)
+        if (isAdmin && categoryData?.restaurantId === ALL_REST) {
+          const restos = asArray(restaurantsRef.current);
+          if (restos.length === 0) throw new Error("Aucun restaurant chargé");
+
+          const results = await Promise.allSettled(
+            restos.map((r) => {
+              const rid = idOf(r);
+              if (!rid) return Promise.reject(new Error("Restaurant sans id"));
+              const payload = {
+                ...categoryData,
+                restaurantId: String(rid),
+                ...(menuId && !categoryData.menu && !categoryData.menuId ? { menu: menuId } : {}),
+              };
+              return api.createCategory(payload);
+            })
+          );
+
+          const created = results
+            .filter((x) => x.status === "fulfilled")
+            .map((x) => x.value)
+            .map((res) => normId(res?.category ?? res?.categorie ?? res));
+
+          if (created.length === 0) {
+            const firstErr = results.find((x) => x.status === "rejected")?.reason;
+            throw firstErr ?? new Error("Création échouée");
+          }
+
+          setCategories((prev) => [...prev, ...created]);
+          if (!selectedCategoryId) setSelectedCategory(created[0] ?? null);
+
+          return { success: true, data: created };
+        }
+
+        // ✅ normal (1 restaurant)
         const payload = {
           ...categoryData,
-          ...(menuId && !categoryData.menu ? { menu: menuId } : {}),
+          ...(menuId && !categoryData.menu && !categoryData.menuId ? { menu: menuId } : {}),
         };
 
         const res = await api.createCategory(payload);
@@ -300,13 +413,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur ajout catégorie" };
       }
     },
-    [api, menuId, selectedCategoryId]
+    [api, isAdmin, menuId, selectedCategoryId]
   );
 
   const updateCategory = useCallback(
     async (categoryId, categoryData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         const res = await api.updateCategory(categoryId, categoryData);
         const updated = normId(res?.category ?? res?.categorie ?? res ?? {});
@@ -323,13 +436,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur modification catégorie" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   const deleteCategory = useCallback(
     async (categoryId) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         await api.deleteCategory(categoryId);
 
@@ -354,14 +467,14 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur suppression catégorie" };
       }
     },
-    [api, selectedCategoryId]
+    [api, isAdmin, selectedCategoryId]
   );
 
   // ======================= CRUD Meals =======================
   const addMeal = useCallback(
     async (mealData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         const payload = {
           ...mealData,
@@ -389,13 +502,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur ajout repas" };
       }
     },
-    [api, menuId, selectedCategoryId]
+    [api, isAdmin, menuId, selectedCategoryId]
   );
 
   const updateMeal = useCallback(
     async (mealId, mealData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         const res = await api.updateMeal(mealId, mealData);
         const updated = normMeal(res?.meal ?? res?.repas ?? res ?? {});
@@ -413,13 +526,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur modification repas" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   const deleteMeal = useCallback(
     async (mealId) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         await api.deleteMeal(mealId);
         setMeals((prev) => prev.filter((m) => !eqId(m.id, mealId)));
@@ -435,7 +548,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur suppression repas" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   const toggleMealAvailability = useCallback(
@@ -451,7 +564,7 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
   const addMenu = useCallback(
     async (menuData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         const res = await api.createMenu(menuData);
         const menu = normId(res?.menu ?? res?.data ?? res);
@@ -462,13 +575,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur ajout menu" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   const updateMenu = useCallback(
     async (menuIdToUpdate, menuData) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         await api.updateMenu(menuIdToUpdate, menuData);
         setMenus((prev) => prev.map((m) => (eqId(m.id, menuIdToUpdate) ? { ...m, ...menuData } : m)));
@@ -477,13 +590,13 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur modification menu" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   const deleteMenu = useCallback(
     async (menuIdToDelete) => {
       try {
-        if (!api) throw new Error("restaurantId manquant");
+        if (!api) throw new Error(isAdmin ? "API admin non initialisée" : "restaurantId manquant");
 
         await api.deleteMenu(menuIdToDelete);
         setMenus((prev) => prev.filter((m) => !eqId(m.id, menuIdToDelete)));
@@ -492,23 +605,27 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
         return { success: false, error: e?.message ?? "Erreur suppression menu" };
       }
     },
-    [api]
+    [api, isAdmin]
   );
 
   // ======================= Init =======================
   useEffect(() => {
     fetchCategories();
     fetchMenus();
-  }, [fetchCategories, fetchMenus]);
+    if (isAdmin) fetchRestaurants();
+  }, [fetchCategories, fetchMenus, fetchRestaurants, isAdmin]);
 
   useEffect(() => {
     if (selectedCategoryId) fetchMeals(selectedCategoryId);
   }, [selectedCategoryId, fetchMeals]);
 
   return {
+    isAdminMode: isAdmin,
+
     categories,
     meals,
     menus,
+    restaurants,
 
     selectedCategory,
     setSelectedCategory,
@@ -533,7 +650,9 @@ export const useMenusData = ({ menuId = null, restaurantId: restaurantIdProp = n
     refreshCategories: fetchCategories,
     refreshMeals: () => fetchMeals(selectedCategoryId),
     refreshMenus: fetchMenus,
+    refreshRestaurants: fetchRestaurants,
   };
+  
 };
 
 export default useMenusData;

@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+// src/pages/Menus/MenusPage.jsx
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   RiRefreshLine,
@@ -23,11 +24,12 @@ import "./AdminMenusPage.css";
 const TAB_MEALS = "meals";
 const TAB_MENUS = "menus";
 
+const idOf = (x) => x?.id ?? x?._id ?? null;
+
 const MenusPage = () => {
   const { t } = useTranslation();
 
   const {
-    // categories / meals
     categories = [],
     meals = [],
     selectedCategory,
@@ -40,23 +42,20 @@ const MenusPage = () => {
     deleteMeal,
     toggleMealAvailability,
 
-    // menus
     menus = [],
+    restaurants = [], // ⬅️ AJOUTÉ
     addMenu,
     updateMenu,
     deleteMenu,
 
-    // ui
     isLoading,
     isRefreshing,
 
-    // refresh (si exposé par ton hook)
     refreshCategories,
     refreshMeals,
     refreshMenus,
   } = useMenusData();
 
-  // tabs
   const [activeTab, setActiveTab] = useState(TAB_MEALS);
 
   // ---------- Modals Category ----------
@@ -74,11 +73,11 @@ const MenusPage = () => {
   const [menuToEdit, setMenuToEdit] = useState(null);
   const [isMenuLoading, setIsMenuLoading] = useState(false);
 
-  // UI: on bloque seulement si 1er chargement et absolument rien
+  const selectedCategoryId = useMemo(() => idOf(selectedCategory), [selectedCategory]);
+
   const isInitialEmptyLoading =
     isLoading && categories.length === 0 && meals.length === 0 && menus.length === 0;
 
-  // Refresh local (même UX que restaurant)
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = async () => {
@@ -88,7 +87,7 @@ const MenusPage = () => {
     try {
       if (activeTab === TAB_MEALS) {
         await refreshCategories?.();
-        if (selectedCategory?.id) await refreshMeals?.();
+        if (selectedCategoryId) await refreshMeals?.();
       } else {
         await refreshMenus?.();
       }
@@ -99,12 +98,13 @@ const MenusPage = () => {
     }
   };
 
-  // Quand on change d’onglet, on ferme les modals ouverts (évite états incohérents)
   useEffect(() => {
     setShowCategoryForm(false);
     setCategoryToEdit(null);
+
     setShowMealForm(false);
     setMealToEdit(null);
+
     setShowMenuForm(false);
     setMenuToEdit(null);
   }, [activeTab]);
@@ -125,9 +125,8 @@ const MenusPage = () => {
   const handleCategorySubmit = async (data) => {
     setIsCategoryLoading(true);
 
-    const result = categoryToEdit
-      ? await updateCategory?.(categoryToEdit.id, data)
-      : await addCategory?.(data);
+    const cid = idOf(categoryToEdit);
+    const result = cid ? await updateCategory?.(String(cid), data) : await addCategory?.(data);
 
     setIsCategoryLoading(false);
 
@@ -140,7 +139,7 @@ const MenusPage = () => {
   };
 
   const handleDeleteCategory = async (categoryId) => {
-    return await deleteCategory?.(categoryId);
+    return await deleteCategory?.(String(categoryId));
   };
 
   const handleCloseCategoryForm = () => {
@@ -154,6 +153,7 @@ const MenusPage = () => {
   const handleAddMeal = () => {
     setMealToEdit(null);
     setShowMealForm(true);
+    console.log("CLICK ADD MEAL", { selectedCategory, showMealForm });
   };
 
   const handleEditMeal = (meal) => {
@@ -164,9 +164,8 @@ const MenusPage = () => {
   const handleMealSubmit = async (data) => {
     setIsMealLoading(true);
 
-    const result = mealToEdit
-      ? await updateMeal?.(mealToEdit.id, data)
-      : await addMeal?.(data);
+    const mid = idOf(mealToEdit);
+    const result = mid ? await updateMeal?.(String(mid), data) : await addMeal?.(data);
 
     setIsMealLoading(false);
 
@@ -179,11 +178,11 @@ const MenusPage = () => {
   };
 
   const handleDeleteMeal = async (mealId) => {
-    return await deleteMeal?.(mealId);
+    return await deleteMeal?.(String(mealId));
   };
 
   const handleToggleMealAvailability = async (mealId) => {
-    return await toggleMealAvailability?.(mealId);
+    return await toggleMealAvailability?.(String(mealId));
   };
 
   const handleCloseMealForm = () => {
@@ -207,8 +206,8 @@ const MenusPage = () => {
   const handleMenuSubmit = async (data) => {
     setIsMenuLoading(true);
 
-    const id = menuToEdit?.id ?? menuToEdit?._id;
-    const result = id ? await updateMenu?.(id, data) : await addMenu?.(data);
+    const id = idOf(menuToEdit);
+    const result = id ? await updateMenu?.(String(id), data) : await addMenu?.(data);
 
     setIsMenuLoading(false);
 
@@ -221,7 +220,7 @@ const MenusPage = () => {
   };
 
   const handleDeleteMenu = async (menuId) => {
-    return await deleteMenu?.(menuId);
+    return await deleteMenu?.(String(menuId));
   };
 
   const handleCloseMenuForm = () => {
@@ -231,7 +230,6 @@ const MenusPage = () => {
 
   return (
     <div className="menus-page admin-menus-page">
-      {/* header tabs + refresh */}
       <div className="menus-page-header admin-tabs-header" style={{ marginBottom: 12 }}>
         <div className="am-tabs" role="tablist" aria-label="Menus tabs">
           <button
@@ -267,14 +265,12 @@ const MenusPage = () => {
         </button>
       </div>
 
-      {/* Indicateur discret de sync */}
       {!!isRefreshing && !isInitialEmptyLoading && (
         <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 8 }}>
           {t("common.loading")}…
         </div>
       )}
 
-      {/* Chargement initial */}
       {isInitialEmptyLoading ? (
         <div style={{ padding: 24 }}>
           <LoadingSpinner />
@@ -314,6 +310,7 @@ const MenusPage = () => {
                 onClose={handleCloseCategoryForm}
                 onSubmit={handleCategorySubmit}
                 category={categoryToEdit}
+                restaurants={restaurants} // ⬅️ AJOUTÉ
                 isLoading={isCategoryLoading}
               />
 
@@ -324,7 +321,8 @@ const MenusPage = () => {
                 meal={mealToEdit}
                 categories={categories}
                 menus={menus}
-                selectedCategoryId={selectedCategory?.id}
+                restaurants={restaurants}
+                selectedCategoryId={selectedCategoryId} 
                 isLoading={isMealLoading}
               />
             </>

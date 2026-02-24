@@ -1,5 +1,5 @@
 // src/components/menus/MealList.jsx
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import {
   RiAddLine,
@@ -12,6 +12,8 @@ import {
 import ConfirmDialog from "../common/ConfirmDialog";
 import resolveImageSrc from "../../utils/resolveImageSrc";
 import "./MealList.css";
+
+const idOf = (x) => x?.id ?? x?._id ?? null;
 
 const MealList = ({
   meals = [],
@@ -29,17 +31,23 @@ const MealList = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingId, setTogglingId] = useState(null);
 
+  const selectedCategoryId = useMemo(() => idOf(selectedCategory), [selectedCategory]);
+
+  // ✅ CORRIGÉ: on autorise le clic même sans catégorie sélectionnée
+  const canAddMeal = !!selectedCategoryId;
+
   const handleDeleteClick = (meal) => {
     setMealToDelete(meal);
     setShowConfirmDelete(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!mealToDelete) return;
+    const mid = idOf(mealToDelete);
+    if (!mid) return;
 
     setIsDeleting(true);
     try {
-      const res = await onDeleteMeal(mealToDelete.id);
+      const res = await onDeleteMeal?.(String(mid));
       if (res?.success) {
         setShowConfirmDelete(false);
         setMealToDelete(null);
@@ -50,9 +58,12 @@ const MealList = ({
   };
 
   const handleToggleAvailability = async (meal) => {
-    setTogglingId(meal.id);
+    const mid = idOf(meal);
+    if (!mid) return;
+
+    setTogglingId(String(mid));
     try {
-      await onToggleAvailability(meal.id);
+      await onToggleAvailability?.(String(mid));
     } finally {
       setTogglingId(null);
     }
@@ -68,11 +79,17 @@ const MealList = ({
     }).format(n);
   };
 
-  const canAddMeal = !!selectedCategory && !isLoading;
+  //  NOUVEAU: Handler pour le bouton
+  const handleAddClick = () => {
+    if (canAddMeal) {
+      onAddMeal?.();
+    } else {
+      alert(t("menu.meals.selectCategory"));
+    }
+  };
 
   return (
     <div className="meal-list">
-      {/* Header (toujours visible) */}
       <div className="meal-list-header">
         <div className="meal-list-title">
           <h3>{t("menu.meals.title")}</h3>
@@ -81,11 +98,11 @@ const MealList = ({
           ) : null}
         </div>
 
-        {/* Bouton toujours visible */}
+        {/* ✅ CORRIGÉ: Bouton toujours cliquable */}
         <button
           type="button"
           className="meal-add-btn"
-          onClick={onAddMeal}
+          onClick={handleAddClick}
           disabled={!canAddMeal}
           title={canAddMeal ? t("menu.meals.add") : t("menu.meals.selectCategory")}
         >
@@ -94,17 +111,14 @@ const MealList = ({
         </button>
       </div>
 
-      {/* Content */}
       <div className="meal-list-content">
-        {/* Aucune catégorie sélectionnée */}
-        {!selectedCategory ? (
+        {!selectedCategoryId ? (
           <div className="meal-list-empty select-category">
             <RiRestaurantLine className="empty-icon" />
             <p>{t("menu.meals.selectCategory")}</p>
             <span>{t("menu.meals.selectCategoryDesc")}</span>
           </div>
         ) : isLoading ? (
-          /* Loading skeleton */
           <div className="meal-table-container">
             <table className="meal-table">
               <thead>
@@ -137,14 +151,12 @@ const MealList = ({
             </table>
           </div>
         ) : meals.length === 0 ? (
-          /* Empty */
           <div className="meal-list-empty">
             <RiRestaurantLine className="empty-icon" />
             <p>{t("menu.meals.empty")}</p>
             <span>{t("menu.meals.emptyDesc")}</span>
           </div>
         ) : (
-          /* Table */
           <div className="meal-table-container">
             <table className="meal-table">
               <thead>
@@ -156,53 +168,51 @@ const MealList = ({
                 </tr>
               </thead>
               <tbody>
-                {meals.map((meal) => {
-                  const img = resolveImageSrc(meal.image);
+                {meals.map((meal, idx) => {
+                  const mid = idOf(meal);
+                  const key = mid != null ? String(mid) : `meal-${idx}`;
+                  const img = resolveImageSrc(meal?.image);
+                  const isAvailable = meal?.isAvailable ?? meal?.isAvaible ?? true;
+                  const isToggling = togglingId != null && String(togglingId) === String(mid);
 
                   return (
-                    <tr key={meal.id} className={!meal.isAvailable ? "unavailable" : ""}>
+                    <tr key={key} className={!isAvailable ? "unavailable" : ""}>
                       <td className="meal-info-cell">
                         <div className="meal-info">
                           {img ? (
                             <img
                               src={img}
-                              alt={meal.name}
+                              alt={meal?.name ?? meal?.nom ?? ""}
                               className="meal-image"
                               loading="lazy"
-                              onError={(e) => {
-                                // évite boucle d’erreur / cassage layout
-                                e.currentTarget.style.display = "none";
-                              }}
+                              onError={(e) => (e.currentTarget.style.display = "none")}
                             />
                           ) : null}
-
                           <div className="meal-details">
-                            <span className="meal-name">{meal.name}</span>
-                            {meal.description && (
+                            <span className="meal-name">{meal?.name ?? meal?.nom ?? ""}</span>
+                            {meal?.description ? (
                               <span className="meal-description">{meal.description}</span>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                       </td>
 
                       <td className="meal-price-cell">
                         <span className="meal-price">
-                          {formatPrice(meal.price)} {t("menu.meals.currency")}
+                          {formatPrice(meal?.price)} {t("menu.meals.currency")}
                         </span>
                       </td>
 
                       <td className="meal-availability-cell">
                         <button
-                          className={`availability-toggle ${
-                            meal.isAvailable ? "available" : "unavailable"
-                          }`}
+                          className={`availability-toggle ${isAvailable ? "available" : "unavailable"}`}
                           onClick={() => handleToggleAvailability(meal)}
-                          disabled={togglingId === meal.id}
+                          disabled={isToggling || mid == null}
                           title={t("menu.actions.toggleAvailability")}
                         >
-                          {togglingId === meal.id ? (
+                          {isToggling ? (
                             <span className="toggle-spinner" />
-                          ) : meal.isAvailable ? (
+                          ) : isAvailable ? (
                             <>
                               <RiToggleFill />
                               <span>{t("menu.meals.available")}</span>
@@ -220,7 +230,7 @@ const MealList = ({
                         <div className="meal-actions">
                           <button
                             className="meal-action-btn edit"
-                            onClick={() => onEditMeal(meal)}
+                            onClick={() => onEditMeal?.(meal)}
                             title={t("menu.actions.edit")}
                           >
                             <RiEditLine />
