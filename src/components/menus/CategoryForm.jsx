@@ -58,18 +58,39 @@ export default function CategoryForm({
   const isAdminMode = (userTypeStore ?? roleLS) === "admin";
 
   const categoryId = useMemo(() => idOf(category), [category]);
-  const restosSafe = useMemo(() => (Array.isArray(restaurants) ? restaurants : []), [restaurants]);
+  const restosSafe = useMemo(
+    () => (Array.isArray(restaurants) ? restaurants : []),
+    [restaurants]
+  );
 
-  const [formData, setFormData] = useState(() => buildInitial(category, restosSafe, isAdminMode));
+  const [formData, setFormData] = useState(() =>
+    buildInitial(category, restosSafe, isAdminMode)
+  );
   const [errors, setErrors] = useState({});
   const [search, setSearch] = useState("");
 
+  // ✅ Reset du form UNIQUEMENT quand on ouvre / change la catégorie / change le mode
+  // (pas quand la liste restaurants change)
   useEffect(() => {
     if (!isOpen) return;
     setFormData(buildInitial(category, restosSafe, isAdminMode));
     setErrors({});
     setSearch("");
-  }, [isOpen, categoryId, isAdminMode, restosSafe]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, categoryId, isAdminMode]);
+
+  // ✅ Auto-select resto si admin + 1 seul resto + rien sélectionné
+  useEffect(() => {
+    if (!isOpen || !isAdminMode) return;
+    if (restosSafe.length !== 1) return;
+
+    const only = idOf(restosSafe[0]);
+    if (only == null) return;
+
+    setFormData((p) =>
+      p.restaurantId ? p : { ...p, restaurantId: String(only) }
+    );
+  }, [isOpen, isAdminMode, restosSafe]);
 
   const filteredRestos = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -100,7 +121,8 @@ export default function CategoryForm({
     else if (name.length < 2) next.name = "tooShort";
 
     const orderNum = Number(formData.order);
-    if (formData.order !== "" && (Number.isNaN(orderNum) || orderNum < 1)) next.order = "invalid";
+    if (formData.order !== "" && (Number.isNaN(orderNum) || orderNum < 1))
+      next.order = "invalid";
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -112,7 +134,9 @@ export default function CategoryForm({
 
     const payload = {
       ...formData,
-      restaurantId: formData.restaurantId ? String(formData.restaurantId) : undefined, // ✅ __ALL__ passe tel quel au hook
+      restaurantId: formData.restaurantId
+        ? String(formData.restaurantId)
+        : undefined, // ✅ __ALL__ passe tel quel au hook
       name: formData.name.trim(),
       description: formData.description?.trim() || "",
       order: parseInt(formData.order, 10) || 1,
@@ -130,50 +154,52 @@ export default function CategoryForm({
     <Modal isOpen={true} onClose={onClose} title={title} size="small">
       <form className="category-form" onSubmit={handleSubmit}>
         {isAdminMode && (
-          <>
-            <div className={`form-group ${errors.restaurantId ? "error" : ""}`}>
-              <label htmlFor="category-restaurant">
-                Restaurant <span className="required">*</span>
-              </label>
+          <div className={`form-group ${errors.restaurantId ? "error" : ""}`}>
+            <label htmlFor="category-restaurant">
+              Restaurant <span className="required">*</span>
+            </label>
 
-              {/* ✅ filtre */}
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un restaurant..."
-                disabled={isLoading}
-                style={{ marginBottom: 8 }}
-              />
+            {/* ✅ filtre */}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher un restaurant..."
+              disabled={isLoading}
+              style={{ marginBottom: 8 }}
+            />
 
-              <select
-                id="category-restaurant"
-                name="restaurantId"
-                value={formData.restaurantId || ""}
-                onChange={handleChange}
-                className="custom-select"
-                disabled={isLoading}
-              >
-                <option value="">Sélectionner…</option>
-                <option value={ALL_REST}>Tous les restaurants</option>
+            <select
+              id="category-restaurant"
+              name="restaurantId"
+              value={formData.restaurantId || ""}
+              onChange={handleChange}
+              className="custom-select"
+              disabled={isLoading}
+            >
+              <option value="">Sélectionner…</option>
+              <option value={ALL_REST}>Tous les restaurants</option>
 
-                {filteredRestos.map((r, idx) => {
-                  const id = idOf(r);
-                  const key = id != null ? String(id) : `resto-${idx}`;
-                  const label = r.name ?? r.nom ?? r.title ?? key;
-                  return (
-                    <option key={key} value={id != null ? String(id) : ""}>
-                      {label}
-                    </option>
-                  );
+              {filteredRestos.map((r, idx) => {
+                const id = idOf(r);
+                const key = id != null ? String(id) : `resto-${idx}`;
+                const label = r.name ?? r.nom ?? r.title ?? key;
+                return (
+                  <option key={key} value={id != null ? String(id) : ""}>
+                    {label}
+                  </option>
+                );
+              })}
+            </select>
+
+            {errors.restaurantId && (
+              <span className="form-error">
+                {t(`menu.errors.${errors.restaurantId}`, {
+                  defaultValue: "Requis",
                 })}
-              </select>
-
-              {errors.restaurantId && (
-                <span className="form-error">{t(`menu.errors.${errors.restaurantId}`, { defaultValue: "Requis" })}</span>
-              )}
-            </div>
-          </>
+              </span>
+            )}
+          </div>
         )}
 
         <div className={`form-group ${errors.name ? "error" : ""}`}>
@@ -188,11 +214,15 @@ export default function CategoryForm({
             onChange={handleChange}
             disabled={isLoading}
           />
-          {errors.name && <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>}
+          {errors.name && (
+            <span className="form-error">{t(`menu.errors.${errors.name}`)}</span>
+          )}
         </div>
 
         <div className="form-group">
-          <label htmlFor="category-description">{t("menu.categories.description")}</label>
+          <label htmlFor="category-description">
+            {t("menu.categories.description")}
+          </label>
           <textarea
             id="category-description"
             name="description"
@@ -214,19 +244,34 @@ export default function CategoryForm({
             min={1}
             disabled={isLoading}
           />
-          {errors.order && <span className="form-error">{t(`menu.errors.${errors.order}`)}</span>}
+          {errors.order && (
+            <span className="form-error">
+              {t(`menu.errors.${errors.order}`)}
+            </span>
+          )}
         </div>
 
         <div className="form-group checkbox-group">
           <label className="checkbox-label">
-            <input type="checkbox" name="isActive" checked={!!formData.isActive} onChange={handleChange} disabled={isLoading} />
+            <input
+              type="checkbox"
+              name="isActive"
+              checked={!!formData.isActive}
+              onChange={handleChange}
+              disabled={isLoading}
+            />
             <span className="checkmark" />
             <span>{t("menu.categories.active")}</span>
           </label>
         </div>
 
         <div className="form-actions">
-          <button type="button" className="btn-cancel" onClick={onClose} disabled={isLoading}>
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={onClose}
+            disabled={isLoading}
+          >
             {t("common.cancel")}
           </button>
           <button type="submit" className="btn-submit" disabled={isLoading}>
