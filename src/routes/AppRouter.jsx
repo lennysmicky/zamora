@@ -1,7 +1,7 @@
+// src/routes/AppRouter.jsx
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import useAuthStore from '../stores/authStore';
-import { Link } from 'react-router-dom';
 
 // Layouts
 import MainLayout from '../layout/MainLayout';
@@ -11,7 +11,9 @@ import AuthLayout from '../layout/AuthLayout';
 // ProtectedRoute
 import ProtectedRoute from './ProtectedRoute';
 
+// ============================
 // Loader fallback
+// ============================
 const PageLoader = () => (
   <div className="page-loader">
     <div className="page-loader-spinner"></div>
@@ -31,7 +33,7 @@ const AdminLoginPage = lazy(() => import('../pages/Auth/Admin/AdminLoginPage'));
 const RestaurantLoginPage = lazy(() => import('../pages/Auth/Restaurant/RestaurantLoginPage'));
 const RestaurantRegisterPage = lazy(() => import('../pages/Auth/Restaurant/RestaurantRegisterPage'));
 
-// Admin dashboard
+// Admin pages
 const DashboardPage = lazy(() => import('../pages/Dashboard/DashboardPage'));
 const RestaurantsPage = lazy(() => import('../pages/Restaurants/RestaurantsPage'));
 const MenusPage = lazy(() => import('../pages/Menus/MenusPage'));
@@ -46,7 +48,7 @@ const PaymentsPage = lazy(() => import('../pages/Payments/PaymentsPage'));
 const SpecialOffersPage = lazy(() => import('../pages/SpecialOffers/SpecialOffersPage'));
 const TablesPage = lazy(() => import('../pages/Tables/TablesPage'));
 
-// Restaurant dashboard
+// Restaurant pages
 const RestaurantDashboardPage = lazy(() => import('../pages/Restaurant/Dashboard/RestaurantDashboardPage'));
 const RestaurantOrdersPage = lazy(() => import('../pages/Restaurant/Orders/RestaurantOrdersPage'));
 const RestaurantMenuPage = lazy(() => import('../pages/Restaurant/Menu/RestaurantMenuPage'));
@@ -58,7 +60,9 @@ const RestaurantMessagesPage = lazy(() => import('../pages/Restaurant/Messages/R
 const RestaurantSettingsPage = lazy(() => import('../pages/Restaurant/Settings/RestaurantSettingsPage'));
 const RestaurantTablesPage = lazy(() => import('../pages/Restaurant/Tables/RestaurantTablesPage'));
 
-// 404
+// ============================
+// 404 Page
+// ============================
 const NotFoundPage = () => (
   <div className="not-found-page">
     <div className="not-found-content">
@@ -73,7 +77,7 @@ const NotFoundPage = () => (
 );
 
 // ============================
-// Admin & Restaurant route config
+// Routes Configuration
 // ============================
 const adminRoutes = [
   { path: 'dashboard', element: <DashboardPage /> },
@@ -105,15 +109,26 @@ const restaurantRoutes = [
 ];
 
 // ============================
+// Auth Redirect Helper
+// ============================
+const AuthRedirect = ({ children }) => {
+  const { isAuthenticated, userType } = useAuthStore();
+  
+  if (isAuthenticated) {
+    return <Navigate to={userType === 'admin' ? '/dashboard' : '/restaurant/dashboard'} replace />;
+  }
+  
+  return children;
+};
+
+// ============================
 // App Router
 // ============================
 const AppRouter = () => {
-  const { isAuthenticated, userType } = useAuthStore();
-
   return (
     <Routes>
       
-      {/* LANDING PAGE - Route racine "/" */}
+      {/* ============ LANDING PAGE ============ */}
       <Route
         path="/"
         element={
@@ -123,58 +138,46 @@ const AppRouter = () => {
         }
       />
 
-      {/* AUTH ROUTES */}
+      {/* ============ AUTH ROUTES ============ */}
       <Route element={<AuthLayout />}>
-        {/* Restaurant login */}
+        {/* Restaurant Login */}
         <Route
           path="/login"
           element={
             <Suspense fallback={<PageLoader />}>
-              {!isAuthenticated ? (
+              <AuthRedirect>
                 <RestaurantLoginPage />
-              ) : userType === 'admin' ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Navigate to="/restaurant/dashboard" replace />
-              )}
+              </AuthRedirect>
             </Suspense>
           }
         />
         
-        {/* Restaurant register */}
+        {/* Restaurant Register */}
         <Route
           path="/register"
           element={
             <Suspense fallback={<PageLoader />}>
-              {!isAuthenticated ? (
+              <AuthRedirect>
                 <RestaurantRegisterPage />
-              ) : userType === 'admin' ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Navigate to="/restaurant/dashboard" replace />
-              )}
+              </AuthRedirect>
             </Suspense>
           }
         />
         
-        {/* Admin login */}
+        {/* Admin Login */}
         <Route
           path="/admin/login"
           element={
             <Suspense fallback={<PageLoader />}>
-              {!isAuthenticated ? (
+              <AuthRedirect>
                 <AdminLoginPage />
-              ) : userType === 'admin' ? (
-                <Navigate to="/dashboard" replace />
-              ) : (
-                <Navigate to="/restaurant/dashboard" replace />
-              )}
+              </AuthRedirect>
             </Suspense>
           }
         />
       </Route>
 
-      {/* ADMIN DASHBOARD */}
+      {/* ============ ADMIN ROUTES ============ */}
       <Route
         element={
           <ProtectedRoute allowedTypes={['admin']}>
@@ -182,16 +185,23 @@ const AppRouter = () => {
           </ProtectedRoute>
         }
       >
-        {adminRoutes.map((r) => (
+        {/* Redirect /admin to /dashboard */}
+        <Route index element={<Navigate to="dashboard" replace />} />
+        
+        {adminRoutes.map((route) => (
           <Route
-            key={r.path}
-            path={r.path}
-            element={<Suspense fallback={<PageLoader />}>{r.element}</Suspense>}
+            key={route.path}
+            path={route.path}
+            element={
+              <Suspense fallback={<PageLoader />}>
+                {route.element}
+              </Suspense>
+            }
           />
         ))}
       </Route>
 
-      {/* RESTAURANT DASHBOARD */}
+      {/* ============ RESTAURANT ROUTES ============ */}
       <Route
         path="/restaurant"
         element={
@@ -200,17 +210,23 @@ const AppRouter = () => {
           </ProtectedRoute>
         }
       >
+        {/* Redirect /restaurant to /restaurant/dashboard */}
         <Route index element={<Navigate to="dashboard" replace />} />
-        {restaurantRoutes.map((r) => (
+        
+        {restaurantRoutes.map((route) => (
           <Route
-            key={r.path}
-            path={r.path}
-            element={<Suspense fallback={<PageLoader />}>{r.element}</Suspense>}
+            key={route.path}
+            path={route.path}
+            element={
+              <Suspense fallback={<PageLoader />}>
+                {route.element}
+              </Suspense>
+            }
           />
         ))}
       </Route>
 
-      {/* 404 */}
+      {/* ============ 404 ============ */}
       <Route path="*" element={<NotFoundPage />} />
       
     </Routes>

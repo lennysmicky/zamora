@@ -11,7 +11,7 @@ import "./css/OrderCreateForm.css";
 const emptyItem = () => ({
   repas: "",
   nom_repas: "",
-  prix_unitaire: "",
+  prix_unitaire: 0,
   quantite: 1,
 });
 
@@ -20,14 +20,23 @@ const toNum = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const idOf = (x) => String(x?._id ?? x?.id ?? "");
+
+const labelOfTable = (t) =>
+  t?.nom ?? t?.name ?? t?.numero ?? (t?.number != null ? `Table ${t.number}` : `Table ${idOf(t)}`);
+
+const labelOfMeal = (m) => m?.nom ?? m?.name ?? "-";
+
+const priceOfMeal = (m) => toNum(m?.prix ?? m?.price ?? 0);
+
 // ================================
 // COMPONENT
 // ================================
-export default function OrderCreateForm({ 
-  restaurantId, 
+export default function OrderCreateForm({
+  restaurantId,
   isRestaurantMode = false,
-  onCancel, 
-  onSuccess 
+  onCancel,
+  onSuccess,
 }) {
   const { t } = useTranslation();
 
@@ -37,12 +46,12 @@ export default function OrderCreateForm({
   const [form, setForm] = useState({
     customer_name: "",
     customer_phone: "",
-    restaurent: restaurantId || "",
+    restaurent: restaurantId || "", // utilisé uniquement pour déterminer :restaurentId (URL)
     table: "",
-    status: "en_attente",
-    payment_status: "en_attente",
-    payment_method: "espece",
-    source: "sur_place",
+
+    payment_method: "espece", // espece | virement | tmoney | flooz
+    source: "sur_place", // sur_place | a_emporter | livraison | web | qrCode
+
     items: [emptyItem()],
   });
 
@@ -64,15 +73,11 @@ export default function OrderCreateForm({
       try {
         const [tablesRes, repasRes] = await Promise.allSettled([
           ordersApi.getTables(rid),
-          ordersApi.getRepas(rid)
+          ordersApi.getRepas(rid),
         ]);
 
-        if (tablesRes.status === "fulfilled") {
-          setTables(tablesRes.value || []);
-        }
-        if (repasRes.status === "fulfilled") {
-          setRepas(repasRes.value || []);
-        }
+        if (tablesRes.status === "fulfilled") setTables(Array.isArray(tablesRes.value) ? tablesRes.value : []);
+        if (repasRes.status === "fulfilled") setRepas(Array.isArray(repasRes.value) ? repasRes.value : []);
       } catch (err) {
         console.error("Erreur chargement données:", err);
       } finally {
@@ -84,15 +89,16 @@ export default function OrderCreateForm({
   }, [form.restaurent, restaurantId]);
 
   // ================================
-  // COMPUTED
+  // COMPUTED (UI)
   // ================================
   const computed = useMemo(() => {
     const items = form.items.map((it) => {
-      const prix = toNum(it.prix_unitaire);
       const qte = Math.max(1, toNum(it.quantite));
+      const prix = toNum(it.prix_unitaire);
       const total = prix * qte;
       return { ...it, quantite: qte, total };
     });
+
     const total_amount = items.reduce((acc, it) => acc + toNum(it.total), 0);
     return { items, total_amount };
   }, [form.items]);
@@ -113,17 +119,17 @@ export default function OrderCreateForm({
   const removeItem = (idx) =>
     setForm((s) => ({ ...s, items: s.items.filter((_, i) => i !== idx) }));
 
-  // Quand on sélectionne un repas, auto-remplir nom et prix
+  // Selection repas => auto fill nom + prix
   const handleRepasSelect = (idx, repasId) => {
-    const selectedRepas = repas.find(r => (r._id || r.id) === repasId);
-    if (selectedRepas) {
+    const selected = repas.find((r) => idOf(r) === String(repasId));
+    if (selected) {
       setItem(idx, {
         repas: repasId,
-        nom_repas: selectedRepas.nom || selectedRepas.name || "",
-        prix_unitaire: selectedRepas.prix || selectedRepas.price || ""
+        nom_repas: labelOfMeal(selected),
+        prix_unitaire: priceOfMeal(selected),
       });
     } else {
-      setItem(idx, { repas: repasId });
+      setItem(idx, { repas: repasId, nom_repas: "", prix_unitaire: 0 });
     }
   };
 
@@ -131,17 +137,38 @@ export default function OrderCreateForm({
   // VALIDATION
   // ================================
   const validate = () => {
-    if (!form.restaurent) return t('orders.form.errors.restaurantRequired', 'Restaurant requis');
-    if (!form.table) return t('orders.form.errors.tableRequired', 'Table requise');
-    if (!form.items?.length) return t('orders.form.errors.itemsRequired', 'Ajoutez au moins 1 article');
+    const rid = form.restaurent || restaurantId;
+    if (!rid) return t("orders.form.errors.restaurantRequired", "Restaurant requis");
+
+    if (!form.customer_name?.trim())
+      return t("orders.form.errors.customerNameRequired", "Nom client requis");
+
+    if (!form.customer_phone?.trim())
+      return t("orders.form.errors.customerPhoneRequired", "Téléphone requis");
+
+    if (!form.items?.length)
+      return t("orders.form.errors.itemsRequired", "Ajoutez au moins 1 article");
+
+    // si QR Code => table obligatoire et doit exister
+    if (String(form.source) === "qrCode") {
+      if (tables.length === 0)
+        return t("orders.form.errors.noTables", "Aucune table disponible. Créez une table d'abord.");
+      if (!form.table)
+        return t("orders.form.errors.tableRequiredForQr", "Table requise pour QR Code");
+    }
+
+    // repas doit exister dans la liste (dropdown only)
+    if (repas.length === 0)
+      return t("orders.form.errors.noMeals", "Aucun repas disponible. Créez un repas d'abord.");
 
     for (let i = 0; i < form.items.length; i++) {
       const it = form.items[i];
-      if (!it.repas) return t('orders.form.errors.repasRequired', { index: i + 1 }) || `Article #${i + 1}: repas requis`;
-      if (!it.nom_repas) return `Article #${i + 1}: nom requis`;
-      if (toNum(it.prix_unitaire) <= 0) return `Article #${i + 1}: prix invalide`;
+      if (!it.repas)
+        return t("orders.form.errors.repasRequired", { index: i + 1 }) || `Article #${i + 1}: repas requis`;
       if (toNum(it.quantite) <= 0) return `Article #${i + 1}: quantité invalide`;
+      if (toNum(it.prix_unitaire) <= 0) return `Article #${i + 1}: prix invalide`;
     }
+
     return "";
   };
 
@@ -151,39 +178,37 @@ export default function OrderCreateForm({
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    
+
     const msg = validate();
     if (msg) return setError(msg);
 
+    const rid = form.restaurent || restaurantId;
+
     setSubmitting(true);
     try {
+      // ✅ contrat backend:
+      // POST /api/commande/:restaurentId
+      // body: customer_name, customer_phone, payment_method, source, table?, items[{repas,quantite}]
       const payload = {
         customer_name: form.customer_name,
         customer_phone: form.customer_phone,
-        restaurent: form.restaurent,
-        table: form.table,
-        status: form.status,
-        payment_status: form.payment_status,
         payment_method: form.payment_method,
         source: form.source,
-        total_amount: computed.total_amount,
-        items: computed.items.map((it) => ({
+        table: form.table || undefined,
+        items: form.items.map((it) => ({
           repas: it.repas,
-          nom_repas: it.nom_repas,
-          prix_unitaire: toNum(it.prix_unitaire),
-          quantite: toNum(it.quantite),
-          total: toNum(it.total),
+          quantite: Math.max(1, toNum(it.quantite)),
         })),
       };
 
-      await ordersApi.createOrder(payload);
+      await ordersApi.createCommande(rid, payload);
       onSuccess?.();
     } catch (err) {
       const apiMsg =
         err?.response?.data?.message ||
         err?.response?.data?.error ||
         err?.message ||
-        t('orders.form.errors.createFailed', 'Erreur lors de la création');
+        t("orders.form.errors.createFailed", "Erreur lors de la création");
       setError(apiMsg);
     } finally {
       setSubmitting(false);
@@ -199,27 +224,26 @@ export default function OrderCreateForm({
 
       {/* INFOS CLIENT */}
       <div className="ocf-section">
-        <h4 className="ocf-section-title">
-          {t('orders.form.customerInfo', 'Informations client')}
-        </h4>
+        <h4 className="ocf-section-title">{t("orders.form.customerInfo", "Informations client")}</h4>
+
         <div className="ocf-grid">
           <div className="ocf-field">
-            <label>{t('orders.form.customerName', 'Nom client')}</label>
+            <label>{t("orders.form.customerName", "Nom client")} *</label>
             <input
               type="text"
               value={form.customer_name}
               onChange={(e) => setField("customer_name", e.target.value)}
-              placeholder={t('orders.form.customerNamePlaceholder', 'Ex: Jean Dupont')}
+              placeholder={t("orders.form.customerNamePlaceholder", "Ex: Kelly")}
             />
           </div>
 
           <div className="ocf-field">
-            <label>{t('orders.form.customerPhone', 'Téléphone')}</label>
+            <label>{t("orders.form.customerPhone", "Téléphone")} *</label>
             <input
               type="tel"
               value={form.customer_phone}
               onChange={(e) => setField("customer_phone", e.target.value)}
-              placeholder={t('orders.form.customerPhonePlaceholder', 'Ex: +228 90 00 00 00')}
+              placeholder={t("orders.form.customerPhonePlaceholder", "Ex: 90000000")}
             />
           </div>
         </div>
@@ -227,14 +251,13 @@ export default function OrderCreateForm({
 
       {/* INFOS COMMANDE */}
       <div className="ocf-section">
-        <h4 className="ocf-section-title">
-          {t('orders.form.orderInfo', 'Détails commande')}
-        </h4>
+        <h4 className="ocf-section-title">{t("orders.form.orderInfo", "Détails commande")}</h4>
+
         <div className="ocf-grid">
-          {/* Restaurant - seulement si admin */}
+          {/* Restaurant id: visible seulement si admin ET restaurantId absent */}
           {!isRestaurantMode && !restaurantId && (
             <div className="ocf-field">
-              <label>{t('orders.form.restaurant', 'Restaurant')} *</label>
+              <label>{t("orders.form.restaurant", "Restaurant")} *</label>
               <input
                 type="text"
                 value={form.restaurent}
@@ -245,87 +268,63 @@ export default function OrderCreateForm({
             </div>
           )}
 
-          {/* Table - Dropdown */}
+          {/* Source (enum backend) */}
           <div className="ocf-field">
-            <label>{t('orders.form.table', 'Table')} *</label>
-            {loadingData ? (
-              <select disabled>
-                <option>{t('common.loading', 'Chargement...')}</option>
-              </select>
-            ) : tables.length > 0 ? (
-              <select
-                value={form.table}
-                onChange={(e) => setField("table", e.target.value)}
-                required
-              >
-                <option value="">{t('orders.form.selectTable', '-- Sélectionner une table --')}</option>
-                {tables.map((table) => (
-                  <option key={table._id || table.id} value={table._id || table.id}>
-                    {table.nom || table.name || table.numero || `Table ${table.number || table._id}`}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <input
-                type="text"
-                value={form.table}
-                onChange={(e) => setField("table", e.target.value)}
-                placeholder="ID Table"
-                required
-              />
-            )}
-          </div>
-
-          {/* Source */}
-          <div className="ocf-field">
-            <label>{t('orders.form.source', 'Source')}</label>
+            <label>{t("orders.form.source", "Source")} *</label>
             <select
               value={form.source}
-              onChange={(e) => setField("source", e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setField("source", next);
+                // si on quitte qrCode, table optionnelle => reset
+                if (next !== "qrCode") setField("table", "");
+              }}
             >
-              <option value="sur_place">{t('orders.source.onSite', 'Sur place')}</option>
-              <option value="web">{t('orders.source.web', 'Web')}</option>
-              <option value="mobile">{t('orders.source.mobile', 'Mobile')}</option>
-              <option value="telephone">{t('orders.source.phone', 'Téléphone')}</option>
+              <option value="sur_place">{t("orders.source.onSite", "Sur place")}</option>
+              <option value="a_emporter">{t("orders.source.takeaway", "À emporter")}</option>
+              <option value="livraison">{t("orders.source.delivery", "Livraison")}</option>
+              <option value="web">{t("orders.source.web", "Web")}</option>
+              <option value="qrCode">{t("orders.source.qrcode", "QR Code")}</option>
             </select>
           </div>
 
-          {/* Statut */}
+          {/* Table (dropdown only) - obligatoire si qrCode */}
           <div className="ocf-field">
-            <label>{t('orders.form.status', 'Statut')}</label>
-            <select 
-              value={form.status} 
-              onChange={(e) => setField("status", e.target.value)}
-            >
-              <option value="en_attente">{t('orders.status.pending', 'En attente')}</option>
-              <option value="livres">{t('orders.status.delivered', 'Livré')}</option>
-              <option value="annules">{t('orders.status.cancelled', 'Annulé')}</option>
-            </select>
-          </div>
+            <label>
+              {t("orders.form.table", "Table")}
+              {form.source === "qrCode" ? " *" : ""}
+            </label>
 
-          {/* Paiement statut */}
-          <div className="ocf-field">
-            <label>{t('orders.form.paymentStatus', 'Statut paiement')}</label>
             <select
-              value={form.payment_status}
-              onChange={(e) => setField("payment_status", e.target.value)}
+              value={form.table}
+              onChange={(e) => setField("table", e.target.value)}
+              required={form.source === "qrCode"}
+              disabled={loadingData || tables.length === 0}
             >
-              <option value="en_attente">{t('orders.paymentStatus.pending', 'En attente')}</option>
-              <option value="en_traitement">{t('orders.paymentStatus.processing', 'En traitement')}</option>
-              <option value="paye">{t('orders.paymentStatus.paid', 'Payé')}</option>
-              <option value="non_paye">{t('orders.paymentStatus.unpaid', 'Non payé')}</option>
+              <option value="">
+                {loadingData
+                  ? t("common.loading", "Chargement...")
+                  : tables.length === 0
+                    ? t("orders.form.noTables", "-- Aucune table --")
+                    : t("orders.form.selectTable", "-- Sélectionner une table --")}
+              </option>
+
+              {tables.map((tb) => (
+                <option key={idOf(tb)} value={idOf(tb)}>
+                  {labelOfTable(tb)}
+                </option>
+              ))}
             </select>
           </div>
 
-          {/* Méthode paiement */}
+          {/* Méthode paiement (enum backend) */}
           <div className="ocf-field">
-            <label>{t('orders.form.paymentMethod', 'Méthode paiement')}</label>
-            <select
-              value={form.payment_method}
-              onChange={(e) => setField("payment_method", e.target.value)}
-            >
-              <option value="espece">{t('orders.paymentMethod.cash', 'Espèces')}</option>
-              <option value="virement">{t('orders.paymentMethod.transfer', 'Virement')}</option>
+            <label>{t("orders.form.paymentMethod", "Méthode paiement")} *</label>
+            <select value={form.payment_method} onChange={(e) => setField("payment_method", e.target.value)}>
+              <option value="espece">{t("orders.paymentMethod.cash", "Espèces")}</option>
+              <option value="virement">{t("orders.paymentMethod.transfer", "Virement")}</option>
+              <option value="tmoney">{t("orders.paymentMethod.tmoney", "TMoney")}</option>
+              <option value="flooz">{t("orders.paymentMethod.flooz", "Flooz")}</option>
             </select>
           </div>
         </div>
@@ -334,78 +333,56 @@ export default function OrderCreateForm({
       {/* ARTICLES */}
       <div className="ocf-section">
         <div className="ocf-section-header">
-          <h4 className="ocf-section-title">
-            {t('orders.form.items', 'Articles')}
-          </h4>
-          <button type="button" className="ocf-btn ocf-btn-add" onClick={addItem}>
+          <h4 className="ocf-section-title">{t("orders.form.items", "Articles")}</h4>
+
+          <button type="button" className="ocf-btn ocf-btn-add" onClick={addItem} disabled={repas.length === 0}>
             <RiAddLine />
-            <span>{t('orders.form.addItem', 'Ajouter')}</span>
+            <span>{t("orders.form.addItem", "Ajouter")}</span>
           </button>
         </div>
 
         <div className="ocf-items-list">
           {form.items.map((it, idx) => {
             const total = computed.items[idx]?.total ?? 0;
+
             return (
               <div key={idx} className="ocf-item">
                 <div className="ocf-item-grid">
-                  {/* Repas - Dropdown ou Input */}
+                  {/* Repas dropdown only */}
                   <div className="ocf-field ocf-field-repas">
-                    <label>{t('orders.form.meal', 'Repas')} *</label>
-                    {repas.length > 0 ? (
-                      <select
-                        value={it.repas}
-                        onChange={(e) => handleRepasSelect(idx, e.target.value)}
-                        required
-                      >
-                        <option value="">{t('orders.form.selectMeal', '-- Choisir --')}</option>
-                        {repas.map((r) => (
-                          <option key={r._id || r.id} value={r._id || r.id}>
-                            {r.nom || r.name} - {(r.prix || r.price || 0).toLocaleString()} FCFA
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={it.repas}
-                        onChange={(e) => setItem(idx, { repas: e.target.value })}
-                        placeholder="ID Repas"
-                        required
-                      />
-                    )}
+                    <label>{t("orders.form.meal", "Repas")} *</label>
+                    <select
+                      value={it.repas}
+                      onChange={(e) => handleRepasSelect(idx, e.target.value)}
+                      required
+                      disabled={repas.length === 0}
+                    >
+                      <option value="">
+                        {repas.length === 0 ? t("orders.form.noMeals", "-- Aucun repas --") : t("orders.form.selectMeal", "-- Choisir --")}
+                      </option>
+                      {repas.map((r) => (
+                        <option key={idOf(r)} value={idOf(r)}>
+                          {labelOfMeal(r)} - {priceOfMeal(r).toLocaleString()} FCFA
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Nom repas (auto-rempli ou manuel) */}
+                  {/* Nom repas (UI only) */}
                   <div className="ocf-field ocf-field-nom">
-                    <label>{t('orders.form.mealName', 'Nom')} *</label>
-                    <input
-                      type="text"
-                      value={it.nom_repas}
-                      onChange={(e) => setItem(idx, { nom_repas: e.target.value })}
-                      placeholder="Ex: Pizza"
-                      required
-                      readOnly={repas.length > 0 && it.repas}
-                    />
+                    <label>{t("orders.form.mealName", "Nom")}</label>
+                    <input type="text" value={it.nom_repas} readOnly placeholder="(auto)" />
                   </div>
 
-                  {/* Prix unitaire */}
+                  {/* Prix unitaire (UI only) */}
                   <div className="ocf-field ocf-field-prix">
-                    <label>{t('orders.form.unitPrice', 'Prix')} *</label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={it.prix_unitaire}
-                      onChange={(e) => setItem(idx, { prix_unitaire: e.target.value })}
-                      placeholder="0"
-                      required
-                      readOnly={repas.length > 0 && it.repas}
-                    />
+                    <label>{t("orders.form.unitPrice", "Prix")}</label>
+                    <input type="text" value={toNum(it.prix_unitaire).toLocaleString("fr-FR")} readOnly placeholder="(auto)" />
                   </div>
 
                   {/* Quantité */}
                   <div className="ocf-field ocf-field-qte">
-                    <label>{t('orders.form.quantity', 'Qté')} *</label>
+                    <label>{t("orders.form.quantity", "Qté")} *</label>
                     <input
                       type="number"
                       min="1"
@@ -417,10 +394,8 @@ export default function OrderCreateForm({
 
                   {/* Total */}
                   <div className="ocf-field ocf-field-total">
-                    <label>{t('orders.form.total', 'Total')}</label>
-                    <div className="ocf-total-value">
-                      {total.toLocaleString("fr-FR")}
-                    </div>
+                    <label>{t("orders.form.total", "Total")}</label>
+                    <div className="ocf-total-value">{total.toLocaleString("fr-FR")} FCFA</div>
                   </div>
 
                   {/* Supprimer */}
@@ -430,7 +405,7 @@ export default function OrderCreateForm({
                       className="ocf-btn ocf-btn-delete"
                       onClick={() => removeItem(idx)}
                       disabled={form.items.length === 1}
-                      title={t('common.delete', 'Supprimer')}
+                      title={t("common.delete", "Supprimer")}
                     >
                       <RiDeleteBinLine />
                     </button>
@@ -443,30 +418,19 @@ export default function OrderCreateForm({
 
         {/* Total commande */}
         <div className="ocf-grand-total">
-          <span>{t('orders.form.grandTotal', 'Total commande')}</span>
+          <span>{t("orders.form.grandTotal", "Total commande")}</span>
           <strong>{computed.total_amount.toLocaleString("fr-FR")} FCFA</strong>
         </div>
       </div>
 
       {/* ACTIONS */}
       <div className="ocf-actions">
-        <button 
-          type="button" 
-          className="ocf-btn ocf-btn-cancel" 
-          onClick={onCancel} 
-          disabled={submitting}
-        >
-          {t('common.cancel', 'Annuler')}
+        <button type="button" className="ocf-btn ocf-btn-cancel" onClick={onCancel} disabled={submitting}>
+          {t("common.cancel", "Annuler")}
         </button>
-        <button 
-          type="submit" 
-          className="ocf-btn ocf-btn-submit" 
-          disabled={submitting}
-        >
-          {submitting 
-            ? t('common.creating', 'Création...') 
-            : t('orders.form.create', 'Créer la commande')
-          }
+
+        <button type="submit" className="ocf-btn ocf-btn-submit" disabled={submitting}>
+          {submitting ? t("common.creating", "Création...") : t("orders.form.create", "Créer la commande")}
         </button>
       </div>
     </form>
