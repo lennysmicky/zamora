@@ -46,7 +46,7 @@ const TableCard = ({
     setShowStatusMenu(false);
   };
 
-  // ✅ Télécharger QR directement
+  // Télécharger QR directement
   const handleDownload = (e) => {
     e.stopPropagation();
     if (onDownloadQR) {
@@ -54,7 +54,7 @@ const TableCard = ({
     }
   };
 
-  // ✅ Imprimer QR directement
+  // Imprimer QR directement
   const handlePrint = (e) => {
     e.stopPropagation();
     if (onPrintQR) {

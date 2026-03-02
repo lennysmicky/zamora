@@ -299,9 +299,11 @@ const normalizeMeal = (m) => ({
 const restoOrdersUrl = (rid) => `/order/${encodeURIComponent(rid)}`; // GET list / POST create
 const restoOrderDetailUrl = (rid, id) =>
   `/order/${encodeURIComponent(rid)}/${encodeURIComponent(id)}`; // GET detail / PATCH/PUT update / DELETE delete
-const restoStatsUrl = (rid) => `/order/stats/${encodeURIComponent(rid)}`; // GET stats global
 
-// Admin (on laisse inchangé)
+// ✅ FIX: stats = /order/:rid/stats (pas /order/stats/:rid)
+const restoStatsUrl = (rid) => `/order/${encodeURIComponent(rid)}/stats`;
+
+// Admin (inchangé)
 const adminListUrl = () => `/admin/commandes`;
 const adminStatsUrl = () => `/admin/commandes/stats`;
 
@@ -333,7 +335,8 @@ export const ordersApi = {
       ...rest
     } = params;
 
-    const baseQuery = clean({
+    // liste: ok avec page/limit/search
+    const listQuery = clean({
       ...rest,
       page,
       limit,
@@ -351,10 +354,13 @@ export const ordersApi = {
       customer_name: search,
     });
 
+    // stats: seulement période (évite params inutiles)
+    const statsQuery = clean({ period, from, to });
+
     // ---------- ADMIN ----------
     if (mode === "admin") {
       const adminQuery = clean({
-        ...baseQuery,
+        ...listQuery,
         restaurent: restaurant ?? restaurentId ?? restaurantId ?? undefined,
         restaurentId: restaurant ?? restaurentId ?? restaurantId ?? undefined,
       });
@@ -377,7 +383,8 @@ export const ordersApi = {
       const orders = arr(listData).map(normalizeOrder);
 
       const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-      const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+      const totalPages =
+        num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
 
       const normalizedStats = statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems });
 
@@ -396,11 +403,18 @@ export const ordersApi = {
       };
     }
 
-    const axiosCfg = { params: baseQuery, timeout: TIMEOUT, signal: options.signal };
+    const listAxiosCfg = { params: listQuery, timeout: TIMEOUT, signal: options.signal };
+    const statsAxiosCfg = { params: statsQuery, timeout: TIMEOUT, signal: options.signal };
+
+    const getStats = () =>
+      requestWithFallback([
+        () => client.get(restoStatsUrl(rid), statsAxiosCfg), // ✅ /order/:id/stats
+        () => client.get(`/order/stats/${encodeURIComponent(rid)}`, statsAxiosCfg), // fallback si backend change
+      ]);
 
     const [listRes, statsRes] = await Promise.allSettled([
-      client.get(restoOrdersUrl(rid), axiosCfg),
-      client.get(restoStatsUrl(rid), axiosCfg),
+      client.get(restoOrdersUrl(rid), listAxiosCfg),
+      getStats(),
     ]);
 
     if (listRes.status === "rejected") {
@@ -413,7 +427,8 @@ export const ordersApi = {
     const orders = arr(listData).map(normalizeOrder);
 
     const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-    const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+    const totalPages =
+      num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
 
     const normalizedStats = statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems });
 
@@ -495,7 +510,6 @@ export const ordersApi = {
       source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
     });
 
-    // PATCH préféré, fallback PUT si backend n'accepte pas PATCH
     const doPatch = () =>
       client.patch(restoOrderDetailUrl(restaurentId, orderId), payload, {
         timeout: TIMEOUT,
@@ -512,14 +526,12 @@ export const ordersApi = {
     return unwrap(res?.data);
   },
 
-  // wrappers (pour ne pas casser ton code existant)
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
 
-    // nouveau contrat (recommandé)
     if (rid) return ordersApi.updateOrder(rid, orderId, { status }, options);
 
-    // 🔁 fallback ancien endpoint si certains écrans l'utilisent encore
+    // fallback ancien endpoint
     const payload = { status: denormalizeOrderStatus(status) };
     const res = await client.patch(`/order/${encodeURIComponent(orderId)}/status`, payload, {
       timeout: TIMEOUT,
@@ -531,10 +543,9 @@ export const ordersApi = {
   updatePaymentStatus: async (orderId, payment_status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
 
-    // nouveau contrat (recommandé)
     if (rid) return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
 
-    // 🔁 fallback ancien endpoint
+    // fallback ancien endpoint
     const payload = { payment_status: denormalizePaymentStatus(payment_status) };
     const res = await client.patch(`/order/${encodeURIComponent(orderId)}/payment`, payload, {
       timeout: TIMEOUT,
@@ -590,7 +601,6 @@ export const ordersApi = {
     if (!restaurentId) return [];
     const axiosCfg = { timeout: TIMEOUT, signal: options.signal };
 
-    // 1) si GET /repas/:restaurentId existe
     const listAllMeals = async () => {
       const res = await client.get(`/repas/${encodeURIComponent(restaurentId)}`, axiosCfg);
       return arr(res?.data)
@@ -598,7 +608,6 @@ export const ordersApi = {
         .filter((m) => m?.id);
     };
 
-    // 2) fallback: repas/categorie/:restaurentId/:categorieId
     const listMealsByCategories = async () => {
       const catsRes = await client.get(`/categorie/${encodeURIComponent(restaurentId)}`, axiosCfg);
       const cats = arr(catsRes?.data);
