@@ -1,0 +1,193 @@
+/* ========================================
+   RESTAURANT SETTINGS PAGE - Full Layout
+   ======================================== */
+
+.rs-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ========================================
+   TABS
+   ======================================== */
+.rs-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background-color: var(--color-card-light);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  width: fit-content;
+}
+
+.dark .rs-tabs {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+.rs-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.rs-tab svg {
+  font-size: 1rem;
+}
+
+.rs-tab:hover {
+  color: var(--color-text-primary);
+  background-color: var(--color-surface-light);
+}
+
+.dark .rs-tab:hover {
+  color: var(--color-text-white);
+  background-color: var(--color-surface-dark);
+}
+
+.rs-tab.active {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+/* ========================================
+   CONTENT - Full Width
+   ======================================== */
+.rs-content {
+  flex: 1;
+  background-color: var(--color-card-light);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  width: 100%;
+}
+
+.dark .rs-content {
+  background-color: var(--color-card-dark);
+  border-color: var(--color-border-dark);
+}
+
+/* ========================================
+   WARNING
+   ======================================== */
+.rs-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  color: #f59e0b;
+  margin-bottom: 1rem;
+}
+
+.rs-warning svg {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   LOADING / ERROR
+   ======================================== */
+.rs-loading,
+.rs-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  min-height: 300px;
+}
+
+.rs-spinner {
+  font-size: 1.5rem;
+  animation: rs-spin 1s linear infinite;
+}
+
+@keyframes rs-spin {
+  to { transform: rotate(360deg); }
+}
+
+.rs-error p {
+  color: var(--color-error);
+  margin: 0;
+}
+
+.rs-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.rs-btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.rs-btn-primary:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* ========================================
+   RESPONSIVE
+   ======================================== */
+@media (max-width: 768px) {
+  .rs-page {
+    padding: 0.75rem;
+  }
+
+  .rs-tabs {
+    width: 100%;
+  }
+
+  .rs-tab {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .rs-content {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .rs-tab span {
+    display: none;
+  }
+  
+  .rs-tab {
+    padding: 0.625rem;
+    justify-content: center;
+  }
+  
+  .rs-tab svg {
+    font-size: 1.125rem;
+  }
+}

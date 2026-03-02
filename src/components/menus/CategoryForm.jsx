@@ -69,7 +69,7 @@ export default function CategoryForm({
   const [errors, setErrors] = useState({});
   const [search, setSearch] = useState("");
 
-  // ✅ Reset du form UNIQUEMENT quand on ouvre / change la catégorie / change le mode
+  //  Reset du form UNIQUEMENT quand on ouvre / change la catégorie / change le mode
   // (pas quand la liste restaurants change)
   useEffect(() => {
     if (!isOpen) return;
@@ -79,7 +79,7 @@ export default function CategoryForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, categoryId, isAdminMode]);
 
-  // ✅ Auto-select resto si admin + 1 seul resto + rien sélectionné
+  //  Auto-select resto si admin + 1 seul resto + rien sélectionné
   useEffect(() => {
     if (!isOpen || !isAdminMode) return;
     if (restosSafe.length !== 1) return;
@@ -136,7 +136,7 @@ export default function CategoryForm({
       ...formData,
       restaurantId: formData.restaurantId
         ? String(formData.restaurantId)
-        : undefined, // ✅ __ALL__ passe tel quel au hook
+        : undefined, //  __ALL__ passe tel quel au hook
       name: formData.name.trim(),
       description: formData.description?.trim() || "",
       order: parseInt(formData.order, 10) || 1,
@@ -159,7 +159,7 @@ export default function CategoryForm({
               Restaurant <span className="required">*</span>
             </label>
 
-            {/* ✅ filtre */}
+            {/*  filtre */}
             <input
               type="text"
               value={search}
