@@ -521,3 +521,30 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+/* ========================================
+   LIST VIEW HEADER
+   ======================================== */
+
+.tables-list-header {
+  display: grid;
+  grid-template-columns: 60px 1fr 80px 100px 50px 150px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--color-surface-light);
+  border-radius: var(--radius-md);
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.dark .tables-list-header {
+  background-color: var(--color-surface-dark);
+}
+
+.list-col {
+  display: flex;
+  align-items: center;
+}

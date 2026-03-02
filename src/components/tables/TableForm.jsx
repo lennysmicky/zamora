@@ -1,22 +1,49 @@
 // src/components/tables/TableForm.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   RiAddLine,
+  RiSave3Line,
   RiLoader4Line,
   RiTableLine,
-  RiGroupLine
+  RiGroupLine,
+  RiQrCodeLine,
+  RiRefreshLine
 } from 'react-icons/ri';
 import './css/TableComponents.css';
 
-const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbers }) => {
-  const [mode, setMode] = useState('single'); // single | multiple
+const TableForm = ({ 
+  table = null, // null = création, sinon = modification
+  onSubmit, 
+  onCreateMultiple, 
+  onCancel, 
+  onRegenerateQR,
+  saving, 
+  existingNumbers = [] 
+}) => {
+  const isEditMode = !!table;
+  const [mode, setMode] = useState('single'); // single | multiple (seulement en création)
+  
   const [form, setForm] = useState({
     numero: '',
     nom: '',
     capacite: 4,
+    status: 'libre'
   });
+  
   const [multipleCount, setMultipleCount] = useState(5);
   const [error, setError] = useState('');
+
+  // Pré-remplir si modification
+  useEffect(() => {
+    if (table) {
+      setForm({
+        numero: table.numero || table.number || '',
+        nom: table.nom || table.name || '',
+        capacite: table.capacite || table.capacity || 4,
+        status: table.status || 'libre'
+      });
+    }
+  }, [table]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -24,7 +51,8 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
     setError('');
   };
 
-  const handleSingleSubmit = async (e) => {
+  // Soumettre (création ou modification)
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -33,16 +61,21 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
       return;
     }
 
-    if (existingNumbers.includes(parseInt(form.numero))) {
+    // Vérifier doublon (sauf si c'est le même numéro en edit)
+    const currentNum = parseInt(form.numero);
+    const isOwnNumber = isEditMode && (table.numero === currentNum || table.number === currentNum);
+    
+    if (!isOwnNumber && existingNumbers.includes(currentNum)) {
       setError('Ce numéro de table existe déjà');
       return;
     }
 
     const result = await onSubmit({
-      numero: parseInt(form.numero),
+      ...(isEditMode ? { _id: table._id || table.id } : {}),
+      numero: currentNum,
       nom: form.nom || `Table ${form.numero}`,
       capacite: parseInt(form.capacite) || 4,
-      status: 'libre'
+      status: form.status
     });
 
     if (!result.success) {
@@ -50,6 +83,7 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
     }
   };
 
+  // Création multiple
   const handleMultipleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -65,6 +99,15 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
     }
   };
 
+  // Régénérer QR (seulement en mode edit)
+  const handleRegenerateQR = async () => {
+    if (!table || !onRegenerateQR) return;
+    const result = await onRegenerateQR(table._id || table.id);
+    if (!result.success) {
+      setError(result.error);
+    }
+  };
+
   // Suggérer le prochain numéro
   const suggestedNumber = existingNumbers.length > 0 
     ? Math.max(...existingNumbers) + 1 
@@ -72,30 +115,40 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
 
   return (
     <div className="table-form">
-      {/* Mode Toggle */}
-      <div className="table-form-mode">
-        <button
-          type="button"
-          className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
-          onClick={() => setMode('single')}
-        >
-          <RiTableLine />
-          <span>Une table</span>
-        </button>
-        <button
-          type="button"
-          className={`mode-btn ${mode === 'multiple' ? 'active' : ''}`}
-          onClick={() => setMode('multiple')}
-        >
-          <RiGroupLine />
-          <span>Plusieurs tables</span>
-        </button>
-      </div>
+      {/* Mode Toggle - Seulement en création */}
+      {!isEditMode && (
+        <div className="table-form-mode">
+          <button
+            type="button"
+            className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
+            onClick={() => setMode('single')}
+          >
+            <RiTableLine />
+            <span>Une table</span>
+          </button>
+          <button
+            type="button"
+            className={`mode-btn ${mode === 'multiple' ? 'active' : ''}`}
+            onClick={() => setMode('multiple')}
+          >
+            <RiGroupLine />
+            <span>Plusieurs</span>
+          </button>
+        </div>
+      )}
+
+      {/* Titre en mode édition */}
+      {isEditMode && (
+        <div className="table-form-edit-header">
+          <h4>Modifier la Table {table.numero || table.number}</h4>
+        </div>
+      )}
 
       {error && <div className="table-form-error">{error}</div>}
 
-      {mode === 'single' ? (
-        <form onSubmit={handleSingleSubmit}>
+      {/* ========== FORMULAIRE SIMPLE ========== */}
+      {(mode === 'single' || isEditMode) && (
+        <form onSubmit={handleSubmit}>
           <div className="table-form-grid">
             <div className="table-form-field">
               <label>Numéro de table *</label>
@@ -104,11 +157,13 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
                 name="numero"
                 value={form.numero}
                 onChange={handleChange}
-                placeholder={`Ex: ${suggestedNumber}`}
+                placeholder={isEditMode ? '' : `Ex: ${suggestedNumber}`}
                 min="1"
                 required
               />
-              <span className="field-hint">Suggestion: Table {suggestedNumber}</span>
+              {!isEditMode && (
+                <span className="field-hint">Suggestion: Table {suggestedNumber}</span>
+              )}
             </div>
 
             <div className="table-form-field">
@@ -133,12 +188,47 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
                 placeholder="Ex: Terrasse, VIP, Fenêtre..."
               />
             </div>
+
+            {/* Status - Seulement en modification */}
+            {isEditMode && (
+              <div className="table-form-field full">
+                <label>Statut</label>
+                <select
+                  name="status"
+                  value={form.status}
+                  onChange={handleChange}
+                >
+                  <option value="libre">Libre</option>
+                  <option value="occupee">Occupée</option>
+                  <option value="reservee">Réservée</option>
+                </select>
+              </div>
+            )}
           </div>
 
+          {/* Info QR */}
           <div className="table-form-info">
             <RiQrCodeLine />
-            <p>Un QR code unique sera généré automatiquement pour cette table</p>
+            <p>
+              {isEditMode 
+                ? 'Le QR code sera régénéré automatiquement si vous changez le numéro'
+                : 'Un QR code unique sera généré automatiquement'
+              }
+            </p>
           </div>
+
+          {/* Bouton régénérer QR - Seulement en modification */}
+          {isEditMode && onRegenerateQR && (
+            <button 
+              type="button" 
+              className="table-form-btn regenerate"
+              onClick={handleRegenerateQR}
+              disabled={saving}
+            >
+              <RiRefreshLine />
+              <span>Régénérer le QR Code</span>
+            </button>
+          )}
 
           <div className="table-form-actions">
             <button 
@@ -157,18 +247,21 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
               {saving ? (
                 <>
                   <RiLoader4Line className="spin" />
-                  <span>Création...</span>
+                  <span>{isEditMode ? 'Enregistrement...' : 'Création...'}</span>
                 </>
               ) : (
                 <>
-                  <RiAddLine />
-                  <span>Créer la table</span>
+                  {isEditMode ? <RiSave3Line /> : <RiAddLine />}
+                  <span>{isEditMode ? 'Enregistrer' : 'Créer la table'}</span>
                 </>
               )}
             </button>
           </div>
         </form>
-      ) : (
+      )}
+
+      {/* ========== FORMULAIRE MULTIPLE ========== */}
+      {!isEditMode && mode === 'multiple' && (
         <form onSubmit={handleMultipleSubmit}>
           <div className="table-form-multiple">
             <div className="table-form-field">
@@ -181,19 +274,19 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
                 max="50"
               />
               <span className="field-hint">
-                Tables {suggestedNumber} à {suggestedNumber + multipleCount - 1} seront créées
+                Tables {suggestedNumber} à {suggestedNumber + multipleCount - 1}
               </span>
             </div>
 
             <div className="table-form-preview">
               <p>Aperçu:</p>
               <div className="preview-numbers">
-                {Array.from({ length: Math.min(multipleCount, 10) }, (_, i) => (
+                {Array.from({ length: Math.min(multipleCount, 8) }, (_, i) => (
                   <span key={i} className="preview-number">
                     {suggestedNumber + i}
                   </span>
                 ))}
-                {multipleCount > 10 && <span className="preview-more">...</span>}
+                {multipleCount > 8 && <span className="preview-more">+{multipleCount - 8}</span>}
               </div>
             </div>
           </div>
@@ -237,6 +330,3 @@ const TableForm = ({ onSubmit, onCreateMultiple, onCancel, saving, existingNumbe
 };
 
 export default TableForm;
-
-// Ajout de l'icône manquante en haut du fichier
-import { RiQrCodeLine } from 'react-icons/ri';

@@ -37,6 +37,7 @@ const pageTitlesConfig = {
   "/settings": { titleKey: "header.pages.settings.title", subtitleKey: "header.pages.settings.subtitle" },
   "/special-offers": { titleKey: "header.pages.specialOffers.title", subtitleKey: "header.pages.specialOffers.subtitle" },
   "/messages": { titleKey: "header.pages.messages.title", subtitleKey: "header.pages.messages.subtitle" },
+  "/tables": { titleKey: "header.pages.tables.title", subtitleKey: "header.pages.tables.subtitle" },
 
   "/restaurant/dashboard": { titleKey: "header.pages.dashboard.title", subtitleKey: "header.pages.restaurant.dashboardSubtitle" },
   "/restaurant/orders": { titleKey: "header.pages.orders.title", subtitleKey: "header.pages.restaurant.ordersSubtitle" },
@@ -47,6 +48,7 @@ const pageTitlesConfig = {
   "/restaurant/notifications": { titleKey: "header.pages.notifications.title", subtitleKey: "header.pages.restaurant.notificationsSubtitle" },
   "/restaurant/settings": { titleKey: "header.pages.settings.title", subtitleKey: "header.pages.restaurant.settingsSubtitle" },
   "/restaurant/messages": { titleKey: "header.pages.messages.title", subtitleKey: "header.pages.restaurant.messagesSubtitle" },
+  "/restaurant/tables": { titleKey: "header.pages.tables.title", subtitleKey: "header.pages.restaurant.tablesSubtitle" },
 };
 
 const toISO = (d) => {
@@ -115,7 +117,7 @@ const Header = ({ onMenuClick }) => {
 
   const { selectedOrders, handlers, clearSelection } = useOrdersStore();
 
-  // ✅ single source of truth: store dashboard
+  // single source of truth: store dashboard
   const dashboardRestaurant = useDashboardFiltersStore((s) => s.restaurant);
   const dashboardPeriod = useDashboardFiltersStore((s) => s.period);
   const dashboardFrom = useDashboardFiltersStore((s) => s.from);
@@ -137,7 +139,7 @@ const Header = ({ onMenuClick }) => {
   const isDashboard = location.pathname === "/dashboard" || location.pathname === "/restaurant/dashboard";
   const isOrders = location.pathname === "/orders" || location.pathname === "/restaurant/orders";
 
-  // ✅ dérivé du store (pas de state local)
+  // dérivé du store (pas de state local)
   const selectedDateRange = useMemo(
     () => storeToDateRange({ period: dashboardPeriod, from: dashboardFrom, to: dashboardTo }),
     [dashboardPeriod, dashboardFrom, dashboardTo]

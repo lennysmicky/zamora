@@ -66,6 +66,10 @@
         "title": "Paiements",
         "subtitle": "Suivez les transactions"
       },
+      "tables": {
+        "title": " Mes Tables",
+        "subtitle": "Gérez les tables et QR codes"
+      },
       "settings": {
         "title": "Paramètres",
         "subtitle": "Configurez vos préférences"
@@ -281,6 +285,102 @@
     },
     "testMode": {
       "message": "Mode test:"
+    }
+  },
+  "tables": {
+    "title": "Gestion des Tables",
+    "subtitle": "Gérez vos tables et QR codes",
+    "add": "Nouvelle Table",
+    "addMultiple": "Créer plusieurs",
+    "refresh": "Actualiser",
+    "search": "Rechercher une table...",
+    "viewGrid": "Vue grille",
+    "viewList": "Vue liste",
+    "stats": {
+      "total": "Total",
+      "libre": "Libres",
+      "occupee": "Occupées",
+      "reservee": "Réservées"
+    },
+    "status": {
+      "libre": "Libre",
+      "occupee": "Occupée",
+      "reservee": "Réservée"
+    },
+    "filters": {
+      "all": "Toutes",
+      "libre": "Libres",
+      "occupee": "Occupées",
+      "reservee": "Réservées"
+    },
+    "card": {
+      "table": "Table",
+      "capacity": "Capacité",
+      "persons": "pers.",
+      "name": "Nom"
+    },
+    "form": {
+      "createTitle": "Créer des tables",
+      "editTitle": "Modifier la table",
+      "singleMode": "Une table",
+      "multipleMode": "Plusieurs tables",
+      "number": "Numéro de table",
+      "numberPlaceholder": "Ex: 1",
+      "numberSuggestion": "Suggestion: Table",
+      "name": "Nom (optionnel)",
+      "namePlaceholder": "Ex: Terrasse, VIP, Fenêtre...",
+      "capacity": "Capacité (personnes)",
+      "status": "Statut",
+      "count": "Nombre de tables à créer",
+      "preview": "Aperçu",
+      "qrInfo": "Un QR code unique sera généré automatiquement",
+      "qrInfoEdit": "Le QR code sera régénéré si vous changez le numéro",
+      "regenerateQR": "Régénérer le QR Code"
+    },
+    "qr": {
+      "title": "QR Code",
+      "tableTitle": "Table",
+      "scanToOrder": "Scannez pour commander",
+      "download": "Télécharger",
+      "print": "Imprimer",
+      "regenerate": "Régénérer",
+      "copyLink": "Copier le lien",
+      "linkCopied": "Lien copié !"
+    },
+    "actions": {
+      "view": "Voir QR",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "download": "Télécharger QR",
+      "print": "Imprimer QR"
+    },
+    "empty": {
+      "title": "Aucune table",
+      "message": "Créez vos tables pour générer des QR codes",
+      "noResults": "Aucun résultat",
+      "noResultsMessage": "Aucune table ne correspond à vos filtres"
+    },
+    "delete": {
+      "title": "Supprimer la table",
+      "message": "Supprimer cette table ?",
+      "confirm": "Supprimer"
+    },
+    "messages": {
+      "created": "Table créée avec succès !",
+      "createdMultiple": "{{count}} tables créées avec succès !",
+      "updated": "Table modifiée !",
+      "deleted": "Table supprimée",
+      "qrRegenerated": "QR code régénéré !",
+      "statusChanged": "Statut mis à jour"
+    },
+    "errors": {
+      "loadFailed": "Erreur lors du chargement des tables",
+      "createFailed": "Erreur lors de la création",
+      "updateFailed": "Erreur lors de la modification",
+      "deleteFailed": "Erreur lors de la suppression",
+      "numberRequired": "Le numéro de table est requis",
+      "numberExists": "Ce numéro de table existe déjà",
+      "countInvalid": "Le nombre doit être entre 1 et 50"
     }
   },
   "dashboard": {
@@ -880,7 +980,7 @@
       },
       "analytics": {
         "title": "Statistiques & Rapports",
-        "description": "Analysez vos ventes, les plats populaires et les performances grâce à des tableaux de bord intuitifs."
+        "description": "Analysez vos ventes, les plats populaires et les performances grâce à des saux de bord intuitifs."
       },
       "tables": {
         "title": "Gestion des tables",
