@@ -66,8 +66,8 @@
         "title": "Paiements",
         "subtitle": "Suivez les transactions"
       },
-      "": {
-        "title": " Mes ",
+      "tables": {
+        "title": " Mes tables",
         "subtitle": "Gérez les  et QR codes"
       },
       "settings": {

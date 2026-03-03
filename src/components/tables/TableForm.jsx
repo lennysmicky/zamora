@@ -1,5 +1,5 @@
 // src/components/tables/TableForm.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   RiAddLine,
   RiSave3Line,
@@ -7,129 +7,133 @@ import {
   RiTableLine,
   RiGroupLine,
   RiQrCodeLine,
-  RiRefreshLine
-} from 'react-icons/ri';
-import './css/TableComponents.css';
+  RiRefreshLine,
+} from "react-icons/ri";
+import "./css/TableComponents.css";
 
-const TableForm = ({ 
-  table = null, // null = création, sinon = modification
-  onSubmit, 
-  onCreateMultiple, 
-  onCancel, 
+const numOf = (t) => t?.numero_table ?? t?.numero ?? t?.number ?? "";
+const nameOf = (t) => t?.nom ?? t?.nom_table ?? t?.name ?? "";
+
+const TableForm = ({
+  table = null,
+  onSubmit,
+  onCreateMultiple,
+  onCancel,
   onRegenerateQR,
-  saving, 
-  existingNumbers = [] 
+  saving,
+  existingNumbers = [],
 }) => {
   const isEditMode = !!table;
-  const [mode, setMode] = useState('single'); // single | multiple (seulement en création)
-  
-  const [form, setForm] = useState({
-    numero: '',
-    nom: '',
-    capacite: 4,
-    status: 'libre'
-  });
-  
-  const [multipleCount, setMultipleCount] = useState(5);
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState("single");
 
-  // Pré-remplir si modification
+  const [form, setForm] = useState({
+    numero: "",
+    nom: "",
+    capacite: 4,
+    status: "libre",
+  });
+
+  const [multipleCount, setMultipleCount] = useState(5);
+  const [error, setError] = useState("");
+
   useEffect(() => {
-    if (table) {
-      setForm({
-        numero: table.numero || table.number || '',
-        nom: table.nom || table.name || '',
-        capacite: table.capacite || table.capacity || 4,
-        status: table.status || 'libre'
-      });
-    }
+    if (!table) return;
+    setForm({
+      numero: numOf(table) ?? "",
+      nom: nameOf(table) ?? "",
+      capacite: table?.capacite ?? table?.capacity ?? 4,
+      status: table?.status ?? "libre",
+    });
   }, [table]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    setError('');
+    setForm((p) => ({ ...p, [name]: value }));
+    setError("");
   };
 
-  // Soumettre (création ou modification)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    if (!form.numero) {
-      setError('Le numéro de table est requis');
+    const currentNum = Number.parseInt(String(form.numero ?? ""), 10);
+    if (!Number.isFinite(currentNum) || currentNum < 1) {
+      setError("Le numéro de table est requis");
       return;
     }
 
-    // Vérifier doublon (sauf si c'est le même numéro en edit)
-    const currentNum = parseInt(form.numero);
-    const isOwnNumber = isEditMode && (table.numero === currentNum || table.number === currentNum);
-    
-    if (!isOwnNumber && existingNumbers.includes(currentNum)) {
-      setError('Ce numéro de table existe déjà');
+    const existing = (existingNumbers || [])
+      .map((n) => Number(n))
+      .filter((n) => Number.isFinite(n));
+
+    const prevNum = Number(numOf(table));
+    const isOwnNumber = isEditMode && Number.isFinite(prevNum) && prevNum === currentNum;
+
+    if (!isOwnNumber && existing.includes(currentNum)) {
+      setError("Ce numéro de table existe déjà");
       return;
     }
 
-    const result = await onSubmit({
-      ...(isEditMode ? { _id: table._id || table.id } : {}),
-      numero: currentNum,
-      nom: form.nom || `Table ${form.numero}`,
-      capacite: parseInt(form.capacite) || 4,
-      status: form.status
-    });
+    const rawName = String(form.nom ?? "").trim();
 
-    if (!result.success) {
-      setError(result.error);
-    }
+    // ✅ en CREATE: nom par défaut si vide
+    // ✅ en EDIT: si vide => on n’envoie pas de nom (ne pas écraser côté backend)
+    const payload = {
+      ...(isEditMode ? { _id: table?._id || table?.id } : {}),
+      numero_table: currentNum,
+      capacite: Number.parseInt(String(form.capacite ?? ""), 10) || 4,
+      status: form.status,
+      ...(rawName
+        ? { nom: rawName, name: rawName, nom_table: rawName }
+        : isEditMode
+        ? {}
+        : { nom: `Table ${currentNum}`, name: `Table ${currentNum}`, nom_table: `Table ${currentNum}` }),
+    };
+
+    const result = await onSubmit(payload);
+    if (!result?.success) setError(result?.error || "Erreur");
   };
 
-  // Création multiple
   const handleMultipleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (multipleCount < 1 || multipleCount > 50) {
-      setError('Le nombre doit être entre 1 et 50');
+      setError("Le nombre doit être entre 1 et 50");
       return;
     }
 
     const result = await onCreateMultiple(multipleCount);
-    if (!result.success) {
-      setError(result.error);
-    }
+    if (!result?.success) setError(result?.error || "Erreur");
   };
 
-  // Régénérer QR (seulement en mode edit)
   const handleRegenerateQR = async () => {
     if (!table || !onRegenerateQR) return;
     const result = await onRegenerateQR(table._id || table.id);
-    if (!result.success) {
-      setError(result.error);
-    }
+    if (!result?.success) setError(result?.error || "Erreur");
   };
 
-  // Suggérer le prochain numéro
-  const suggestedNumber = existingNumbers.length > 0 
-    ? Math.max(...existingNumbers) + 1 
-    : 1;
+  const suggestedNumber =
+    (existingNumbers?.length ?? 0) > 0 ? Math.max(...existingNumbers) + 1 : 1;
+
+  const displayNum = numOf(table);
 
   return (
     <div className="table-form">
-      {/* Mode Toggle - Seulement en création */}
       {!isEditMode && (
         <div className="table-form-mode">
           <button
             type="button"
-            className={`mode-btn ${mode === 'single' ? 'active' : ''}`}
-            onClick={() => setMode('single')}
+            className={`mode-btn ${mode === "single" ? "active" : ""}`}
+            onClick={() => setMode("single")}
           >
             <RiTableLine />
             <span>Une table</span>
           </button>
           <button
             type="button"
-            className={`mode-btn ${mode === 'multiple' ? 'active' : ''}`}
-            onClick={() => setMode('multiple')}
+            className={`mode-btn ${mode === "multiple" ? "active" : ""}`}
+            onClick={() => setMode("multiple")}
           >
             <RiGroupLine />
             <span>Plusieurs</span>
@@ -137,17 +141,15 @@ const TableForm = ({
         </div>
       )}
 
-      {/* Titre en mode édition */}
       {isEditMode && (
         <div className="table-form-edit-header">
-          <h4>Modifier la Table {table.numero || table.number}</h4>
+          <h4>Modifier la Table {displayNum}</h4>
         </div>
       )}
 
       {error && <div className="table-form-error">{error}</div>}
 
-      {/* ========== FORMULAIRE SIMPLE ========== */}
-      {(mode === 'single' || isEditMode) && (
+      {(mode === "single" || isEditMode) && (
         <form onSubmit={handleSubmit}>
           <div className="table-form-grid">
             <div className="table-form-field">
@@ -157,7 +159,7 @@ const TableForm = ({
                 name="numero"
                 value={form.numero}
                 onChange={handleChange}
-                placeholder={isEditMode ? '' : `Ex: ${suggestedNumber}`}
+                placeholder={isEditMode ? "" : `Ex: ${suggestedNumber}`}
                 min="1"
                 required
               />
@@ -189,15 +191,10 @@ const TableForm = ({
               />
             </div>
 
-            {/* Status - Seulement en modification */}
             {isEditMode && (
               <div className="table-form-field full">
                 <label>Statut</label>
-                <select
-                  name="status"
-                  value={form.status}
-                  onChange={handleChange}
-                >
+                <select name="status" value={form.status} onChange={handleChange}>
                   <option value="libre">Libre</option>
                   <option value="occupee">Occupée</option>
                   <option value="reservee">Réservée</option>
@@ -206,21 +203,18 @@ const TableForm = ({
             )}
           </div>
 
-          {/* Info QR */}
           <div className="table-form-info">
             <RiQrCodeLine />
             <p>
-              {isEditMode 
-                ? 'Le QR code sera régénéré automatiquement si vous changez le numéro'
-                : 'Un QR code unique sera généré automatiquement'
-              }
+              {isEditMode
+                ? "Le QR code sera régénéré automatiquement si vous changez le numéro"
+                : "Un QR code unique sera généré automatiquement"}
             </p>
           </div>
 
-          {/* Bouton régénérer QR - Seulement en modification */}
           {isEditMode && onRegenerateQR && (
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="table-form-btn regenerate"
               onClick={handleRegenerateQR}
               disabled={saving}
@@ -231,28 +225,19 @@ const TableForm = ({
           )}
 
           <div className="table-form-actions">
-            <button 
-              type="button" 
-              className="table-form-btn cancel"
-              onClick={onCancel}
-              disabled={saving}
-            >
+            <button type="button" className="table-form-btn cancel" onClick={onCancel} disabled={saving}>
               Annuler
             </button>
-            <button 
-              type="submit" 
-              className="table-form-btn submit"
-              disabled={saving}
-            >
+            <button type="submit" className="table-form-btn submit" disabled={saving}>
               {saving ? (
                 <>
                   <RiLoader4Line className="spin" />
-                  <span>{isEditMode ? 'Enregistrement...' : 'Création...'}</span>
+                  <span>{isEditMode ? "Enregistrement..." : "Création..."}</span>
                 </>
               ) : (
                 <>
                   {isEditMode ? <RiSave3Line /> : <RiAddLine />}
-                  <span>{isEditMode ? 'Enregistrer' : 'Créer la table'}</span>
+                  <span>{isEditMode ? "Enregistrer" : "Créer la table"}</span>
                 </>
               )}
             </button>
@@ -260,8 +245,7 @@ const TableForm = ({
         </form>
       )}
 
-      {/* ========== FORMULAIRE MULTIPLE ========== */}
-      {!isEditMode && mode === 'multiple' && (
+      {!isEditMode && mode === "multiple" && (
         <form onSubmit={handleMultipleSubmit}>
           <div className="table-form-multiple">
             <div className="table-form-field">
@@ -269,7 +253,7 @@ const TableForm = ({
               <input
                 type="number"
                 value={multipleCount}
-                onChange={(e) => setMultipleCount(parseInt(e.target.value) || 1)}
+                onChange={(e) => setMultipleCount(Number.parseInt(e.target.value, 10) || 1)}
                 min="1"
                 max="50"
               />
@@ -297,19 +281,10 @@ const TableForm = ({
           </div>
 
           <div className="table-form-actions">
-            <button 
-              type="button" 
-              className="table-form-btn cancel"
-              onClick={onCancel}
-              disabled={saving}
-            >
+            <button type="button" className="table-form-btn cancel" onClick={onCancel} disabled={saving}>
               Annuler
             </button>
-            <button 
-              type="submit" 
-              className="table-form-btn submit"
-              disabled={saving}
-            >
+            <button type="submit" className="table-form-btn submit" disabled={saving}>
               {saving ? (
                 <>
                   <RiLoader4Line className="spin" />

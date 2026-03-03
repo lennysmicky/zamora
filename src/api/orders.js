@@ -2,6 +2,8 @@
 import client from "./client";
 
 // ---------------- utils ----------------
+const TIMEOUT = 10000;
+
 const clean = (p = {}) =>
   Object.fromEntries(Object.entries(p).filter(([, v]) => v !== "" && v != null));
 
@@ -12,6 +14,18 @@ const unwrap = (x) => {
     if (Array.isArray(v)) break;
     if (typeof v !== "object") break;
     v = v.data ?? v.result ?? v.payload ?? v.response ?? v;
+  }
+  return v;
+};
+
+//  unwrap spécifique tables (supporte keys tables/table)
+const unwrapTables = (x) => {
+  let v = x;
+  for (let i = 0; i < 4; i++) {
+    if (v == null) break;
+    if (Array.isArray(v)) break;
+    if (typeof v !== "object") break;
+    v = v.data ?? v.result ?? v.tables ?? v.table ?? v.payload ?? v.response ?? v;
   }
   return v;
 };
@@ -37,6 +51,21 @@ const arr = (v) => {
   return [];
 };
 
+//  extract list tables (supporte {tables:[...]}, {data:{tables:[...]}} etc)
+const arrTables = (v) => {
+  const x = unwrapTables(v);
+  if (Array.isArray(x)) return x;
+
+  if (Array.isArray(x?.tables)) return x.tables;
+  if (Array.isArray(x?.data?.tables)) return x.data.tables;
+
+  if (Array.isArray(x?.data)) return x.data;
+  if (Array.isArray(x?.results)) return x.results;
+  if (Array.isArray(x?.items)) return x.items;
+
+  return [];
+};
+
 const num = (v) => {
   if (v == null || v === "") return 0;
   if (typeof v === "number") return Number.isFinite(v) ? v : 0;
@@ -51,7 +80,7 @@ const pick = (o, keys) => {
   return undefined;
 };
 
-const TIMEOUT = 10000;
+const enc = (v) => encodeURIComponent(String(v ?? ""));
 
 const toAxiosErrorMessage = (err) => {
   const status = err?.response?.status;
@@ -63,24 +92,11 @@ const toAxiosErrorMessage = (err) => {
   return status ? `${status} - ${msg}` : msg;
 };
 
-const isFallbackable = (err) => {
-  const s = err?.response?.status;
-  const m = String(err?.response?.data?.message ?? err?.message ?? "");
-  return s === 404 || s === 405 || /not found|cannot|unknown|route|endpoint/i.test(m);
-};
-
-const requestWithFallback = async (calls) => {
-  let lastErr = null;
-  for (const fn of calls) {
-    try {
-      return await fn();
-    } catch (e) {
-      lastErr = e;
-      if (!isFallbackable(e)) break;
-    }
-  }
-  throw lastErr ?? new Error("Request failed");
-};
+const axiosCfg = (options = {}, extra = {}) => ({
+  timeout: TIMEOUT,
+  signal: options.signal,
+  ...extra,
+});
 
 // ---------------- mapping UI <-> backend ----------------
 const normalizeOrderStatus = (s) => {
@@ -129,7 +145,6 @@ const denormalizePaymentStatus = (s) => {
   return undefined;
 };
 
-// backend enum: espece | virement | tmoney | flooz
 const normalizePaymentMethod = (m) => {
   const v = String(m ?? "").trim().toLowerCase();
   if (["espece", "espèce", "cash", "cod", "cash_on_delivery"].includes(v)) return "CASH";
@@ -147,12 +162,12 @@ const denormalizePaymentMethod = (m) => {
   if (v === "TMONEY") return "tmoney";
   if (v === "FLOOZ") return "flooz";
   if (v === "CARD") return "card";
+
   const low = String(m ?? "").toLowerCase();
   if (["espece", "virement", "tmoney", "flooz", "card"].includes(low)) return low;
   return undefined;
 };
 
-// backend enum: sur_place | a_emporter | livraison | web | qrCode
 const normalizeSource = (s) => {
   const raw = String(s ?? "").trim();
   const v = raw.toLowerCase();
@@ -242,7 +257,6 @@ const normalizeOrder = (raw) => {
   return {
     id,
     _id: id,
-
     restaurantId,
 
     order_number: orderNumber,
@@ -294,16 +308,50 @@ const normalizeMeal = (m) => ({
   price: num(m?.prix ?? m?.price ?? 0),
 });
 
-// ---------------- routes ----------------
-// NOUVELLES ROUTES RESTAURANT (Order API)
-const restoOrdersUrl = (rid) => `/order/${encodeURIComponent(rid)}`; // GET list / POST create
-const restoOrderDetailUrl = (rid, id) =>
-  `/order/${encodeURIComponent(rid)}/${encodeURIComponent(id)}`; // GET detail / PATCH/PUT update / DELETE delete
+//  normalize table pour le select (évite "Table <restaurantId>")
+const normalizeTable = (raw) => {
+  const base = raw?.table && typeof raw.table === "object" ? raw.table : raw;
+  const _id = String(base?._id ?? base?.id ?? "").trim();
+  const numero_table =
+    base?.numero_table ??
+    base?.numeroTable ??
+    base?.numero ??
+    base?.tableNumber ??
+    base?.number ??
+    base?.num ??
+    null;
 
-// ✅ FIX: stats = /order/:rid/stats (pas /order/stats/:rid)
-const restoStatsUrl = (rid) => `/order/${encodeURIComponent(rid)}/stats`;
+  const nom =
+    base?.nom_table ??
+    base?.table_name ??
+    base?.tableName ??
+    base?.nom ??
+    base?.name ??
+    "";
 
-// Admin (inchangé)
+  // si ce n'est pas une table (pas de numero + pas de nom), on la jette
+  const hasUseful = (numero_table != null && String(numero_table) !== "") || String(nom).trim() !== "";
+  if (!hasUseful) return null;
+
+  return {
+    ...(base || {}),
+    _id,
+    id: _id,
+    numero_table,
+    numero: numero_table,
+    nom: String(nom || "").trim(),
+    name: String(nom || "").trim(),
+    status: base?.status ?? base?.etat ?? "libre",
+  };
+};
+
+// ---------------- routes (UNIQUEMENT les vraies) ----------------
+const restoOrdersListUrl = (rid) => `/order/${enc(rid)}`;
+const restoStatsUrl = (rid) => `/order/${enc(rid)}/stats`;
+const restoCommandeCreateUrl = (rid) => `/commande/${enc(rid)}`;
+const restoCommandeDetailUrl = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`;
+
+// Admin (si réellement existant chez toi)
 const adminListUrl = () => `/admin/commandes`;
 const adminStatsUrl = () => `/admin/commandes/stats`;
 
@@ -314,28 +362,22 @@ export const ordersApi = {
   getOrders: async (params = {}, options = {}) => {
     const {
       mode = "restaurant",
-
       restaurantId,
       restaurentId,
-      restaurant, // filtre admin
-
+      restaurant,
       page = 1,
       limit = 10,
-
       search,
       status,
       paymentStatus,
       paymentMethod,
       source,
-
       period,
       from,
       to,
-
       ...rest
     } = params;
 
-    // liste: ok avec page/limit/search
     const listQuery = clean({
       ...rest,
       page,
@@ -343,21 +385,17 @@ export const ordersApi = {
       period,
       from,
       to,
-
       status: status ? denormalizeOrderStatus(status) : undefined,
       payment_status: paymentStatus ? denormalizePaymentStatus(paymentStatus) : undefined,
       payment_method: paymentMethod ? denormalizePaymentMethod(paymentMethod) : undefined,
       source: source ? denormalizeSource(source) : undefined,
-
       search,
       q: search,
       customer_name: search,
     });
 
-    // stats: seulement période (évite params inutiles)
     const statsQuery = clean({ period, from, to });
 
-    // ---------- ADMIN ----------
     if (mode === "admin") {
       const adminQuery = clean({
         ...listQuery,
@@ -365,95 +403,78 @@ export const ordersApi = {
         restaurentId: restaurant ?? restaurentId ?? restaurantId ?? undefined,
       });
 
-      const axiosCfg = { params: adminQuery, timeout: TIMEOUT, signal: options.signal };
+      const cfg = axiosCfg(options, { params: adminQuery });
 
-      const [r1, r2] = await Promise.allSettled([
-        client.get(adminListUrl(), axiosCfg),
-        client.get(adminStatsUrl(), axiosCfg),
+      try {
+        const [r1, r2] = await Promise.all([client.get(adminListUrl(), cfg), client.get(adminStatsUrl(), cfg)]);
+
+        const listData = unwrap(r1?.data);
+        const statsData = unwrap(r2?.data);
+
+        const orders = arr(listData).map(normalizeOrder);
+        const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
+        const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+
+        return {
+          data: orders,
+          totalPages,
+          totalItems,
+          stats: statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems }),
+        };
+      } catch (e) {
+        throw new Error(toAxiosErrorMessage(e));
+      }
+    }
+
+    const rid = restaurentId ?? restaurantId ?? null;
+    if (!rid) {
+      return { data: [], totalPages: 1, totalItems: 0, stats: { total: 0, pending: 0, delivered: 0, cancelled: 0 } };
+    }
+
+    try {
+      const listCfg = axiosCfg(options, { params: listQuery });
+      const statsCfg = axiosCfg(options, { params: statsQuery });
+
+      const [listRes, statsRes] = await Promise.all([
+        client.get(restoOrdersListUrl(rid), listCfg),
+        client.get(restoStatsUrl(rid), statsCfg),
       ]);
 
-      if (r1.status === "rejected" && r2.status === "rejected") {
-        throw new Error(toAxiosErrorMessage(r1.reason) || toAxiosErrorMessage(r2.reason));
-      }
-      if (r1.status === "rejected") throw new Error(toAxiosErrorMessage(r1.reason));
-
-      const listData = unwrap(r1.value?.data);
-      const statsData = r2.status === "fulfilled" ? unwrap(r2.value?.data) : null;
+      const listData = unwrap(listRes?.data);
+      const statsData = unwrap(statsRes?.data);
 
       const orders = arr(listData).map(normalizeOrder);
-
       const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-      const totalPages =
-        num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+      const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
 
-      const normalizedStats = statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems });
-
-      return { data: orders, totalPages, totalItems, stats: normalizedStats };
-    }
-
-    // ---------- RESTAURANT ----------
-    const rid = restaurentId ?? restaurantId ?? null;
-
-    if (!rid) {
       return {
-        data: [],
-        totalPages: 1,
-        totalItems: 0,
-        stats: { total: 0, pending: 0, delivered: 0, cancelled: 0 },
+        data: orders,
+        totalPages,
+        totalItems,
+        stats: statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems }),
       };
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
     }
-
-    const listAxiosCfg = { params: listQuery, timeout: TIMEOUT, signal: options.signal };
-    const statsAxiosCfg = { params: statsQuery, timeout: TIMEOUT, signal: options.signal };
-
-    const getStats = () =>
-      requestWithFallback([
-        () => client.get(restoStatsUrl(rid), statsAxiosCfg), // ✅ /order/:id/stats
-        () => client.get(`/order/stats/${encodeURIComponent(rid)}`, statsAxiosCfg), // fallback si backend change
-      ]);
-
-    const [listRes, statsRes] = await Promise.allSettled([
-      client.get(restoOrdersUrl(rid), listAxiosCfg),
-      getStats(),
-    ]);
-
-    if (listRes.status === "rejected") {
-      throw new Error(toAxiosErrorMessage(listRes.reason));
-    }
-
-    const listData = unwrap(listRes.value?.data);
-    const statsData = statsRes.status === "fulfilled" ? unwrap(statsRes.value?.data) : null;
-
-    const orders = arr(listData).map(normalizeOrder);
-
-    const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-    const totalPages =
-      num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
-
-    const normalizedStats = statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems });
-
-    return { data: orders, totalPages, totalItems, stats: normalizedStats };
   },
 
   // ========================
   // DETAIL
-  // GET /api/order/:restaurentId/:id
   // ========================
   getOrderById: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
 
-    const res = await client.get(restoOrderDetailUrl(restaurentId, orderId), {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-
-    return normalizeOrder(unwrap(res?.data));
+    try {
+      const res = await client.get(restoCommandeDetailUrl(restaurentId, orderId), axiosCfg(options));
+      return normalizeOrder(unwrap(res?.data));
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
   // ========================
   // CREATE
-  // POST /api/order/:restaurentId
   // ========================
   createOrder: async (payload, options = {}) => {
     const rid =
@@ -466,33 +487,38 @@ export const ordersApi = {
 
     if (!rid) throw new Error("Missing restaurentId for createOrder()");
 
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+    const mappedItems = items
+      .map((it) => {
+        const repas = it?.repas ?? it?.mealId ?? it?.id ?? it?._id;
+        const quantite = Number(it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? 0);
+        if (!repas || !Number.isFinite(quantite) || quantite <= 0) return null;
+        return { repas: String(repas), quantite };
+      })
+      .filter(Boolean);
+
     const body = clean({
-      customer_name: payload?.customer_name,
-      customer_phone: payload?.customer_phone,
-      payment_method: payload?.payment_method, // espece|virement|tmoney|flooz
-      source: payload?.source, // sur_place|a_emporter|livraison|web|qrCode
-      table: payload?.table || undefined,
-      items: (payload?.items || []).map((it) => ({
-        repas: String(it.repas),
-        quantite: Number(it.quantite),
-      })),
+      customer_name: payload?.customer_name ?? payload?.customer?.name,
+      customer_phone: payload?.customer_phone ?? payload?.customer?.phone,
+      payment_method: payload?.payment_method ? denormalizePaymentMethod(payload.payment_method) : undefined,
+      source: payload?.source ? denormalizeSource(payload.source) : undefined,
+      table: payload?.table ?? payload?.tableId ?? undefined,
+      items: mappedItems,
     });
 
-    const res = await client.post(restoOrdersUrl(rid), body, {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-
-    return unwrap(res?.data);
+    try {
+      const res = await client.post(restoCommandeCreateUrl(rid), body, axiosCfg(options));
+      return unwrap(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
-  // alias compat (ancien nom)
   createCommande: async (restaurentId, body, options = {}) =>
     ordersApi.createOrder({ ...body, restaurent: restaurentId }, options),
 
   // ========================
   // UPDATE
-  // PATCH/PUT /api/order/:restaurentId/:id
   // ========================
   updateOrder: async (restaurentId, orderId, patch, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
@@ -501,137 +527,88 @@ export const ordersApi = {
     const payload = clean({
       ...patch,
       status: patch?.status ? denormalizeOrderStatus(patch.status) : patch?.status,
-      payment_status: patch?.payment_status
-        ? denormalizePaymentStatus(patch.payment_status)
-        : patch?.payment_status,
-      payment_method: patch?.payment_method
-        ? denormalizePaymentMethod(patch.payment_method)
-        : patch?.payment_method,
+      payment_status: patch?.payment_status ? denormalizePaymentStatus(patch.payment_status) : patch?.payment_status,
+      payment_method: patch?.payment_method ? denormalizePaymentMethod(patch.payment_method) : patch?.payment_method,
       source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
     });
 
-    const doPatch = () =>
-      client.patch(restoOrderDetailUrl(restaurentId, orderId), payload, {
-        timeout: TIMEOUT,
-        signal: options.signal,
-      });
-
-    const doPut = () =>
-      client.put(restoOrderDetailUrl(restaurentId, orderId), payload, {
-        timeout: TIMEOUT,
-        signal: options.signal,
-      });
-
-    const res = await requestWithFallback([doPatch, doPut]);
-    return unwrap(res?.data);
+    try {
+      const res = await client.patch(restoCommandeDetailUrl(restaurentId, orderId), payload, axiosCfg(options));
+      return unwrap(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
-
-    if (rid) return ordersApi.updateOrder(rid, orderId, { status }, options);
-
-    // fallback ancien endpoint
-    const payload = { status: denormalizeOrderStatus(status) };
-    const res = await client.patch(`/order/${encodeURIComponent(orderId)}/status`, payload, {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-    return unwrap(res?.data);
+    if (!rid) throw new Error("Missing restaurentId for updateStatus()");
+    return ordersApi.updateOrder(rid, orderId, { status }, options);
   },
 
   updatePaymentStatus: async (orderId, payment_status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
-
-    if (rid) return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
-
-    // fallback ancien endpoint
-    const payload = { payment_status: denormalizePaymentStatus(payment_status) };
-    const res = await client.patch(`/order/${encodeURIComponent(orderId)}/payment`, payload, {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-    return unwrap(res?.data);
+    if (!rid) throw new Error("Missing restaurentId for updatePaymentStatus()");
+    return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
   },
 
   // ========================
   // DELETE
-  // DELETE /api/order/:restaurentId/:id
   // ========================
   deleteOrder: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
 
-    const res = await client.delete(restoOrderDetailUrl(restaurentId, orderId), {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-
-    return unwrap(res?.data);
+    try {
+      const res = await client.delete(restoCommandeDetailUrl(restaurentId, orderId), axiosCfg(options));
+      return unwrap(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
   // ========================
-  // MENU: TABLES / REPAS (inchangé)
+  // MENU: TABLES / CATEGORIES / REPAS
   // ========================
+
+  //  Route réelle: GET /api/table/:restaurentId
   getTables: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
-    const axiosCfg = { timeout: TIMEOUT, signal: options.signal };
+    try {
+      const res = await client.get(`/table/${enc(restaurentId)}`, axiosCfg(options));
 
-    const res = await requestWithFallback([
-      () => client.get(`/table/restaurent/${encodeURIComponent(restaurentId)}`, axiosCfg),
-      () => client.get(`/tables/restaurent/${encodeURIComponent(restaurentId)}`, axiosCfg),
-      () => client.get(`/restaurent/${encodeURIComponent(restaurentId)}/tables`, axiosCfg),
-      () => client.get(`/table/${encodeURIComponent(restaurentId)}`, axiosCfg),
-      () => client.get(`/tables/${encodeURIComponent(restaurentId)}`, axiosCfg),
-    ]);
+      // ⚠️ important: extraire correctement la liste + normaliser
+      const list = arrTables(res?.data);
+      const normalized = (Array.isArray(list) ? list : [])
+        .map(normalizeTable)
+        .filter(Boolean);
 
-    return arr(res?.data);
+      // tri stable par numéro
+      normalized.sort((a, b) => Number(a.numero_table ?? 0) - Number(b.numero_table ?? 0));
+      return normalized;
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
   getCategories: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
-    const res = await client.get(`/categorie/${encodeURIComponent(restaurentId)}`, {
-      timeout: TIMEOUT,
-      signal: options.signal,
-    });
-    return arr(res?.data);
+    try {
+      const res = await client.get(`/categorie/${enc(restaurentId)}`, axiosCfg(options));
+      return arr(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 
   getRepas: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
-    const axiosCfg = { timeout: TIMEOUT, signal: options.signal };
-
-    const listAllMeals = async () => {
-      const res = await client.get(`/repas/${encodeURIComponent(restaurentId)}`, axiosCfg);
-      return arr(res?.data)
-        .map(normalizeMeal)
-        .filter((m) => m?.id);
-    };
-
-    const listMealsByCategories = async () => {
-      const catsRes = await client.get(`/categorie/${encodeURIComponent(restaurentId)}`, axiosCfg);
-      const cats = arr(catsRes?.data);
-
-      const chunks = await Promise.allSettled(
-        cats.map((c) => {
-          const cid = String(c?._id ?? c?.id ?? "");
-          if (!cid) return Promise.resolve([]);
-          return client
-            .get(`/repas/categorie/${encodeURIComponent(restaurentId)}/${encodeURIComponent(cid)}`, axiosCfg)
-            .then((r) => arr(r?.data).map(normalizeMeal));
-        })
-      );
-
-      const flat = chunks.flatMap((r) => (r.status === "fulfilled" ? r.value : []));
-      const map = new Map();
-      for (const m of flat) if (m?.id) map.set(String(m.id), m);
-      return [...map.values()];
-    };
-
-    const meals = await requestWithFallback([listAllMeals, listMealsByCategories]);
-    const out = Array.isArray(meals) ? meals : [];
-    out.sort((a, b) => String(a?.nom ?? "").localeCompare(String(b?.nom ?? ""), "fr"));
-    return out;
+    try {
+      const res = await client.get(`/repas/${enc(restaurentId)}`, axiosCfg(options));
+      return arr(res?.data).map(normalizeMeal).filter((m) => m?.id);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
   },
 };
 

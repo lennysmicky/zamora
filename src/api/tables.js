@@ -5,13 +5,37 @@ const unwrap = (res) => {
   let v = res?.data;
   for (let i = 0; i < 3; i++) {
     if (!v || typeof v !== "object") break;
-    v = v.data ?? v.result ?? v.tables ?? v;
+    v = v.data ?? v.result ?? v.tables ?? v.table ?? v;
   }
   return v;
 };
 
+const normalizeTablePayload = (data = {}) => {
+  const d = { ...(data || {}) };
+
+  const numero =
+    d.numero_table ??
+    d.numeroTable ??
+    d.numero ??
+    d.tableNumber ??
+    d.number ??
+    d.num;
+
+  if (numero != null && numero !== "") {
+    const n = Number(numero);
+    d.numero_table = Number.isFinite(n) ? n : numero; // au pire on laisse la string
+  }
+
+  // nettoyage alias
+  delete d.numeroTable;
+  delete d.tableNumber;
+  delete d.number;
+  delete d.num;
+
+  return d;
+};
+
 export const tablesApi = {
-  // Récupérer toutes les tables d'un restaurant
   getTables: async (restaurantId) => {
     if (!restaurantId) return [];
     const res = await client.get(`/table/${restaurantId}`);
@@ -19,60 +43,56 @@ export const tablesApi = {
     return Array.isArray(data) ? data : [];
   },
 
-  // Récupérer une table par ID
-  getTable: async (tableId) => {
-    const res = await client.get(`/table/single/${tableId}`);
+  getTable: async (restaurantId, id) => {
+    if (!restaurantId || !id) return null;
+    const res = await client.get(`/table/${restaurantId}/${id}`);
     return unwrap(res);
   },
 
-  // Créer une nouvelle table
   createTable: async (restaurantId, data) => {
-    const res = await client.post(`/table/${restaurantId}`, data);
+    if (!restaurantId) throw new Error("[tablesApi] Missing restaurantId");
+    const payload = normalizeTablePayload(data);
+
+    // guard clair côté front
+    if (payload.numero_table == null || payload.numero_table === "") {
+      throw new Error("[tablesApi] Missing numero_table");
+    }
+
+    const res = await client.post(`/table/${restaurantId}`, payload);
     return unwrap(res);
   },
 
-  // Créer plusieurs tables d'un coup
-  createMultipleTables: async (restaurantId, count) => {
-    const res = await client.post(`/table/${restaurantId}/bulk`, { count });
+  updateTable: async (restaurantId, id, data) => {
+    if (!restaurantId || !id) throw new Error("[tablesApi] Missing id");
+    const payload = normalizeTablePayload(data);
+    const res = await client.put(`/table/${restaurantId}/${id}`, payload);
     return unwrap(res);
   },
 
-  // Mettre à jour une table
-  updateTable: async (tableId, data) => {
-    const res = await client.put(`/table/${tableId}`, data);
+  deleteTable: async (restaurantId, id) => {
+    if (!restaurantId || !id) throw new Error("[tablesApi] Missing id");
+    const res = await client.delete(`/table/${restaurantId}/${id}`);
     return unwrap(res);
   },
 
-  // Supprimer une table
-  deleteTable: async (tableId) => {
-    const res = await client.delete(`/table/${tableId}`);
-    return unwrap(res);
-  },
-
-  // Changer le statut d'une table (libre, occupée, réservée)
-  updateStatus: async (tableId, status) => {
-    const res = await client.patch(`/table/${tableId}/status`, { status });
-    return unwrap(res);
-  },
-
-  // Régénérer le QR code d'une table
-  regenerateQR: async (tableId) => {
-    const res = await client.post(`/table/${tableId}/regenerate-qr`);
-    return unwrap(res);
-  },
-
-  // Récupérer les stats des tables
   getStats: async (restaurantId) => {
-    if (!restaurantId) return { total: 0, libre: 0, occupee: 0, reservee: 0 };
+    const empty = { total: 0, libre: 0, occupee: 0, reservee: 0 };
+    if (!restaurantId) return empty;
     try {
-      const res = await client.get(`/table/${restaurantId}/stats`);
-      return unwrap(res) || { total: 0, libre: 0, occupee: 0, reservee: 0 };
+      const res = await client.get(`/table/stats/${restaurantId}`);
+      return unwrap(res) || empty;
     } catch {
-      return { total: 0, libre: 0, occupee: 0, reservee: 0 };
+      return empty;
     }
   },
 
-  // Générer l'URL du menu pour le QR
+  searchTables: async (restaurantId, params = {}) => {
+    if (!restaurantId) return [];
+    const res = await client.get(`/table/search/${restaurantId}`, { params });
+    const data = unwrap(res);
+    return Array.isArray(data) ? data : [];
+  },
+
   getMenuUrl: (restaurantId, tableId, tableNumber) => {
     const baseUrl = import.meta.env.VITE_CLIENT_URL || window.location.origin;
     return `${baseUrl}/menu/${restaurantId}?table=${tableId}&numero=${tableNumber}`;

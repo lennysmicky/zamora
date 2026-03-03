@@ -20,23 +20,44 @@ const toNum = (v) => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const idOf = (x) => String(x?._id ?? x?.id ?? "");
+const idOf = (x) => String(x?._id ?? x?.id ?? "").trim();
 
-const labelOfTable = (t) =>
+const numOfTable = (t) =>
+  t?.numero_table ??
+  t?.numeroTable ??
+  t?.numero ??
+  t?.tableNumber ??
+  t?.number ??
+  t?.num ??
+  null;
+
+const nameOfTable = (t) =>
+  t?.nom_table ??
+  t?.table_name ??
+  t?.tableName ??
   t?.nom ??
   t?.name ??
-  t?.numero ??
-  (t?.number != null ? `Table ${t.number}` : idOf(t) ? `Table ${idOf(t)}` : "Table");
+  "";
+
+const labelOfTable = (t) => {
+  const name = String(nameOfTable(t) || "").trim();
+  if (name) return name;
+
+  const n = numOfTable(t);
+  const nn = Number(n);
+  if (Number.isFinite(nn) && nn > 0) return `Table ${nn}`;
+
+  // ✅ jamais afficher l'ID restaurant / ID table comme label
+  return "Table";
+};
 
 const labelOfMeal = (m) => m?.nom ?? m?.name ?? "-";
 const priceOfMeal = (m) => toNum(m?.prix ?? m?.price ?? 0);
 
-const requiresTable = (source) =>
-  source === "sur_place" ||
-  source === "qrCode" ||
-  source === "qrcode" ||
-  source === "qr_code" ||
-  source === "qr";
+const requiresTable = (source) => {
+  const v = String(source ?? "").trim().toLowerCase();
+  return v === "sur_place" || v === "qrcode" || v === "qr_code" || v === "qrcode" || v === "qrcode" || v === "qr" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrcode" || v === "qrCode".toLowerCase();
+};
 
 // ================================
 // COMPONENT
@@ -111,6 +132,7 @@ export default function OrderCreateForm({
     if (!needsTable) {
       setTables([]);
       if (form.table) setForm((s) => ({ ...s, table: "" }));
+      setLoadingTables(false);
       return;
     }
 
@@ -133,7 +155,19 @@ export default function OrderCreateForm({
     return () => {
       mounted = false;
     };
-  }, [rid, needsTable, form.table]);
+    // ✅ ne pas dépendre de form.table (sinon refetch à chaque sélection -> glitches)
+  }, [rid, needsTable]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sortedTables = useMemo(() => {
+    const arr = Array.isArray(tables) ? [...tables] : [];
+    arr.sort((a, b) => {
+      const na = Number(numOfTable(a));
+      const nb = Number(numOfTable(b));
+      if (Number.isFinite(na) && Number.isFinite(nb)) return na - nb;
+      return labelOfTable(a).localeCompare(labelOfTable(b), "fr");
+    });
+    return arr;
+  }, [tables]);
 
   // ================================
   // COMPUTED (UI)
@@ -153,7 +187,10 @@ export default function OrderCreateForm({
   // ================================
   // HANDLERS
   // ================================
-  const setField = (k, v) => setForm((s) => ({ ...s, [k]: v }));
+  const setField = (k, v) => {
+    setForm((s) => ({ ...s, [k]: v }));
+    setError("");
+  };
 
   const setItem = (idx, patch) =>
     setForm((s) => ({
@@ -167,15 +204,16 @@ export default function OrderCreateForm({
     setForm((s) => ({ ...s, items: s.items.filter((_, i) => i !== idx) }));
 
   const handleRepasSelect = (idx, repasId) => {
-    const selected = repas.find((r) => idOf(r) === String(repasId));
+    const ridStr = String(repasId ?? "");
+    const selected = repas.find((r) => idOf(r) === ridStr);
     if (selected) {
       setItem(idx, {
-        repas: repasId,
+        repas: ridStr,
         nom_repas: labelOfMeal(selected),
         prix_unitaire: priceOfMeal(selected),
       });
     } else {
-      setItem(idx, { repas: repasId, nom_repas: "", prix_unitaire: 0 });
+      setItem(idx, { repas: ridStr, nom_repas: "", prix_unitaire: 0 });
     }
   };
 
@@ -197,20 +235,17 @@ export default function OrderCreateForm({
     if (repas.length === 0)
       return t("orders.form.errors.noMeals", "Aucun repas disponible. Créez un repas d'abord.");
 
-    // table requise UNIQUEMENT si sur_place OU qrCode
     if (needsTable) {
       if (loadingTables)
         return t("orders.form.errors.tablesLoading", "Chargement des tables...");
-      if (tables.length === 0)
-        return t(
-          "orders.form.errors.noTables",
-          "Tables indisponibles (API tables non prête / accès refusé)."
-        );
+      if (sortedTables.length === 0)
+        return t("orders.form.errors.noTables", "Aucune table disponible.");
       if (!form.table)
-        return t(
-          "orders.form.errors.tableRequired",
-          "Table requise pour cette source"
-        );
+        return t("orders.form.errors.tableRequired", "Table requise pour cette source");
+
+      // ✅ sécurité: table sélectionnée doit exister dans la liste
+      const ok = sortedTables.some((tb) => idOf(tb) === String(form.table));
+      if (!ok) return t("orders.form.errors.tableInvalid", "Table sélectionnée invalide");
     }
 
     for (let i = 0; i < form.items.length; i++) {
@@ -240,9 +275,9 @@ export default function OrderCreateForm({
         customer_phone: form.customer_phone,
         payment_method: form.payment_method,
         source: form.source,
-        table: needsTable ? form.table : undefined, //  sur_place + qrCode
+        table: needsTable ? String(form.table) : undefined,
         items: form.items.map((it) => ({
-          repas: it.repas,
+          repas: String(it.repas),
           quantite: Math.max(1, toNum(it.quantite)),
         })),
       };
@@ -321,7 +356,18 @@ export default function OrderCreateForm({
           {/* Source */}
           <div className="ocf-field">
             <label>{t("orders.form.source", "Source")} *</label>
-            <select value={form.source} onChange={(e) => setField("source", e.target.value)}>
+            <select
+              value={form.source}
+              onChange={(e) => {
+                const next = e.target.value;
+                setForm((s) => ({
+                  ...s,
+                  source: next,
+                  table: requiresTable(next) ? s.table : "", // ✅ clear si plus requis
+                }));
+                setError("");
+              }}
+            >
               <option value="sur_place">{t("orders.source.onSite", "Sur place")}</option>
               <option value="a_emporter">{t("orders.source.takeaway", "À emporter")}</option>
               <option value="livraison">{t("orders.source.delivery", "Livraison")}</option>
@@ -338,21 +384,25 @@ export default function OrderCreateForm({
                 value={form.table}
                 onChange={(e) => setField("table", e.target.value)}
                 required
-                disabled={loadingTables || tables.length === 0}
+                disabled={loadingTables || sortedTables.length === 0}
               >
                 <option value="">
                   {loadingTables
                     ? t("common.loading", "Chargement...")
-                    : tables.length === 0
+                    : sortedTables.length === 0
                     ? t("orders.form.noTables", "-- Aucune table --")
                     : t("orders.form.selectTable", "-- Sélectionner une table --")}
                 </option>
 
-                {tables.map((tb) => (
-                  <option key={idOf(tb)} value={idOf(tb)}>
-                    {labelOfTable(tb)}
-                  </option>
-                ))}
+                {sortedTables.map((tb) => {
+                  const id = idOf(tb);
+                  if (!id) return null;
+                  return (
+                    <option key={id} value={id}>
+                      {labelOfTable(tb)}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           )}

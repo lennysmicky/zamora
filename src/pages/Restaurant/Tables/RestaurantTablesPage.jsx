@@ -1,7 +1,5 @@
 // src/pages/Restaurant/Tables/RestaurantTablesPage.jsx
-import React, { useState, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
-import { QRCodeSVG } from 'qrcode.react';
+import React, { useMemo, useRef, useState } from "react";
 import {
   RiAddLine,
   RiRefreshLine,
@@ -12,18 +10,88 @@ import {
   RiCalendarCheckLine,
   RiSearchLine,
   RiGridLine,
-  RiListCheck
-} from 'react-icons/ri';
-import { useTables } from '../../../hooks/useTables';
-import TableCard from '../../../components/tables/TableCard';
-import TableForm from '../../../components/tables/TableForm';
-import TableQRModal from '../../../components/tables/TableQRModal';
-import Modal from '../../../components/common/Modal';
-import './RestaurantTablesPage.css';
+  RiListCheck,
+} from "react-icons/ri";
+
+import { useTables } from "../../../hooks/useTables";
+import TableCard from "../../../components/tables/TableCard";
+import TableForm from "../../../components/tables/TableForm";
+import TableQRModal from "../../../components/tables/TableQRModal";
+import Modal from "../../../components/common/Modal";
+import "./RestaurantTablesPage.css";
+
+// ---------------- helpers ----------------
+const idOf = (x) => x?._id ?? x?.id ?? null;
+
+const numOf = (t) =>
+  t?.numero_table ??
+  t?.numero ??
+  t?.number ??
+  t?.numeroTable ??
+  t?.tableNumber ??
+  null;
+
+const nameOf = (t) =>
+  t?.nom_table ??
+  t?.nom ??
+  t?.name ??
+  t?.table_name ??
+  t?.tableName ??
+  "";
+
+const capOf = (t) =>
+  t?.capacite ?? t?.capacity ?? t?.places ?? t?.nb_places ?? null;
+
+const statusOf = (t) => t?.status ?? t?.etat ?? "libre";
+
+const normalizeTable = (raw) => {
+  const _id = idOf(raw);
+  return {
+    ...(raw || {}),
+    _id,
+    id: raw?.id ?? undefined,
+    numero: numOf(raw),
+    nom: nameOf(raw),
+    capacite: capOf(raw),
+    status: statusOf(raw),
+  };
+};
+
+// IMPORTANT: backend exige numero_table
+const toApiPayload = (formLike) => {
+  const n = Number(formLike?.numero_table ?? formLike?.numero ?? formLike?.number);
+  const numero_table = Number.isFinite(n) ? n : undefined;
+
+  const nomRaw =
+    formLike?.nom ??
+    formLike?.name ??
+    formLike?.nom_table ??
+    formLike?.table_name ??
+    formLike?.tableName ??
+    "";
+  const nom = String(nomRaw || "").trim() || undefined;
+
+  const c = Number(formLike?.capacite ?? formLike?.capacity ?? formLike?.places ?? formLike?.nb_places);
+  const capacite = Number.isFinite(c) ? c : undefined;
+
+  const status = formLike?.status ?? formLike?.etat ?? undefined;
+
+  // Mongoose accepte les champs en trop (droppe si strict)
+  return {
+    numero_table,
+    nom_table: nom,
+    capacite,
+    status,
+    // aliases utiles côté front/compat
+    numero: numero_table,
+    nom,
+    name: nom,
+    capacity: capacite,
+    etat: status,
+  };
+};
 
 const RestaurantTablesPage = () => {
-  const { t } = useTranslation();
-  
   const {
     tables,
     stats,
@@ -37,181 +105,197 @@ const RestaurantTablesPage = () => {
     updateStatus,
     deleteTable,
     regenerateQR,
-    getMenuUrl
+    getMenuUrl,
   } = useTables();
 
-  // États locaux
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [selectedTable, setSelectedTable] = useState(null);
-  const [viewMode, setViewMode] = useState('grid');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Ref pour générer QR hors écran (téléchargement/impression)
+  // modal suppression propre (au lieu de window.confirm)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [tableToDelete, setTableToDelete] = useState(null);
+
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [viewMode, setViewMode] = useState("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [message, setMessage] = useState({ type: "", text: "" });
+
   const qrRef = useRef(null);
 
-  // Filtrer les tables
-  const filteredTables = tables.filter(table => {
-    const matchSearch = !searchQuery || 
-      (table.numero?.toString().includes(searchQuery)) ||
-      (table.nom?.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchStatus = statusFilter === 'all' || 
-      (table.status || 'libre') === statusFilter;
+  // Normalisation unique (source of truth UI)
+  const normalizedTables = useMemo(
+    () => (tables || []).map(normalizeTable).filter((t) => t._id),
+    [tables]
+  );
 
-    return matchSearch && matchStatus;
-  });
+  const existingNumbers = useMemo(() => {
+    return normalizedTables
+      .map((t) => Number(t.numero))
+      .filter((n) => Number.isFinite(n));
+  }, [normalizedTables]);
 
-  // ========== HANDLERS ==========
+  const filteredTables = useMemo(() => {
+    const q = String(searchQuery || "").trim().toLowerCase();
+    return normalizedTables.filter((t) => {
+      const n = t.numero;
+      const nom = String(t.nom || "").toLowerCase();
+      const st = t.status || "libre";
 
-  const showMessage = (type, text) => {
+      const matchSearch = !q || String(n ?? "").includes(q) || nom.includes(q);
+      const matchStatus = statusFilter === "all" || st === statusFilter;
+
+      return matchSearch && matchStatus;
+    });
+  }, [normalizedTables, searchQuery, statusFilter]);
+
+  const showToast = (type, text) => {
     setMessage({ type, text });
-    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    window.setTimeout(() => setMessage({ type: "", text: "" }), 3000);
   };
 
-  // Créer une table
-  const handleCreateTable = async (data) => {
-    const result = await createTable(data);
-    if (result.success) {
+  // ---------------- handlers ----------------
+  const handleCreateTable = async (formData) => {
+    const payload = toApiPayload(formData);
+    const result = await createTable(payload);
+
+    if (result?.success) {
       setShowCreateModal(false);
-      showMessage('success', 'Table créée avec succès !');
+      showToast("success", "Table créée avec succès !");
+      fetchTables?.();
     } else {
-      showMessage('error', result.error);
+      showToast("error", result?.error || "Erreur");
     }
     return result;
   };
 
-  // Créer plusieurs tables
   const handleCreateMultiple = async (count) => {
     const result = await createMultipleTables(count);
-    if (result.success) {
+
+    if (result?.success) {
       setShowCreateModal(false);
-      showMessage('success', `${count} tables créées avec succès !`);
+      showToast("success", `${count} tables créées avec succès !`);
+      fetchTables?.();
     } else {
-      showMessage('error', result.error);
+      showToast("error", result?.error || "Erreur");
     }
     return result;
   };
 
-  // Modifier une table
-  const handleEditTable = async (data) => {
-    const result = await updateTable(data._id, data);
-    if (result.success) {
+  const handleEditTable = async (formPayload) => {
+    const id = formPayload?._id ?? formPayload?.id;
+    if (!id) return { success: false, error: "ID table manquant" };
+
+    // ⚠️ on ne force PAS "Table X" ici : on respecte le nom saisi
+    const apiData = toApiPayload(formPayload);
+    const result = await updateTable(id, apiData);
+
+    if (result?.success) {
       setShowEditModal(false);
       setSelectedTable(null);
-      showMessage('success', 'Table modifiée !');
+      showToast("success", "Table modifiée !");
+      fetchTables?.();
     } else {
-      showMessage('error', result.error);
+      showToast("error", result?.error || "Erreur");
     }
     return result;
   };
 
-  // Ouvrir modal édition
   const handleOpenEdit = (table) => {
-    setSelectedTable(table);
+    setSelectedTable(normalizeTable(table));
     setShowEditModal(true);
   };
 
-  // Changer statut
   const handleStatusChange = async (tableId, newStatus) => {
     const result = await updateStatus(tableId, newStatus);
-    if (!result.success) {
-      showMessage('error', result.error);
-    }
+    if (!result?.success) showToast("error", result?.error || "Erreur");
   };
 
-  // Supprimer
-  const handleDelete = async (tableId) => {
-    if (!confirm('Supprimer cette table ?')) return;
-    
-    const result = await deleteTable(tableId);
-    if (result.success) {
-      showMessage('success', 'Table supprimée');
+  // suppression: ouvrir modal
+  const handleAskDelete = (tableId) => {
+    const t = normalizedTables.find((x) => String(x._id) === String(tableId));
+    setTableToDelete(t || { _id: tableId, numero: "?" });
+    setShowDeleteModal(true);
+  };
+
+  // suppression: confirmer
+  const handleConfirmDelete = async () => {
+    const id = tableToDelete?._id ?? tableToDelete?.id;
+    if (!id) return;
+
+    const result = await deleteTable(id);
+
+    if (result?.success) {
+      showToast("success", "Table supprimée");
+      setShowDeleteModal(false);
+      setTableToDelete(null);
+      fetchTables?.();
     } else {
-      showMessage('error', result.error);
+      showToast("error", result?.error || "Erreur");
     }
   };
 
-  // Afficher QR modal
   const handleShowQR = (table) => {
-    setSelectedTable(table);
+    setSelectedTable(normalizeTable(table));
     setShowQRModal(true);
   };
 
-  // Régénérer QR
   const handleRegenerateQR = async (tableId) => {
     const result = await regenerateQR(tableId);
-    if (result.success) {
-      if (selectedTable && selectedTable._id === tableId) {
-        setSelectedTable(result.table);
-      }
-      showMessage('success', 'QR code régénéré !');
+
+    if (result?.success) {
+      const next = normalizeTable(result.table || {});
+      if (selectedTable && String(selectedTable._id) === String(tableId)) setSelectedTable(next);
+      showToast("success", "QR code régénéré !");
+      fetchTables?.();
     } else {
-      showMessage('error', result.error);
+      showToast("error", result?.error || "Erreur");
     }
     return result;
   };
 
-  // Télécharger QR
   const handleDownloadQR = (table, menuUrl) => {
-    const tableNumber = table.numero || table.number || '?';
-    
-    // Créer un canvas temporaire
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
+    const tableNumber = table?.numero ?? "?";
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     canvas.width = 300;
     canvas.height = 380;
-    
-    // Background blanc
-    ctx.fillStyle = '#ffffff';
+
+    ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Créer QR en SVG puis convertir
-    const svgString = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200">
-        ${document.querySelector('.qr-temp-container svg')?.innerHTML || ''}
-      </svg>
-    `;
-    
-    // Utiliser une approche plus simple avec QRCode lib
-    import('qrcode').then(QRCode => {
-      QRCode.toCanvas(canvas, menuUrl, {
-        width: 200,
-        margin: 2,
-        color: { dark: '#000000', light: '#ffffff' }
-      }, (err) => {
-        if (err) {
-          console.error('Erreur génération QR:', err);
-          return;
+
+    import("qrcode").then((QRCode) => {
+      QRCode.toCanvas(
+        canvas,
+        menuUrl,
+        { width: 200, margin: 2, color: { dark: "#000000", light: "#ffffff" } },
+        (err) => {
+          if (err) return;
+
+          ctx.fillStyle = "#000000";
+          ctx.font = "bold 24px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(`Table ${tableNumber}`, 150, 280);
+
+          ctx.font = "14px Arial";
+          ctx.fillStyle = "#666666";
+          ctx.fillText("Scannez pour commander", 150, 310);
+
+          const link = document.createElement("a");
+          link.download = `table-${tableNumber}-qr.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
         }
-        
-        // Ajouter le texte
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`Table ${tableNumber}`, 150, 280);
-        
-        ctx.font = '14px Arial';
-        ctx.fillStyle = '#666666';
-        ctx.fillText('Scannez pour commander', 150, 310);
-        
-        // Télécharger
-        const link = document.createElement('a');
-        link.download = `table-${tableNumber}-qr.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-      });
+      );
     });
   };
 
-  // Imprimer QR
   const handlePrintQR = (table, menuUrl) => {
-    const tableNumber = table.numero || table.number || '?';
-    
-    const printWindow = window.open('', '_blank');
+    const tableNumber = table?.numero ?? "?";
+
+    const printWindow = window.open("", "_blank");
     if (!printWindow) return;
 
     printWindow.document.write(`
@@ -221,24 +305,11 @@ const RestaurantTablesPage = () => {
           <title>Table ${tableNumber} - QR Code</title>
           <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
           <style>
-            body {
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              min-height: 100vh;
-              margin: 0;
-              font-family: Arial, sans-serif;
-            }
-            .container {
-              text-align: center;
-              padding: 30px;
-              border: 2px solid #e5e7eb;
-              border-radius: 12px;
-            }
-            canvas { margin-bottom: 20px; }
-            h1 { font-size: 32px; margin: 10px 0; }
-            p { color: #666; margin: 0; }
+            body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;font-family:Arial,sans-serif;}
+            .container{text-align:center;padding:30px;border:2px solid #e5e7eb;border-radius:12px;}
+            canvas{margin-bottom:20px;}
+            h1{font-size:32px;margin:10px 0;}
+            p{color:#666;margin:0;}
           </style>
         </head>
         <body>
@@ -249,10 +320,7 @@ const RestaurantTablesPage = () => {
           </div>
           <script>
             QRCode.toCanvas(document.getElementById('qr'), '${menuUrl}', { width: 200 }, function(err) {
-              if (!err) {
-                window.print();
-                window.close();
-              }
+              if (!err) { window.print(); window.close(); }
             });
           </script>
         </body>
@@ -261,10 +329,9 @@ const RestaurantTablesPage = () => {
     printWindow.document.close();
   };
 
-  // ========== RENDER ==========
+  // ---------------- render ----------------
   return (
     <div className="tables-page">
-      {/* Header */}
       <div className="tables-header">
         <div className="tables-header-info">
           <h1>
@@ -273,17 +340,22 @@ const RestaurantTablesPage = () => {
           </h1>
           <p>Gérez vos tables et QR codes</p>
         </div>
+
         <div className="tables-header-actions">
-          <button 
+          <button
             className="tables-btn tables-btn-secondary"
             onClick={fetchTables}
             disabled={loading}
+            title="Rafraîchir"
+            type="button"
           >
-            <RiRefreshLine className={loading ? 'spin' : ''} />
+            <RiRefreshLine className={loading ? "spin" : ""} />
           </button>
-          <button 
+
+          <button
             className="tables-btn tables-btn-primary"
             onClick={() => setShowCreateModal(true)}
+            type="button"
           >
             <RiAddLine />
             <span>Nouvelle Table</span>
@@ -291,46 +363,54 @@ const RestaurantTablesPage = () => {
         </div>
       </div>
 
-      {/* Message */}
       {message.text && (
         <div className={`tables-message tables-message-${message.type}`}>
           {message.text}
         </div>
       )}
 
-      {/* Stats */}
       <div className="tables-stats">
         <div className="tables-stat-card">
-          <div className="tables-stat-icon total"><RiTableLine /></div>
+          <div className="tables-stat-icon total">
+            <RiTableLine />
+          </div>
           <div className="tables-stat-content">
-            <span className="tables-stat-value">{stats.total}</span>
+            <span className="tables-stat-value">{stats?.total ?? 0}</span>
             <span className="tables-stat-label">Total</span>
           </div>
         </div>
+
         <div className="tables-stat-card">
-          <div className="tables-stat-icon libre"><RiCheckboxCircleLine /></div>
+          <div className="tables-stat-icon libre">
+            <RiCheckboxCircleLine />
+          </div>
           <div className="tables-stat-content">
-            <span className="tables-stat-value">{stats.libre}</span>
+            <span className="tables-stat-value">{stats?.libre ?? 0}</span>
             <span className="tables-stat-label">Libres</span>
           </div>
         </div>
+
         <div className="tables-stat-card">
-          <div className="tables-stat-icon occupee"><RiTimeLine /></div>
+          <div className="tables-stat-icon occupee">
+            <RiTimeLine />
+          </div>
           <div className="tables-stat-content">
-            <span className="tables-stat-value">{stats.occupee}</span>
+            <span className="tables-stat-value">{stats?.occupee ?? 0}</span>
             <span className="tables-stat-label">Occupées</span>
           </div>
         </div>
+
         <div className="tables-stat-card">
-          <div className="tables-stat-icon reservee"><RiCalendarCheckLine /></div>
+          <div className="tables-stat-icon reservee">
+            <RiCalendarCheckLine />
+          </div>
           <div className="tables-stat-content">
-            <span className="tables-stat-value">{stats.reservee}</span>
+            <span className="tables-stat-value">{stats?.reservee ?? 0}</span>
             <span className="tables-stat-label">Réservées</span>
           </div>
         </div>
       </div>
 
-      {/* Filters */}
       <div className="tables-filters">
         <div className="tables-search">
           <RiSearchLine />
@@ -343,36 +423,42 @@ const RestaurantTablesPage = () => {
         </div>
 
         <div className="tables-filter-buttons">
-          {['all', 'libre', 'occupee', 'reservee'].map((status) => (
+          {["all", "libre", "occupee", "reservee"].map((st) => (
             <button
-              key={status}
-              className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
-              onClick={() => setStatusFilter(status)}
+              key={st}
+              className={`filter-btn ${statusFilter === st ? "active" : ""}`}
+              onClick={() => setStatusFilter(st)}
+              type="button"
             >
-              {status === 'all' ? 'Toutes' : 
-               status === 'libre' ? 'Libres' : 
-               status === 'occupee' ? 'Occupées' : 'Réservées'}
+              {st === "all"
+                ? "Toutes"
+                : st === "libre"
+                ? "Libres"
+                : st === "occupee"
+                ? "Occupées"
+                : "Réservées"}
             </button>
           ))}
         </div>
 
         <div className="tables-view-toggle">
           <button
-            className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-            onClick={() => setViewMode('grid')}
+            className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
+            onClick={() => setViewMode("grid")}
+            type="button"
           >
             <RiGridLine />
           </button>
           <button
-            className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-            onClick={() => setViewMode('list')}
+            className={`view-btn ${viewMode === "list" ? "active" : ""}`}
+            onClick={() => setViewMode("list")}
+            type="button"
           >
             <RiListCheck />
           </button>
         </div>
       </div>
 
-      {/* Content */}
       <div className="tables-content">
         {loading ? (
           <div className="tables-loading">
@@ -382,25 +468,34 @@ const RestaurantTablesPage = () => {
         ) : error ? (
           <div className="tables-error">
             <p>{error}</p>
-            <button className="tables-btn tables-btn-primary" onClick={fetchTables}>
+            <button className="tables-btn tables-btn-primary" onClick={fetchTables} type="button">
               Réessayer
             </button>
           </div>
         ) : filteredTables.length === 0 ? (
           <div className="tables-empty">
-            <div className="tables-empty-icon"><RiTableLine /></div>
+            <div className="tables-empty-icon">
+              <RiTableLine />
+            </div>
             <h3>Aucune table</h3>
-            <p>{tables.length === 0 ? "Créez vos tables pour générer des QR codes" : "Aucun résultat"}</p>
-            {tables.length === 0 && (
-              <button className="tables-btn tables-btn-primary" onClick={() => setShowCreateModal(true)}>
+            <p>
+              {normalizedTables.length === 0
+                ? "Créez vos tables pour générer des QR codes"
+                : "Aucun résultat"}
+            </p>
+            {normalizedTables.length === 0 && (
+              <button
+                className="tables-btn tables-btn-primary"
+                onClick={() => setShowCreateModal(true)}
+                type="button"
+              >
                 <RiAddLine /> Créer des tables
               </button>
             )}
           </div>
         ) : (
           <>
-            {/* Liste Header (vue liste) */}
-            {viewMode === 'list' && (
+            {viewMode === "list" && (
               <div className="tables-list-header">
                 <div className="list-col">N°</div>
                 <div className="list-col">Nom</div>
@@ -410,17 +505,17 @@ const RestaurantTablesPage = () => {
                 <div className="list-col">Actions</div>
               </div>
             )}
-            
+
             <div className={`tables-grid ${viewMode}`}>
               {filteredTables.map((table) => (
                 <TableCard
-                  key={table._id}
+                  key={String(table._id)}
                   table={table}
                   viewMode={viewMode}
                   onStatusChange={handleStatusChange}
                   onShowQR={handleShowQR}
                   onEdit={handleOpenEdit}
-                  onDelete={handleDelete}
+                  onDelete={handleAskDelete}
                   onDownloadQR={handleDownloadQR}
                   onPrintQR={handlePrintQR}
                   getMenuUrl={getMenuUrl}
@@ -431,7 +526,7 @@ const RestaurantTablesPage = () => {
         )}
       </div>
 
-      {/* Modal Création */}
+      {/* ---------- Modal Création ---------- */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -443,38 +538,95 @@ const RestaurantTablesPage = () => {
           onCreateMultiple={handleCreateMultiple}
           onCancel={() => setShowCreateModal(false)}
           saving={saving}
-          existingNumbers={tables.map(t => t.numero || t.number)}
+          existingNumbers={existingNumbers}
         />
       </Modal>
 
-      {/* Modal Modification */}
+      {/* ---------- Modal Modification ---------- */}
       <Modal
         isOpen={showEditModal}
-        onClose={() => { setShowEditModal(false); setSelectedTable(null); }}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedTable(null);
+        }}
         title="Modifier la table"
         size="small"
       >
         <TableForm
           table={selectedTable}
           onSubmit={handleEditTable}
-          onCancel={() => { setShowEditModal(false); setSelectedTable(null); }}
+          onCancel={() => {
+            setShowEditModal(false);
+            setSelectedTable(null);
+          }}
           onRegenerateQR={handleRegenerateQR}
           saving={saving}
-          existingNumbers={tables.map(t => t.numero || t.number)}
+          existingNumbers={existingNumbers}
         />
       </Modal>
 
-      {/* Modal QR Code */}
+      {/* ---------- Modal Suppression (UI propre) ---------- */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setTableToDelete(null);
+        }}
+        title="Supprimer la table"
+        size="small"
+      >
+        <div className="delete-confirm">
+          <p className="delete-confirm-text">
+            Voulez-vous supprimer{" "}
+            <strong>Table {tableToDelete?.numero ?? tableToDelete?.number ?? "?"}</strong> ?
+            <br />
+            Cette action est irréversible.
+          </p>
+
+          <div className="delete-confirm-actions">
+            <button
+              type="button"
+              className="tables-btn tables-btn-secondary"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setTableToDelete(null);
+              }}
+              disabled={saving}
+            >
+              Annuler
+            </button>
+
+            <button
+              type="button"
+              className="tables-btn tables-btn-danger"
+              onClick={handleConfirmDelete}
+              disabled={saving}
+            >
+              Supprimer
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ---------- Modal QR ---------- */}
       {selectedTable && (
         <TableQRModal
           isOpen={showQRModal}
-          onClose={() => { setShowQRModal(false); setSelectedTable(null); }}
+          onClose={() => {
+            setShowQRModal(false);
+            setSelectedTable(null);
+          }}
           table={selectedTable}
-          menuUrl={getMenuUrl(selectedTable._id, selectedTable.numero)}
+          menuUrl={getMenuUrl(
+            selectedTable._id,
+            selectedTable.numero ?? selectedTable.number ?? selectedTable.numero_table
+          )}
           onRegenerate={() => handleRegenerateQR(selectedTable._id)}
           saving={saving}
         />
       )}
+
+      <div ref={qrRef} style={{ display: "none" }} />
     </div>
   );
 };
