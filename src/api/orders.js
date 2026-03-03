@@ -7,6 +7,24 @@ const TIMEOUT = 10000;
 const clean = (p = {}) =>
   Object.fromEntries(Object.entries(p).filter(([, v]) => v !== "" && v != null));
 
+const enc = (v) => encodeURIComponent(String(v ?? ""));
+
+const axiosCfg = (options = {}, extra = {}) => ({
+  timeout: TIMEOUT,
+  signal: options.signal,
+  ...extra,
+});
+
+const toAxiosErrorMessage = (err) => {
+  const status = err?.response?.status;
+  const msg =
+    err?.response?.data?.message ??
+    err?.response?.data?.error ??
+    err?.message ??
+    "Request failed";
+  return status ? `${status} - ${msg}` : msg;
+};
+
 const unwrap = (x) => {
   let v = x;
   for (let i = 0; i < 4; i++) {
@@ -18,7 +36,7 @@ const unwrap = (x) => {
   return v;
 };
 
-//  unwrap spécifique tables (supporte keys tables/table)
+// ✅ unwrap tables (supporte tables/table)
 const unwrapTables = (x) => {
   let v = x;
   for (let i = 0; i < 4; i++) {
@@ -33,36 +51,28 @@ const unwrapTables = (x) => {
 const arr = (v) => {
   const x = unwrap(v);
   if (Array.isArray(x)) return x;
-
   if (Array.isArray(x?.items)) return x.items;
   if (Array.isArray(x?.data)) return x.data;
   if (Array.isArray(x?.rows)) return x.rows;
   if (Array.isArray(x?.docs)) return x.docs;
   if (Array.isArray(x?.results)) return x.results;
-
   if (Array.isArray(x?.commandes)) return x.commandes;
   if (Array.isArray(x?.orders)) return x.orders;
-
   if (Array.isArray(x?.repas)) return x.repas;
   if (Array.isArray(x?.plats)) return x.plats;
   if (Array.isArray(x?.categories)) return x.categories;
   if (Array.isArray(x?.categorie)) return x.categorie;
-
   return [];
 };
 
-//  extract list tables (supporte {tables:[...]}, {data:{tables:[...]}} etc)
 const arrTables = (v) => {
   const x = unwrapTables(v);
   if (Array.isArray(x)) return x;
-
   if (Array.isArray(x?.tables)) return x.tables;
   if (Array.isArray(x?.data?.tables)) return x.data.tables;
-
   if (Array.isArray(x?.data)) return x.data;
   if (Array.isArray(x?.results)) return x.results;
   if (Array.isArray(x?.items)) return x.items;
-
   return [];
 };
 
@@ -79,24 +89,6 @@ const pick = (o, keys) => {
   for (const k of keys) if (x[k] != null) return x[k];
   return undefined;
 };
-
-const enc = (v) => encodeURIComponent(String(v ?? ""));
-
-const toAxiosErrorMessage = (err) => {
-  const status = err?.response?.status;
-  const msg =
-    err?.response?.data?.message ??
-    err?.response?.data?.error ??
-    err?.message ??
-    "Request failed";
-  return status ? `${status} - ${msg}` : msg;
-};
-
-const axiosCfg = (options = {}, extra = {}) => ({
-  timeout: TIMEOUT,
-  signal: options.signal,
-  ...extra,
-});
 
 // ---------------- mapping UI <-> backend ----------------
 const normalizeOrderStatus = (s) => {
@@ -194,7 +186,7 @@ const denormalizeSource = (s) => {
   return undefined;
 };
 
-// ---------------- normalize backend -> UI row compatible ----------------
+// ---------------- normalize backend -> UI ----------------
 const normalizeOrder = (raw) => {
   const o = unwrap(raw) ?? {};
 
@@ -242,15 +234,10 @@ const normalizeOrder = (raw) => {
     pick(o, ["total_amount", "totalAmount", "total", "montant_total", "montant", "amount", "prix_total"])
   );
 
-  const statusRaw = pick(o, ["status", "etat", "state", "order_status", "orderStatus"]);
-  const paymentStatusRaw = pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"]);
-  const paymentMethodRaw = pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"]);
-  const sourceRaw = pick(o, ["source", "origine", "platform"]);
-
-  const status = normalizeOrderStatus(statusRaw);
-  const payment_status = normalizePaymentStatus(paymentStatusRaw);
-  const payment_method = normalizePaymentMethod(paymentMethodRaw);
-  const source = normalizeSource(sourceRaw);
+  const status = normalizeOrderStatus(pick(o, ["status", "etat", "state", "order_status", "orderStatus"]));
+  const payment_status = normalizePaymentStatus(pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"]));
+  const payment_method = normalizePaymentMethod(pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"]));
+  const source = normalizeSource(pick(o, ["source", "origine", "platform"]));
 
   const id = pick(o, ["_id", "id", "orderId", "commandeId", "commande_id"]) ?? "";
 
@@ -298,7 +285,6 @@ const normalizeStats = (statsRaw) => {
   };
 };
 
-// ---------------- menu normalization ----------------
 const normalizeMeal = (m) => ({
   _id: m?._id ?? m?.id ?? null,
   id: m?._id ?? m?.id ?? null,
@@ -308,35 +294,24 @@ const normalizeMeal = (m) => ({
   price: num(m?.prix ?? m?.price ?? 0),
 });
 
-//  normalize table pour le select (évite "Table <restaurantId>")
+// ✅ évite "Table <restaurantId>" si API renvoie un wrapper bizarre
 const normalizeTable = (raw) => {
   const base = raw?.table && typeof raw.table === "object" ? raw.table : raw;
-  const _id = String(base?._id ?? base?.id ?? "").trim();
+  const id = String(base?._id ?? base?.id ?? "").trim();
+
   const numero_table =
-    base?.numero_table ??
-    base?.numeroTable ??
-    base?.numero ??
-    base?.tableNumber ??
-    base?.number ??
-    base?.num ??
-    null;
+    base?.numero_table ?? base?.numeroTable ?? base?.numero ?? base?.tableNumber ?? base?.number ?? base?.num ?? null;
 
   const nom =
-    base?.nom_table ??
-    base?.table_name ??
-    base?.tableName ??
-    base?.nom ??
-    base?.name ??
-    "";
+    base?.nom_table ?? base?.table_name ?? base?.tableName ?? base?.nom ?? base?.name ?? "";
 
-  // si ce n'est pas une table (pas de numero + pas de nom), on la jette
   const hasUseful = (numero_table != null && String(numero_table) !== "") || String(nom).trim() !== "";
   if (!hasUseful) return null;
 
   return {
     ...(base || {}),
-    _id,
-    id: _id,
+    _id: id,
+    id,
     numero_table,
     numero: numero_table,
     nom: String(nom || "").trim(),
@@ -345,26 +320,18 @@ const normalizeTable = (raw) => {
   };
 };
 
-// ---------------- routes (UNIQUEMENT les vraies) ----------------
-const restoOrdersListUrl = (rid) => `/order/${enc(rid)}`;
-const restoStatsUrl = (rid) => `/order/${enc(rid)}/stats`;
-const restoCommandeCreateUrl = (rid) => `/commande/${enc(rid)}`;
-const restoCommandeDetailUrl = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`;
-
-// Admin (si réellement existant chez toi)
-const adminListUrl = () => `/admin/commandes`;
-const adminStatsUrl = () => `/admin/commandes/stats`;
+// ---------------- routes (VRAIES) ----------------
+const urlListOrders = (rid) => `/order/${enc(rid)}`;                 // GET list
+const urlStats = (rid) => `/order/${enc(rid)}/stats`;                // GET stats (si existe)
+const urlCreateCommande = (rid) => `/commande/${enc(rid)}`;          // POST create
+const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`; // GET/PATCH/DELETE
 
 export const ordersApi = {
-  // ========================
   // LIST + STATS
-  // ========================
   getOrders: async (params = {}, options = {}) => {
     const {
-      mode = "restaurant",
       restaurantId,
       restaurentId,
-      restaurant,
       page = 1,
       limit = 10,
       search,
@@ -377,6 +344,9 @@ export const ordersApi = {
       to,
       ...rest
     } = params;
+
+    const rid = restaurentId ?? restaurantId ?? null;
+    if (!rid) return { data: [], totalPages: 1, totalItems: 0, stats: normalizeStats({ total: 0 }) };
 
     const listQuery = clean({
       ...rest,
@@ -396,56 +366,24 @@ export const ordersApi = {
 
     const statsQuery = clean({ period, from, to });
 
-    if (mode === "admin") {
-      const adminQuery = clean({
-        ...listQuery,
-        restaurent: restaurant ?? restaurentId ?? restaurantId ?? undefined,
-        restaurentId: restaurant ?? restaurentId ?? restaurantId ?? undefined,
-      });
-
-      const cfg = axiosCfg(options, { params: adminQuery });
-
-      try {
-        const [r1, r2] = await Promise.all([client.get(adminListUrl(), cfg), client.get(adminStatsUrl(), cfg)]);
-
-        const listData = unwrap(r1?.data);
-        const statsData = unwrap(r2?.data);
-
-        const orders = arr(listData).map(normalizeOrder);
-        const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-        const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
-
-        return {
-          data: orders,
-          totalPages,
-          totalItems,
-          stats: statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems }),
-        };
-      } catch (e) {
-        throw new Error(toAxiosErrorMessage(e));
-      }
-    }
-
-    const rid = restaurentId ?? restaurantId ?? null;
-    if (!rid) {
-      return { data: [], totalPages: 1, totalItems: 0, stats: { total: 0, pending: 0, delivered: 0, cancelled: 0 } };
-    }
-
     try {
       const listCfg = axiosCfg(options, { params: listQuery });
       const statsCfg = axiosCfg(options, { params: statsQuery });
 
-      const [listRes, statsRes] = await Promise.all([
-        client.get(restoOrdersListUrl(rid), listCfg),
-        client.get(restoStatsUrl(rid), statsCfg),
+      const [listRes, statsRes] = await Promise.allSettled([
+        client.get(urlListOrders(rid), listCfg),
+        client.get(urlStats(rid), statsCfg),
       ]);
 
-      const listData = unwrap(listRes?.data);
-      const statsData = unwrap(statsRes?.data);
+      if (listRes.status === "rejected") throw listRes.reason;
 
+      const listData = unwrap(listRes.value?.data);
       const orders = arr(listData).map(normalizeOrder);
+
       const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
       const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+
+      const statsData = statsRes.status === "fulfilled" ? unwrap(statsRes.value?.data) : null;
 
       return {
         data: orders,
@@ -458,24 +396,19 @@ export const ordersApi = {
     }
   },
 
-  // ========================
   // DETAIL
-  // ========================
   getOrderById: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
-
     try {
-      const res = await client.get(restoCommandeDetailUrl(restaurentId, orderId), axiosCfg(options));
+      const res = await client.get(urlCommandeDetail(restaurentId, orderId), axiosCfg(options));
       return normalizeOrder(unwrap(res?.data));
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
-  // ========================
   // CREATE
-  // ========================
   createOrder: async (payload, options = {}) => {
     const rid =
       payload?.restaurent ??
@@ -507,7 +440,7 @@ export const ordersApi = {
     });
 
     try {
-      const res = await client.post(restoCommandeCreateUrl(rid), body, axiosCfg(options));
+      const res = await client.post(urlCreateCommande(rid), body, axiosCfg(options));
       return unwrap(res?.data);
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
@@ -517,9 +450,7 @@ export const ordersApi = {
   createCommande: async (restaurentId, body, options = {}) =>
     ordersApi.createOrder({ ...body, restaurent: restaurentId }, options),
 
-  // ========================
-  // UPDATE
-  // ========================
+  // UPDATE (PATCH)
   updateOrder: async (restaurentId, orderId, patch, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
@@ -533,13 +464,14 @@ export const ordersApi = {
     });
 
     try {
-      const res = await client.patch(restoCommandeDetailUrl(restaurentId, orderId), payload, axiosCfg(options));
+      const res = await client.patch(urlCommandeDetail(restaurentId, orderId), payload, axiosCfg(options));
       return unwrap(res?.data);
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
+  // Helpers (exigent le restaurentId via options)
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
     if (!rid) throw new Error("Missing restaurentId for updateStatus()");
@@ -552,40 +484,27 @@ export const ordersApi = {
     return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
   },
 
-  // ========================
   // DELETE
-  // ========================
   deleteOrder: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
-
     try {
-      const res = await client.delete(restoCommandeDetailUrl(restaurentId, orderId), axiosCfg(options));
+      const res = await client.delete(urlCommandeDetail(restaurentId, orderId), axiosCfg(options));
       return unwrap(res?.data);
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
-  // ========================
-  // MENU: TABLES / CATEGORIES / REPAS
-  // ========================
-
-  //  Route réelle: GET /api/table/:restaurentId
+  // TABLES (route réelle)
   getTables: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
     try {
       const res = await client.get(`/table/${enc(restaurentId)}`, axiosCfg(options));
-
-      // ⚠️ important: extraire correctement la liste + normaliser
       const list = arrTables(res?.data);
-      const normalized = (Array.isArray(list) ? list : [])
-        .map(normalizeTable)
-        .filter(Boolean);
-
-      // tri stable par numéro
-      normalized.sort((a, b) => Number(a.numero_table ?? 0) - Number(b.numero_table ?? 0));
-      return normalized;
+      const out = (Array.isArray(list) ? list : []).map(normalizeTable).filter(Boolean);
+      out.sort((a, b) => Number(a.numero_table ?? 0) - Number(b.numero_table ?? 0));
+      return out;
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
