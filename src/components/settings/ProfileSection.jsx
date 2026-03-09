@@ -1,9 +1,8 @@
-// src/components/settings/ProfileSection.jsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  RiImageEditLine, 
-  RiSave3Line, 
+import {
+  RiImageEditLine,
+  RiSave3Line,
   RiLoader4Line,
   RiCheckLine,
   RiCloseLine
@@ -13,7 +12,7 @@ import './css/SettingsSections.css';
 const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
   const { t } = useTranslation();
   const fileInputRef = useRef(null);
-  
+
   const [form, setForm] = useState({
     nom: '',
     email: '',
@@ -21,11 +20,10 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
     adresse: '',
     description: '',
   });
-  
+
   const [logoPreview, setLogoPreview] = useState(null);
   const [message, setMessage] = useState({ type: '', text: '' });
 
-  // Init form avec les données du restaurant
   useEffect(() => {
     if (restaurant) {
       setForm({
@@ -41,7 +39,7 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLogoClick = () => {
@@ -52,18 +50,18 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview
     const reader = new FileReader();
-    reader.onload = (e) => setLogoPreview(e.target.result);
+    reader.onload = (ev) => setLogoPreview(ev.target.result);
     reader.readAsDataURL(file);
 
-    // Upload
     const result = await onUpdateLogo(file);
+
     if (result.success) {
       setMessage({ type: 'success', text: 'Logo mis à jour !' });
     } else {
       setMessage({ type: 'error', text: result.error });
     }
+
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
@@ -71,12 +69,26 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
-    const result = await onUpdateInfo(form);
+    // Payload large pour couvrir plusieurs noms de champs backend
+    const payload = {
+      nom: form.nom,
+      name: form.nom,
+      email: form.email,
+      telephone: form.telephone,
+      phone: form.telephone,
+      adresse: form.adresse,
+      address: form.adresse,
+      description: form.description,
+    };
+
+    const result = await onUpdateInfo(payload);
+
     if (result.success) {
       setMessage({ type: 'success', text: 'Informations mises à jour !' });
     } else {
       setMessage({ type: 'error', text: result.error });
     }
+
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
@@ -87,7 +99,6 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
         <p>{t('settings.profile.subtitle', 'Gérez les informations de votre restaurant')}</p>
       </div>
 
-      {/* Message */}
       {message.text && (
         <div className={`ss-message ss-message-${message.type}`}>
           {message.type === 'success' ? <RiCheckLine /> : <RiCloseLine />}
@@ -95,7 +106,6 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
         </div>
       )}
 
-      {/* Logo */}
       <div className="ss-logo-section">
         <div className="ss-logo-wrapper" onClick={handleLogoClick}>
           {logoPreview ? (
@@ -110,6 +120,7 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
             <span>Changer</span>
           </div>
         </div>
+
         <input
           ref={fileInputRef}
           type="file"
@@ -117,10 +128,10 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
           onChange={handleLogoChange}
           style={{ display: 'none' }}
         />
+
         <span className="ss-logo-hint">Cliquez pour changer le logo</span>
       </div>
 
-      {/* Form */}
       <form className="ss-form" onSubmit={handleSubmit}>
         <div className="ss-form-grid">
           <div className="ss-field">
@@ -182,8 +193,8 @@ const ProfileSection = ({ restaurant, saving, onUpdateInfo, onUpdateLogo }) => {
         </div>
 
         <div className="ss-actions">
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="ss-btn ss-btn-primary"
             disabled={saving}
           >

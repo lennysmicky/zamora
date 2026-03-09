@@ -1,11 +1,10 @@
-// src/hooks/useRestaurantSettings.js
 import { useState, useEffect, useCallback } from 'react';
 import { settingsApi } from '../api/settings';
 import useAuthStore from '../stores/authStore';
 
 export const useRestaurantSettings = () => {
   const { restaurantId, logout } = useAuthStore();
-  
+
   const [restaurant, setRestaurant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,10 +13,10 @@ export const useRestaurantSettings = () => {
   // Charger les infos du restaurant
   const fetchRestaurant = useCallback(async () => {
     if (!restaurantId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await settingsApi.getRestaurantInfo(restaurantId);
       setRestaurant(data);
@@ -36,13 +35,16 @@ export const useRestaurantSettings = () => {
   const updateInfo = async (data) => {
     setSaving(true);
     try {
-      const updated = await settingsApi.updateRestaurantInfo(restaurantId, data);
-      setRestaurant(updated);
+      await settingsApi.updateRestaurantInfo(restaurantId, data);
+
+      // Recharge les vraies données depuis le backend
+      await fetchRestaurant();
+
       return { success: true };
     } catch (err) {
-      return { 
-        success: false, 
-        error: err?.response?.data?.message || 'Erreur de mise à jour' 
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Erreur de mise à jour',
       };
     } finally {
       setSaving(false);
@@ -55,13 +57,17 @@ export const useRestaurantSettings = () => {
     try {
       const formData = new FormData();
       formData.append('logo', file);
-      const updated = await settingsApi.updateLogo(restaurantId, formData);
-      setRestaurant(updated);
+
+      await settingsApi.updateLogo(restaurantId, formData);
+
+      // Recharge les vraies données
+      await fetchRestaurant();
+
       return { success: true };
     } catch (err) {
-      return { 
-        success: false, 
-        error: err?.response?.data?.message || 'Erreur upload logo' 
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Erreur upload logo',
       };
     } finally {
       setSaving(false);
@@ -75,28 +81,31 @@ export const useRestaurantSettings = () => {
       await settingsApi.changePassword(restaurantId, data);
       return { success: true };
     } catch (err) {
-      return { 
-        success: false, 
-        error: err?.response?.data?.message || 'Erreur changement mot de passe' 
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Erreur changement mot de passe',
       };
     } finally {
       setSaving(false);
     }
   };
 
-  // Activer/Désactiver
+  // Ouvrir / Fermer le restaurant
   const toggleActive = async (activate) => {
     setSaving(true);
     try {
-      const updated = activate 
-        ? await settingsApi.activateRestaurant(restaurantId)
-        : await settingsApi.deactivateRestaurant(restaurantId);
-      setRestaurant(updated);
+      const status = activate ? 'ouvert' : 'ferme';
+
+      await settingsApi.changeRestaurantStatus(restaurantId, status);
+
+      // Recharge les vraies données
+      await fetchRestaurant();
+
       return { success: true };
     } catch (err) {
-      return { 
-        success: false, 
-        error: err?.response?.data?.message || 'Erreur de mise à jour' 
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Erreur de mise à jour du statut',
       };
     } finally {
       setSaving(false);
@@ -108,12 +117,12 @@ export const useRestaurantSettings = () => {
     setSaving(true);
     try {
       await settingsApi.deleteAccount(restaurantId, password);
-      logout(); // Déconnexion après suppression
+      logout();
       return { success: true };
     } catch (err) {
-      return { 
-        success: false, 
-        error: err?.response?.data?.message || 'Erreur de suppression' 
+      return {
+        success: false,
+        error: err?.response?.data?.message || 'Erreur de suppression',
       };
     } finally {
       setSaving(false);

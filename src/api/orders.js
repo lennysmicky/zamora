@@ -36,7 +36,7 @@ const unwrap = (x) => {
   return v;
 };
 
-// ✅ unwrap tables (supporte tables/table)
+//  unwrap tables (supporte tables/table)
 const unwrapTables = (x) => {
   let v = x;
   for (let i = 0; i < 4; i++) {
@@ -294,7 +294,7 @@ const normalizeMeal = (m) => ({
   price: num(m?.prix ?? m?.price ?? 0),
 });
 
-// ✅ évite "Table <restaurantId>" si API renvoie un wrapper bizarre
+//  évite "Table <restaurantId>" si API renvoie un wrapper bizarre
 const normalizeTable = (raw) => {
   const base = raw?.table && typeof raw.table === "object" ? raw.table : raw;
   const id = String(base?._id ?? base?.id ?? "").trim();
@@ -322,7 +322,7 @@ const normalizeTable = (raw) => {
 
 // ---------------- routes (VRAIES) ----------------
 const urlListOrders = (rid) => `/order/${enc(rid)}`;                 // GET list
-const urlStats = (rid) => `/order/${enc(rid)}/stats`;                // GET stats (si existe)
+const urlStats = (rid) => `/order/${enc(rid)}/stats`;                // GET stats 
 const urlCreateCommande = (rid) => `/commande/${enc(rid)}`;          // POST create
 const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`; // GET/PATCH/DELETE
 

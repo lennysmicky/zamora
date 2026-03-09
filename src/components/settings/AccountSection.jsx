@@ -1,7 +1,6 @@
-// src/components/settings/AccountSection.jsx
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
+import {
   RiToggleLine,
   RiToggleFill,
   RiDeleteBin6Line,
@@ -14,24 +13,37 @@ import './css/SettingsSections.css';
 
 const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount }) => {
   const { t } = useTranslation();
-  
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [deleteError, setDeleteError] = useState('');
 
-  const isActive = restaurant?.isActive ?? restaurant?.actif ?? true;
+  const rawStatus =
+    restaurant?.status ??
+    restaurant?.statut ??
+    restaurant?.etat ??
+    restaurant?.isActive ??
+    restaurant?.actif;
+
+  const isOpen =
+    rawStatus === 'ouvert' ||
+    rawStatus === true ||
+    rawStatus === 'true' ||
+    rawStatus === 1;
 
   const handleToggle = async () => {
-    const result = await onToggleActive(!isActive);
+    const result = await onToggleActive(!isOpen);
+
     if (result.success) {
-      setMessage({ 
-        type: 'success', 
-        text: isActive ? 'Restaurant désactivé' : 'Restaurant activé' 
+      setMessage({
+        type: 'success',
+        text: isOpen ? 'Restaurant fermé' : 'Restaurant ouvert'
       });
     } else {
       setMessage({ type: 'error', text: result.error });
     }
+
     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
@@ -40,11 +52,9 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
       setDeleteError('Mot de passe requis');
       return;
     }
-    
+
     const result = await onDeleteAccount(deletePassword);
-    if (result.success) {
-      // Redirect sera géré par le hook (logout)
-    } else {
+    if (!result.success) {
       setDeleteError(result.error);
     }
   };
@@ -53,10 +63,9 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
     <div className="ss-section">
       <div className="ss-header">
         <h3>{t('settings.account.title', 'Gestion du compte')}</h3>
-        <p>{t('settings.account.subtitle', 'Activez, désactivez ou supprimez votre compte')}</p>
+        <p>{t('settings.account.subtitle', 'Ouvrez, fermez ou supprimez votre compte')}</p>
       </div>
 
-      {/* Message */}
       {message.text && (
         <div className={`ss-message ss-message-${message.type}`}>
           {message.type === 'success' ? <RiCheckLine /> : <RiCloseLine />}
@@ -64,44 +73,42 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
         </div>
       )}
 
-      {/* Status Card */}
       <div className="ss-card">
         <div className="ss-card-header">
           <div className="ss-card-info">
             <h4>Statut du restaurant</h4>
-            <p>Activez ou désactivez votre restaurant</p>
+            <p>Ouvrez ou fermez votre restaurant</p>
           </div>
-          <div className={`ss-status-badge ${isActive ? 'active' : 'inactive'}`}>
-            {isActive ? 'Actif' : 'Inactif'}
+          <div className={`ss-status-badge ${isOpen ? 'active' : 'inactive'}`}>
+            {isOpen ? 'Ouvert' : 'Fermé'}
           </div>
         </div>
-        
+
         <div className="ss-card-content">
           <p className="ss-card-desc">
-            {isActive 
-              ? 'Votre restaurant est visible et peut recevoir des commandes.'
-              : 'Votre restaurant est invisible et ne peut pas recevoir de commandes.'
+            {isOpen
+              ? 'Votre restaurant est ouvert et peut recevoir des commandes.'
+              : 'Votre restaurant est fermé et ne peut pas recevoir de commandes.'
             }
           </p>
-          
-          <button 
-            className={`ss-toggle-btn ${isActive ? 'active' : ''}`}
+
+          <button
+            className={`ss-toggle-btn ${isOpen ? 'active' : ''}`}
             onClick={handleToggle}
             disabled={saving}
           >
             {saving ? (
               <RiLoader4Line className="ss-spinner" />
-            ) : isActive ? (
+            ) : isOpen ? (
               <RiToggleFill />
             ) : (
               <RiToggleLine />
             )}
-            <span>{isActive ? 'Désactiver' : 'Activer'}</span>
+            <span>{isOpen ? 'Fermer' : 'Ouvrir'}</span>
           </button>
         </div>
       </div>
 
-      {/* Danger Zone */}
       <div className="ss-card ss-card-danger">
         <div className="ss-card-header">
           <div className="ss-card-info">
@@ -112,14 +119,14 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
             <p>Actions irréversibles</p>
           </div>
         </div>
-        
+
         <div className="ss-card-content">
           <p className="ss-card-desc ss-text-danger">
-            La suppression de votre compte est définitive. Toutes vos données, 
+            La suppression de votre compte est définitive. Toutes vos données,
             commandes et configurations seront perdues.
           </p>
-          
-          <button 
+
+          <button
             className="ss-btn ss-btn-danger"
             onClick={() => setShowDeleteDialog(true)}
             disabled={saving}
@@ -130,21 +137,20 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
       {showDeleteDialog && (
         <div className="ss-dialog-overlay" onClick={() => setShowDeleteDialog(false)}>
-          <div className="ss-dialog" onClick={e => e.stopPropagation()}>
+          <div className="ss-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="ss-dialog-header">
               <RiAlertLine className="ss-dialog-icon" />
               <h4>Supprimer le compte ?</h4>
             </div>
-            
+
             <div className="ss-dialog-body">
               <p>
-                Cette action est <strong>irréversible</strong>. 
+                Cette action est <strong>irréversible</strong>.
                 Entrez votre mot de passe pour confirmer.
               </p>
-              
+
               <div className={`ss-field ${deleteError ? 'ss-field-error' : ''}`}>
                 <label>Mot de passe *</label>
                 <input
@@ -161,9 +167,9 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
                 )}
               </div>
             </div>
-            
+
             <div className="ss-dialog-actions">
-              <button 
+              <button
                 className="ss-btn ss-btn-ghost"
                 onClick={() => {
                   setShowDeleteDialog(false);
@@ -173,7 +179,8 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
               >
                 Annuler
               </button>
-              <button 
+
+              <button
                 className="ss-btn ss-btn-danger"
                 onClick={handleDeleteConfirm}
                 disabled={saving}

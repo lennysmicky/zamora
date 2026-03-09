@@ -10,50 +10,49 @@ const unwrap = (res) => {
   return v;
 };
 
+// A confirmer selon ta vraie route backend
+const CHANGE_PASSWORD_ROUTE = (restaurantId) => `/user/change_password/${restaurantId}`;
+
 export const settingsApi = {
-  //  Récupérer les infos du restaurant
+  // Récupérer les infos du restaurant
   getRestaurantInfo: async (restaurantId) => {
     const res = await client.get(`/restaurent/${restaurantId}`);
     return unwrap(res);
   },
 
-  //  Mettre à jour les infos du restaurant (nom, email, téléphone, adresse)
+  // Modifier les infos du restaurant
   updateRestaurantInfo: async (restaurantId, data) => {
     const res = await client.put(`/restaurent/${restaurantId}`, data);
     return unwrap(res);
   },
 
-  //  Mettre à jour le logo
+  // Modifier le logo
   updateLogo: async (restaurantId, formData) => {
-    const res = await client.put(`/restaurent/${restaurantId}/logo`, formData, {
-      headers: { "Content-Type": "multipart/form-data" }
+    const res = await client.put(`/restaurent/${restaurantId}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
     });
     return unwrap(res);
   },
 
-  //  Changer le mot de passe
+  // Changer le mot de passe
   changePassword: async (restaurantId, data) => {
-    // data = { currentPassword, newPassword, confirmPassword }
-    const res = await client.put(`/restaurent/${restaurantId}/password`, data);
+    const res = await client.put(CHANGE_PASSWORD_ROUTE(restaurantId), data);
     return unwrap(res);
   },
 
-  //  Activer le restaurant
-  activateRestaurant: async (restaurantId) => {
-    const res = await client.put(`/restaurent/${restaurantId}/activate`);
+  // Changer le statut : ouvert / ferme
+  changeRestaurantStatus: async (restaurantId, status) => {
+    const res = await client.put(`/restaurent/status_restaurent`, {
+      restaurantId,
+      status,
+    });
     return unwrap(res);
   },
 
-  //  Désactiver le restaurant
-  deactivateRestaurant: async (restaurantId) => {
-    const res = await client.put(`/restaurent/${restaurantId}/deactivate`);
-    return unwrap(res);
-  },
-
-  //  Supprimer le compte restaurant
+  // Supprimer le compte
   deleteAccount: async (restaurantId, password) => {
-    const res = await client.delete(`/restaurent/${restaurantId}`, {
-      data: { password }
+    const res = await client.delete(`/user/${restaurantId}`, {
+      data: { password },
     });
     return unwrap(res);
   },
