@@ -20,7 +20,6 @@ const qrLinkOf = (t) =>
   t?.qr?.link ??
   null;
 
-// correction ici : ajout de `statut`
 const statusRawOf = (t) =>
   t?.statut ??
   t?.status ??
@@ -30,9 +29,11 @@ const statusRawOf = (t) =>
 
 const normStatus = (s) => {
   const v = String(s ?? "").toLowerCase().trim();
+
   if (["libre", "free", "available", "disponible"].includes(v)) return "libre";
   if (["occupee", "occupée", "occupe", "occupied", "busy"].includes(v)) return "occupee";
   if (["reservee", "réservée", "reserve", "reserved"].includes(v)) return "reservee";
+
   return "libre";
 };
 
@@ -44,18 +45,22 @@ const toInt = (v, def = 0) => {
 const computeStats = (arr = []) => {
   const t = Array.isArray(arr) ? arr : [];
   const s = { ...EMPTY_STATS, total: t.length };
+
   for (const row of t) {
     const st = normStatus(statusRawOf(row));
     s[st] += 1;
   }
+
   return s;
 };
 
 const resolveId = (tableIdOrObj) => {
   if (!tableIdOrObj) return null;
   if (typeof tableIdOrObj === "object") return resolveId(idOf(tableIdOrObj));
+
   const id = String(tableIdOrObj);
   if (!id || id === "[object Object]") return null;
+
   return id;
 };
 
@@ -149,9 +154,12 @@ export const useTables = () => {
 
   const createTable = useCallback(
     async (data) => {
-      if (!restaurantId) return { success: false, error: "Restaurant non trouvé" };
+      if (!restaurantId) {
+        return { success: false, error: "Restaurant non trouvé" };
+      }
 
       setSaving(true);
+
       try {
         const created = await tablesApi.createTable(restaurantId, data);
         await fetchTables();
@@ -175,7 +183,9 @@ export const useTables = () => {
 
   const createMultipleTables = useCallback(
     async (count) => {
-      if (!restaurantId) return { success: false, error: "Restaurant non trouvé" };
+      if (!restaurantId) {
+        return { success: false, error: "Restaurant non trouvé" };
+      }
 
       const n = Number.parseInt(String(count ?? ""), 10);
       if (!Number.isFinite(n) || n < 1 || n > 50) {
@@ -183,6 +193,7 @@ export const useTables = () => {
       }
 
       setSaving(true);
+
       try {
         if (typeof tablesApi.createMultipleTables === "function") {
           const created = await tablesApi.createMultipleTables(restaurantId, n);
@@ -198,7 +209,19 @@ export const useTables = () => {
 
         for (let i = 0; i < n; i++) {
           while (used.has(start)) start++;
-          const payload = { numero_table: start, capacite: 4, status: "libre" };
+
+          const defaultName = `Table ${start}`;
+
+          const payload = {
+            numero_table: start,
+            capacite: 4,
+            status: "libre",
+            statut: "libre",
+            nom_table: defaultName,
+            nom: defaultName,
+            name: defaultName,
+          };
+
           const created = await tablesApi.createTable(restaurantId, payload);
           createdTables.push(created);
           createdIds.push(resolveId(created));
@@ -227,14 +250,19 @@ export const useTables = () => {
 
   const updateTable = useCallback(
     async (tableId, data) => {
-      if (!restaurantId) return { success: false, error: "Restaurant non trouvé" };
+      if (!restaurantId) {
+        return { success: false, error: "Restaurant non trouvé" };
+      }
 
       const id = resolveId(tableId);
-      if (!id) return { success: false, error: "ID table invalide" };
+      if (!id) {
+        return { success: false, error: "ID table invalide" };
+      }
 
       const { _id, id: _id2, ...payload } = data || {};
 
       setSaving(true);
+
       try {
         const updated = await tablesApi.updateTable(restaurantId, id, payload);
 
@@ -260,18 +288,30 @@ export const useTables = () => {
   );
 
   const updateStatus = useCallback(
-    async (tableId, status) => updateTable(tableId, { status: normStatus(status) }),
+    async (tableId, status) => {
+      const normalized = normStatus(status);
+
+      return updateTable(tableId, {
+        status: normalized,
+        statut: normalized,
+      });
+    },
     [updateTable]
   );
 
   const deleteTable = useCallback(
     async (tableIdOrObj) => {
-      if (!restaurantId) return { success: false, error: "Restaurant non trouvé" };
+      if (!restaurantId) {
+        return { success: false, error: "Restaurant non trouvé" };
+      }
 
       const id = resolveId(tableIdOrObj);
-      if (!id) return { success: false, error: "ID table invalide" };
+      if (!id) {
+        return { success: false, error: "ID table invalide" };
+      }
 
       let snapshot = null;
+
       setTables((prev) => {
         snapshot = prev;
         const next = (prev || []).filter((t) => String(resolveId(t)) !== String(id));
@@ -280,6 +320,7 @@ export const useTables = () => {
       });
 
       setSaving(true);
+
       try {
         await tablesApi.deleteTable(restaurantId, id);
         await fetchTables();
@@ -289,6 +330,7 @@ export const useTables = () => {
           setTables(snapshot);
           setStats(computeStats(snapshot));
         }
+
         return {
           success: false,
           error: err?.response?.data?.message || err?.message || "Erreur de suppression",
@@ -309,11 +351,15 @@ export const useTables = () => {
     }
 
     const id = resolveId(tableId);
-    if (!id) return { success: false, error: "ID table invalide" };
+    if (!id) {
+      return { success: false, error: "ID table invalide" };
+    }
 
     setSaving(true);
+
     try {
       const updated = await tablesApi.regenerateQR(id);
+
       setTables((prev) => {
         const next = (prev || []).map((t) =>
           String(resolveId(t)) === String(id) ? { ...t, ...updated } : t
@@ -321,7 +367,12 @@ export const useTables = () => {
         setStats(computeStats(next));
         return next;
       });
-      return { success: true, table: updated, qrLink: qrLinkOf(updated) };
+
+      return {
+        success: true,
+        table: updated,
+        qrLink: qrLinkOf(updated),
+      };
     } catch (err) {
       return {
         success: false,
@@ -332,7 +383,6 @@ export const useTables = () => {
     }
   }, []);
 
-  // Accepte soit (tableObj), soit (tableId, tableNumber)
   const getMenuUrl = useCallback(
     (tableOrId, tableNumber) => {
       if (!restaurantId) return "";
@@ -341,6 +391,7 @@ export const useTables = () => {
         const id = resolveId(tableOrId);
         const numero = numOf(tableOrId);
         const backendQrLink = qrLinkOf(tableOrId);
+
         return tablesApi.getMenuUrl(restaurantId, id, numero, backendQrLink);
       }
 

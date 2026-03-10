@@ -1,4 +1,3 @@
-// src/pages/Restaurant/Tables/RestaurantTablesPage.jsx
 import React, { useMemo, useRef, useState } from "react";
 import {
   RiAddLine,
@@ -41,11 +40,23 @@ const nameOf = (t) =>
 const capOf = (t) =>
   t?.capacite ?? t?.capacity ?? t?.places ?? t?.nb_places ?? null;
 
+const normalizeStatus = (value) => {
+  const v = String(value ?? "").toLowerCase().trim();
+
+  if (["libre", "free", "available", "disponible"].includes(v)) return "libre";
+  if (["occupee", "occupée", "occupe", "occupied", "busy"].includes(v)) return "occupee";
+  if (["reservee", "réservée", "reserve", "reserved"].includes(v)) return "reservee";
+
+  return "libre";
+};
+
 const statusOf = (t) =>
-  t?.statut ?? t?.status ?? t?.etat ?? t?.state ?? "libre";
+  normalizeStatus(t?.statut ?? t?.status ?? t?.etat ?? t?.state ?? "libre");
 
 const normalizeTable = (raw) => {
   const _id = idOf(raw);
+  const normalizedStatus = statusOf(raw);
+
   return {
     ...(raw || {}),
     _id,
@@ -53,8 +64,8 @@ const normalizeTable = (raw) => {
     numero: numOf(raw),
     nom: nameOf(raw),
     capacite: capOf(raw),
-    status: statusOf(raw),
-    statut: statusOf(raw),
+    status: normalizedStatus,
+    statut: normalizedStatus,
     qrLink: raw?.qrLink ?? raw?.qr_link ?? raw?.qr?.link ?? null,
   };
 };
@@ -70,6 +81,7 @@ const toApiPayload = (formLike) => {
     formLike?.table_name ??
     formLike?.tableName ??
     "";
+
   const nom = String(nomRaw || "").trim() || undefined;
 
   const c = Number(
@@ -77,11 +89,9 @@ const toApiPayload = (formLike) => {
   );
   const capacite = Number.isFinite(c) ? c : undefined;
 
-  const status =
-    formLike?.statut ??
-    formLike?.status ??
-    formLike?.etat ??
-    undefined;
+  const status = normalizeStatus(
+    formLike?.statut ?? formLike?.status ?? formLike?.etat ?? "libre"
+  );
 
   return {
     numero_table,
@@ -120,7 +130,7 @@ const RestaurantTablesPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [message, setMessage] = useState({ type: "", text: "" });
@@ -140,6 +150,7 @@ const RestaurantTablesPage = () => {
 
   const filteredTables = useMemo(() => {
     const q = String(searchQuery || "").trim().toLowerCase();
+
     return normalizedTables.filter((t) => {
       const n = t.numero;
       const nom = String(t.nom || "").toLowerCase();
@@ -168,6 +179,7 @@ const RestaurantTablesPage = () => {
     } else {
       showToast("error", result?.error || "Erreur");
     }
+
     return result;
   };
 
@@ -181,6 +193,7 @@ const RestaurantTablesPage = () => {
     } else {
       showToast("error", result?.error || "Erreur");
     }
+
     return result;
   };
 
@@ -199,6 +212,7 @@ const RestaurantTablesPage = () => {
     } else {
       showToast("error", result?.error || "Erreur");
     }
+
     return result;
   };
 
@@ -252,6 +266,7 @@ const RestaurantTablesPage = () => {
     } else {
       showToast("error", result?.error || "Erreur");
     }
+
     return result;
   };
 

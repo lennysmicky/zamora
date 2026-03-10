@@ -72,15 +72,23 @@ export const tablesApi = {
       throw new Error("[tablesApi] Missing numero_table");
     }
 
-    const res = await client.post(`/table/${restaurantId}`, payload);
+    if (payload.status && !payload.statut) {
+      payload.statut = payload.status;
+    }
 
-    // garde la table + qrLink venant du backend
+    const res = await client.post(`/table/${restaurantId}`, payload);
     return unwrapCreateTable(res);
   },
 
   updateTable: async (restaurantId, id, data) => {
     if (!restaurantId || !id) throw new Error("[tablesApi] Missing id");
+
     const payload = normalizeTablePayload(data);
+
+    if (payload.status && !payload.statut) {
+      payload.statut = payload.status;
+    }
+
     const res = await client.put(`/table/${restaurantId}/${id}`, payload);
     return unwrap(res);
   },
@@ -110,7 +118,6 @@ export const tablesApi = {
     return Array.isArray(data) ? data : [];
   },
 
-  // fallback uniquement si le backend ne renvoie pas qrLink
   getMenuUrl: (restaurantId, tableId, tableNumber, backendQrLink) => {
     if (backendQrLink) return backendQrLink;
 

@@ -1,4 +1,3 @@
-// src/components/tables/TableCard.jsx
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -70,7 +69,7 @@ const TableCard = ({
     table?.qrLink ??
     table?.qr_link ??
     table?.qr?.link ??
-    (getMenuUrl ? getMenuUrl(table, tableNumber) : '');
+    (getMenuUrl ? getMenuUrl(table) : '');
 
   const handleStatusSelect = (newStatus) => {
     onStatusChange(tableId, newStatus);
@@ -236,12 +235,10 @@ const TableCard = ({
         </div>
       </div>
 
-      {tableName && (
-        <div className="table-card-info">
-          <span className="table-info-label">Nom:</span>
-          <span className="table-info-value">{tableName}</span>
-        </div>
-      )}
+      <div className="table-card-info">
+        <span className="table-info-label">Nom:</span>
+        <span className="table-info-value">{tableName}</span>
+      </div>
 
       {table?.capacite && (
         <div className="table-card-info">
