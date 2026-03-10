@@ -27,7 +27,7 @@ const AccountSection = ({ restaurant, saving, onToggleActive, onDeleteAccount })
     restaurant?.actif;
 
   const isOpen =
-    rawStatus === 'ouvert' ||
+    rawStatus === 'Ouvert' ||
     rawStatus === true ||
     rawStatus === 'true' ||
     rawStatus === 1;

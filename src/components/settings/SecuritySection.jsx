@@ -48,8 +48,8 @@ const SecuritySection = ({ saving, onChangePassword }) => {
     
     if (!form.newPassword) {
       newErrors.newPassword = 'Nouveau mot de passe requis';
-    } else if (form.newPassword.length < 6) {
-      newErrors.newPassword = 'Minimum 6 caractères';
+    } else if (form.newPassword.length < 8) {
+      newErrors.newPassword = 'Minimum 8caractères';
     }
     
     if (!form.confirmPassword) {

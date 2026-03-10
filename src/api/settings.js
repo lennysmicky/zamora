@@ -10,8 +10,8 @@ const unwrap = (res) => {
   return v;
 };
 
-// A confirmer selon ta vraie route backend
-const CHANGE_PASSWORD_ROUTE = (restaurantId) => `/user/change_password/${restaurantId}`;
+// Route correcte pour le changement de mot de passe
+const CHANGE_PASSWORD_ROUTE = "/user/change_password";
 
 export const settingsApi = {
   // Récupérer les infos du restaurant
@@ -35,15 +35,14 @@ export const settingsApi = {
   },
 
   // Changer le mot de passe
-  changePassword: async (restaurantId, data) => {
-    const res = await client.put(CHANGE_PASSWORD_ROUTE(restaurantId), data);
+  changePassword: async (data) => {
+    const res = await client.put(CHANGE_PASSWORD_ROUTE, data);
     return unwrap(res);
   },
 
   // Changer le statut : ouvert / ferme
   changeRestaurantStatus: async (restaurantId, status) => {
-    const res = await client.put(`/restaurent/status_restaurent`, {
-      restaurantId,
+    const res = await client.put(`/restaurent/status/${restaurantId}`, {
       status,
     });
     return unwrap(res);

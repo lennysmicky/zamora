@@ -10,9 +10,11 @@ export const useRestaurantSettings = () => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Charger les infos du restaurant
   const fetchRestaurant = useCallback(async () => {
-    if (!restaurantId) return;
+    if (!restaurantId) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -31,15 +33,11 @@ export const useRestaurantSettings = () => {
     fetchRestaurant();
   }, [fetchRestaurant]);
 
-  // Mettre à jour les infos
   const updateInfo = async (data) => {
     setSaving(true);
     try {
       await settingsApi.updateRestaurantInfo(restaurantId, data);
-
-      // Recharge les vraies données depuis le backend
       await fetchRestaurant();
-
       return { success: true };
     } catch (err) {
       return {
@@ -51,16 +49,13 @@ export const useRestaurantSettings = () => {
     }
   };
 
-  // Mettre à jour le logo
   const updateLogo = async (file) => {
     setSaving(true);
     try {
       const formData = new FormData();
-      formData.append('logo', file);
+      formData.append('image', file);
 
       await settingsApi.updateLogo(restaurantId, formData);
-
-      // Recharge les vraies données
       await fetchRestaurant();
 
       return { success: true };
@@ -74,11 +69,10 @@ export const useRestaurantSettings = () => {
     }
   };
 
-  // Changer le mot de passe
   const changePassword = async (data) => {
     setSaving(true);
     try {
-      await settingsApi.changePassword(restaurantId, data);
+      await settingsApi.changePassword(data);
       return { success: true };
     } catch (err) {
       return {
@@ -90,15 +84,12 @@ export const useRestaurantSettings = () => {
     }
   };
 
-  // Ouvrir / Fermer le restaurant
-  const toggleActive = async (activate) => {
+  const toggleActive = async (Ouvert) => {
     setSaving(true);
     try {
-      const status = activate ? 'ouvert' : 'ferme';
+      const status = Ouvert ? 'Ouvert' : 'Fermé';
 
       await settingsApi.changeRestaurantStatus(restaurantId, status);
-
-      // Recharge les vraies données
       await fetchRestaurant();
 
       return { success: true };
@@ -112,7 +103,6 @@ export const useRestaurantSettings = () => {
     }
   };
 
-  // Supprimer le compte
   const deleteAccount = async (password) => {
     setSaving(true);
     try {
