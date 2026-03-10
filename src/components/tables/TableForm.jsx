@@ -1,4 +1,3 @@
-// src/components/tables/TableForm.jsx
 import React, { useState, useEffect } from "react";
 import {
   RiAddLine,
@@ -13,6 +12,7 @@ import "./css/TableComponents.css";
 
 const numOf = (t) => t?.numero_table ?? t?.numero ?? t?.number ?? "";
 const nameOf = (t) => t?.nom ?? t?.nom_table ?? t?.name ?? "";
+const statusOf = (t) => t?.statut ?? t?.status ?? t?.etat ?? t?.state ?? "libre";
 
 const TableForm = ({
   table = null,
@@ -42,7 +42,7 @@ const TableForm = ({
       numero: numOf(table) ?? "",
       nom: nameOf(table) ?? "",
       capacite: table?.capacite ?? table?.capacity ?? 4,
-      status: table?.status ?? "libre",
+      status: statusOf(table),
     });
   }, [table]);
 
@@ -76,13 +76,12 @@ const TableForm = ({
 
     const rawName = String(form.nom ?? "").trim();
 
-    // ✅ en CREATE: nom par défaut si vide
-    // ✅ en EDIT: si vide => on n’envoie pas de nom (ne pas écraser côté backend)
     const payload = {
       ...(isEditMode ? { _id: table?._id || table?.id } : {}),
       numero_table: currentNum,
       capacite: Number.parseInt(String(form.capacite ?? ""), 10) || 4,
       status: form.status,
+      statut: form.status,
       ...(rawName
         ? { nom: rawName, name: rawName, nom_table: rawName }
         : isEditMode

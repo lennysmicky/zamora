@@ -1,11 +1,9 @@
-// src/hooks/useTables.js
 import { useEffect, useCallback, useMemo, useRef, useState } from "react";
 import { tablesApi } from "../api/tables";
 import useAuthStore from "../stores/authStore";
 
 const EMPTY_STATS = { total: 0, libre: 0, occupee: 0, reservee: 0 };
 
-// IMPORTANT: préférer _id (Mongo) à id (souvent ambigu)
 const idOf = (x) => x?._id ?? x?.id ?? null;
 
 const numOf = (t) =>
@@ -16,7 +14,19 @@ const numOf = (t) =>
   t?.tableNumber ??
   null;
 
-const statusRawOf = (t) => t?.status ?? t?.etat ?? t?.state ?? null;
+const qrLinkOf = (t) =>
+  t?.qrLink ??
+  t?.qr_link ??
+  t?.qr?.link ??
+  null;
+
+// correction ici : ajout de `statut`
+const statusRawOf = (t) =>
+  t?.statut ??
+  t?.status ??
+  t?.etat ??
+  t?.state ??
+  null;
 
 const normStatus = (s) => {
   const v = String(s ?? "").toLowerCase().trim();
@@ -41,7 +51,6 @@ const computeStats = (arr = []) => {
   return s;
 };
 
-// accepte string OU objet table/id, bloque "[object Object]"
 const resolveId = (tableIdOrObj) => {
   if (!tableIdOrObj) return null;
   if (typeof tableIdOrObj === "object") return resolveId(idOf(tableIdOrObj));
@@ -50,7 +59,6 @@ const resolveId = (tableIdOrObj) => {
   return id;
 };
 
-// stats backend parfois avec clés différentes -> normaliser + valider
 const normalizeStatsFromApi = (raw, tablesFallback = []) => {
   if (!raw || typeof raw !== "object") return computeStats(tablesFallback);
 
@@ -67,10 +75,7 @@ const normalizeStatsFromApi = (raw, tablesFallback = []) => {
 
   const sum = out.libre + out.occupee + out.reservee;
 
-  // si API renvoie des champs non mappés -> on tombe à 0 : fallback fiable
   if (sum === 0 && (tablesFallback?.length ?? 0) > 0) return computeStats(tablesFallback);
-
-  // cohérence total
   if (out.total === 0 && sum > 0) out.total = sum;
 
   return out;
@@ -85,7 +90,6 @@ export const useTables = () => {
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // anti-race: ignore les réponses hors-ordre
   const fetchSeqRef = useRef(0);
 
   const existingNumbers = useMemo(() => {
@@ -151,7 +155,12 @@ export const useTables = () => {
       try {
         const created = await tablesApi.createTable(restaurantId, data);
         await fetchTables();
-        return { success: true, table: created };
+
+        return {
+          success: true,
+          table: created,
+          qrLink: qrLinkOf(created),
+        };
       } catch (err) {
         return {
           success: false,
@@ -176,27 +185,34 @@ export const useTables = () => {
       setSaving(true);
       try {
         if (typeof tablesApi.createMultipleTables === "function") {
-          await tablesApi.createMultipleTables(restaurantId, n);
+          const created = await tablesApi.createMultipleTables(restaurantId, n);
           await fetchTables();
-          return { success: true };
+          return { success: true, tables: created };
         }
 
-        // Fallback: création séquentielle
         const used = new Set(existingNumbers);
         let start = used.size ? Math.max(...existingNumbers) + 1 : 1;
 
+        const createdTables = [];
         const createdIds = [];
+
         for (let i = 0; i < n; i++) {
           while (used.has(start)) start++;
           const payload = { numero_table: start, capacite: 4, status: "libre" };
           const created = await tablesApi.createTable(restaurantId, payload);
+          createdTables.push(created);
           createdIds.push(resolveId(created));
           used.add(start);
           start++;
         }
 
         await fetchTables();
-        return { success: true, createdIds };
+
+        return {
+          success: true,
+          createdIds,
+          tables: createdTables,
+        };
       } catch (err) {
         return {
           success: false,
@@ -255,7 +271,6 @@ export const useTables = () => {
       const id = resolveId(tableIdOrObj);
       if (!id) return { success: false, error: "ID table invalide" };
 
-      // Optimiste: enlève exactement la table cliquée côté UI
       let snapshot = null;
       setTables((prev) => {
         snapshot = prev;
@@ -267,11 +282,9 @@ export const useTables = () => {
       setSaving(true);
       try {
         await tablesApi.deleteTable(restaurantId, id);
-        // refresh pour être sûr
         await fetchTables();
         return { success: true };
       } catch (err) {
-        // rollback si erreur
         if (snapshot) {
           setTables(snapshot);
           setStats(computeStats(snapshot));
@@ -308,7 +321,7 @@ export const useTables = () => {
         setStats(computeStats(next));
         return next;
       });
-      return { success: true, table: updated };
+      return { success: true, table: updated, qrLink: qrLinkOf(updated) };
     } catch (err) {
       return {
         success: false,
@@ -319,10 +332,19 @@ export const useTables = () => {
     }
   }, []);
 
+  // Accepte soit (tableObj), soit (tableId, tableNumber)
   const getMenuUrl = useCallback(
-    (tableId, tableNumber) => {
+    (tableOrId, tableNumber) => {
       if (!restaurantId) return "";
-      return tablesApi.getMenuUrl(restaurantId, tableId, tableNumber);
+
+      if (typeof tableOrId === "object" && tableOrId) {
+        const id = resolveId(tableOrId);
+        const numero = numOf(tableOrId);
+        const backendQrLink = qrLinkOf(tableOrId);
+        return tablesApi.getMenuUrl(restaurantId, id, numero, backendQrLink);
+      }
+
+      return tablesApi.getMenuUrl(restaurantId, tableOrId, tableNumber);
     },
     [restaurantId]
   );

@@ -10,6 +10,21 @@ const unwrap = (res) => {
   return v;
 };
 
+const unwrapCreateTable = (res) => {
+  const raw = res?.data ?? {};
+  const nested = raw?.data ?? raw?.result ?? raw;
+
+  const table = nested?.table ?? raw?.table ?? unwrap(res);
+  const qrLink = nested?.qrLink ?? raw?.qrLink ?? null;
+  const message = nested?.message ?? raw?.message ?? null;
+
+  return {
+    ...(table || {}),
+    qrLink,
+    message,
+  };
+};
+
 const normalizeTablePayload = (data = {}) => {
   const d = { ...(data || {}) };
 
@@ -23,10 +38,9 @@ const normalizeTablePayload = (data = {}) => {
 
   if (numero != null && numero !== "") {
     const n = Number(numero);
-    d.numero_table = Number.isFinite(n) ? n : numero; // au pire on laisse la string
+    d.numero_table = Number.isFinite(n) ? n : numero;
   }
 
-  // nettoyage alias
   delete d.numeroTable;
   delete d.tableNumber;
   delete d.number;
@@ -51,15 +65,17 @@ export const tablesApi = {
 
   createTable: async (restaurantId, data) => {
     if (!restaurantId) throw new Error("[tablesApi] Missing restaurantId");
+
     const payload = normalizeTablePayload(data);
 
-    // guard clair côté front
     if (payload.numero_table == null || payload.numero_table === "") {
       throw new Error("[tablesApi] Missing numero_table");
     }
 
     const res = await client.post(`/table/${restaurantId}`, payload);
-    return unwrap(res);
+
+    // garde la table + qrLink venant du backend
+    return unwrapCreateTable(res);
   },
 
   updateTable: async (restaurantId, id, data) => {
@@ -78,6 +94,7 @@ export const tablesApi = {
   getStats: async (restaurantId) => {
     const empty = { total: 0, libre: 0, occupee: 0, reservee: 0 };
     if (!restaurantId) return empty;
+
     try {
       const res = await client.get(`/table/stats/${restaurantId}`);
       return unwrap(res) || empty;
@@ -93,7 +110,10 @@ export const tablesApi = {
     return Array.isArray(data) ? data : [];
   },
 
-  getMenuUrl: (restaurantId, tableId, tableNumber) => {
+  // fallback uniquement si le backend ne renvoie pas qrLink
+  getMenuUrl: (restaurantId, tableId, tableNumber, backendQrLink) => {
+    if (backendQrLink) return backendQrLink;
+
     const baseUrl = import.meta.env.VITE_CLIENT_URL || window.location.origin;
     return `${baseUrl}/menu/${restaurantId}?table=${tableId}&numero=${tableNumber}`;
   },

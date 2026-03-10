@@ -20,7 +20,6 @@ import TableQRModal from "../../../components/tables/TableQRModal";
 import Modal from "../../../components/common/Modal";
 import "./RestaurantTablesPage.css";
 
-// ---------------- helpers ----------------
 const idOf = (x) => x?._id ?? x?.id ?? null;
 
 const numOf = (t) =>
@@ -42,7 +41,8 @@ const nameOf = (t) =>
 const capOf = (t) =>
   t?.capacite ?? t?.capacity ?? t?.places ?? t?.nb_places ?? null;
 
-const statusOf = (t) => t?.status ?? t?.etat ?? "libre";
+const statusOf = (t) =>
+  t?.statut ?? t?.status ?? t?.etat ?? t?.state ?? "libre";
 
 const normalizeTable = (raw) => {
   const _id = idOf(raw);
@@ -54,10 +54,11 @@ const normalizeTable = (raw) => {
     nom: nameOf(raw),
     capacite: capOf(raw),
     status: statusOf(raw),
+    statut: statusOf(raw),
+    qrLink: raw?.qrLink ?? raw?.qr_link ?? raw?.qr?.link ?? null,
   };
 };
 
-// IMPORTANT: backend exige numero_table
 const toApiPayload = (formLike) => {
   const n = Number(formLike?.numero_table ?? formLike?.numero ?? formLike?.number);
   const numero_table = Number.isFinite(n) ? n : undefined;
@@ -71,18 +72,23 @@ const toApiPayload = (formLike) => {
     "";
   const nom = String(nomRaw || "").trim() || undefined;
 
-  const c = Number(formLike?.capacite ?? formLike?.capacity ?? formLike?.places ?? formLike?.nb_places);
+  const c = Number(
+    formLike?.capacite ?? formLike?.capacity ?? formLike?.places ?? formLike?.nb_places
+  );
   const capacite = Number.isFinite(c) ? c : undefined;
 
-  const status = formLike?.status ?? formLike?.etat ?? undefined;
+  const status =
+    formLike?.statut ??
+    formLike?.status ??
+    formLike?.etat ??
+    undefined;
 
-  // Mongoose accepte les champs en trop (droppe si strict)
   return {
     numero_table,
     nom_table: nom,
     capacite,
     status,
-    // aliases utiles côté front/compat
+    statut: status,
     numero: numero_table,
     nom,
     name: nom,
@@ -111,11 +117,8 @@ const RestaurantTablesPage = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-
-  // modal suppression propre (au lieu de window.confirm)
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [tableToDelete, setTableToDelete] = useState(null);
-
   const [selectedTable, setSelectedTable] = useState(null);
   const [viewMode, setViewMode] = useState("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,7 +127,6 @@ const RestaurantTablesPage = () => {
 
   const qrRef = useRef(null);
 
-  // Normalisation unique (source of truth UI)
   const normalizedTables = useMemo(
     () => (tables || []).map(normalizeTable).filter((t) => t._id),
     [tables]
@@ -155,7 +157,6 @@ const RestaurantTablesPage = () => {
     window.setTimeout(() => setMessage({ type: "", text: "" }), 3000);
   };
 
-  // ---------------- handlers ----------------
   const handleCreateTable = async (formData) => {
     const payload = toApiPayload(formData);
     const result = await createTable(payload);
@@ -187,7 +188,6 @@ const RestaurantTablesPage = () => {
     const id = formPayload?._id ?? formPayload?.id;
     if (!id) return { success: false, error: "ID table manquant" };
 
-    // ⚠️ on ne force PAS "Table X" ici : on respecte le nom saisi
     const apiData = toApiPayload(formPayload);
     const result = await updateTable(id, apiData);
 
@@ -212,14 +212,12 @@ const RestaurantTablesPage = () => {
     if (!result?.success) showToast("error", result?.error || "Erreur");
   };
 
-  // suppression: ouvrir modal
   const handleAskDelete = (tableId) => {
     const t = normalizedTables.find((x) => String(x._id) === String(tableId));
     setTableToDelete(t || { _id: tableId, numero: "?" });
     setShowDeleteModal(true);
   };
 
-  // suppression: confirmer
   const handleConfirmDelete = async () => {
     const id = tableToDelete?._id ?? tableToDelete?.id;
     if (!id) return;
@@ -246,7 +244,9 @@ const RestaurantTablesPage = () => {
 
     if (result?.success) {
       const next = normalizeTable(result.table || {});
-      if (selectedTable && String(selectedTable._id) === String(tableId)) setSelectedTable(next);
+      if (selectedTable && String(selectedTable._id) === String(tableId)) {
+        setSelectedTable(next);
+      }
       showToast("success", "QR code régénéré !");
       fetchTables?.();
     } else {
@@ -256,7 +256,20 @@ const RestaurantTablesPage = () => {
   };
 
   const handleDownloadQR = (table, menuUrl) => {
-    const tableNumber = table?.numero ?? "?";
+    const tableNumber =
+      table?.numero_table ??
+      table?.numero ??
+      table?.number ??
+      "?";
+
+    const effectiveMenuUrl =
+      table?.qrLink ??
+      table?.qr_link ??
+      menuUrl ??
+      (getMenuUrl ? getMenuUrl(table) : "") ??
+      "";
+
+    if (!effectiveMenuUrl) return;
 
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -269,7 +282,7 @@ const RestaurantTablesPage = () => {
     import("qrcode").then((QRCode) => {
       QRCode.toCanvas(
         canvas,
-        menuUrl,
+        effectiveMenuUrl,
         { width: 200, margin: 2, color: { dark: "#000000", light: "#ffffff" } },
         (err) => {
           if (err) return;
@@ -293,10 +306,25 @@ const RestaurantTablesPage = () => {
   };
 
   const handlePrintQR = (table, menuUrl) => {
-    const tableNumber = table?.numero ?? "?";
+    const tableNumber =
+      table?.numero_table ??
+      table?.numero ??
+      table?.number ??
+      "?";
+
+    const effectiveMenuUrl =
+      table?.qrLink ??
+      table?.qr_link ??
+      menuUrl ??
+      (getMenuUrl ? getMenuUrl(table) : "") ??
+      "";
+
+    if (!effectiveMenuUrl) return;
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
+
+    const safeUrl = JSON.stringify(effectiveMenuUrl);
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -319,7 +347,7 @@ const RestaurantTablesPage = () => {
             <p>Scannez pour commander</p>
           </div>
           <script>
-            QRCode.toCanvas(document.getElementById('qr'), '${menuUrl}', { width: 200 }, function(err) {
+            QRCode.toCanvas(document.getElementById('qr'), ${safeUrl}, { width: 200 }, function(err) {
               if (!err) { window.print(); window.close(); }
             });
           </script>
@@ -329,7 +357,6 @@ const RestaurantTablesPage = () => {
     printWindow.document.close();
   };
 
-  // ---------------- render ----------------
   return (
     <div className="tables-page">
       <div className="tables-header">
@@ -526,7 +553,6 @@ const RestaurantTablesPage = () => {
         )}
       </div>
 
-      {/* ---------- Modal Création ---------- */}
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -542,7 +568,6 @@ const RestaurantTablesPage = () => {
         />
       </Modal>
 
-      {/* ---------- Modal Modification ---------- */}
       <Modal
         isOpen={showEditModal}
         onClose={() => {
@@ -565,7 +590,6 @@ const RestaurantTablesPage = () => {
         />
       </Modal>
 
-      {/* ---------- Modal Suppression (UI propre) ---------- */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => {
@@ -608,7 +632,6 @@ const RestaurantTablesPage = () => {
         </div>
       </Modal>
 
-      {/* ---------- Modal QR ---------- */}
       {selectedTable && (
         <TableQRModal
           isOpen={showQRModal}
@@ -617,10 +640,7 @@ const RestaurantTablesPage = () => {
             setSelectedTable(null);
           }}
           table={selectedTable}
-          menuUrl={getMenuUrl(
-            selectedTable._id,
-            selectedTable.numero ?? selectedTable.number ?? selectedTable.numero_table
-          )}
+          menuUrl={getMenuUrl(selectedTable)}
           onRegenerate={() => handleRegenerateQR(selectedTable._id)}
           saving={saving}
         />

@@ -1,4 +1,3 @@
-// src/components/tables/TableQRModal.jsx
 import React, { useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -18,46 +17,56 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
 
   if (!isOpen || !table) return null;
 
-  const tableNumber = table.numero || table.number || '?';
+  const tableNumber =
+    table.numero_table ??
+    table.numero ??
+    table.number ??
+    table.numeroTable ??
+    table.tableNumber ??
+    '?';
+
+  // priorité au lien backend renvoyé à la création / régénération
+  const effectiveMenuUrl =
+    table.qrLink ??
+    table.qr_link ??
+    table.qr?.link ??
+    menuUrl ??
+    '';
 
   // Télécharger le QR en PNG
   const handleDownload = () => {
     const svg = qrRef.current?.querySelector('svg');
-    if (!svg) return;
+    if (!svg || !effectiveMenuUrl) return;
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const data = new XMLSerializer().serializeToString(svg);
     const img = new Image();
-    
+
     canvas.width = 400;
     canvas.height = 500;
-    
+
     img.onload = () => {
-      // Background blanc
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // QR Code centré
+
       ctx.drawImage(img, 50, 50, 300, 300);
-      
-      // Texte
+
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 24px Arial';
       ctx.textAlign = 'center';
       ctx.fillText(`Table ${tableNumber}`, 200, 400);
-      
+
       ctx.font = '14px Arial';
       ctx.fillStyle = '#666666';
       ctx.fillText('Scannez pour commander', 200, 430);
-      
-      // Download
+
       const link = document.createElement('a');
       link.download = `table-${tableNumber}-qr.png`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     };
-    
+
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(data)));
   };
 
@@ -65,10 +74,10 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
   const handlePrint = () => {
     const printWindow = window.open('', '_blank');
     const svg = qrRef.current?.querySelector('svg');
-    if (!svg || !printWindow) return;
+    if (!svg || !printWindow || !effectiveMenuUrl) return;
 
     const svgData = new XMLSerializer().serializeToString(svg);
-    
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -126,8 +135,10 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
 
   // Copier le lien
   const handleCopyLink = async () => {
+    if (!effectiveMenuUrl) return;
+
     try {
-      await navigator.clipboard.writeText(menuUrl);
+      await navigator.clipboard.writeText(effectiveMenuUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -138,7 +149,6 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
   return (
     <div className="qr-modal-overlay" onClick={onClose}>
       <div className="qr-modal" onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className="qr-modal-header">
           <h3>QR Code - Table {tableNumber}</h3>
           <button className="qr-modal-close" onClick={onClose}>
@@ -146,11 +156,10 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
           </button>
         </div>
 
-        {/* Content */}
         <div className="qr-modal-content">
           <div className="qr-display" ref={qrRef}>
             <QRCodeSVG
-              value={menuUrl}
+              value={effectiveMenuUrl || ' '}
               size={200}
               level="H"
               includeMargin={true}
@@ -165,24 +174,24 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
           </div>
 
           <div className="qr-url">
-            <input 
-              type="text" 
-              value={menuUrl} 
-              readOnly 
+            <input
+              type="text"
+              value={effectiveMenuUrl}
+              readOnly
               onClick={(e) => e.target.select()}
             />
-            <button 
+            <button
               className={`qr-copy-btn ${copied ? 'copied' : ''}`}
               onClick={handleCopyLink}
+              disabled={!effectiveMenuUrl}
             >
               {copied ? <RiCheckLine /> : <RiFileCopyLine />}
             </button>
           </div>
         </div>
 
-        {/* Actions */}
         <div className="qr-modal-actions">
-          <button 
+          <button
             className="qr-action-btn"
             onClick={onRegenerate}
             disabled={saving}
@@ -190,11 +199,19 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
             {saving ? <RiLoader4Line className="spin" /> : <RiRefreshLine />}
             <span>Régénérer</span>
           </button>
-          <button className="qr-action-btn" onClick={handleDownload}>
+          <button
+            className="qr-action-btn"
+            onClick={handleDownload}
+            disabled={!effectiveMenuUrl}
+          >
             <RiDownloadLine />
             <span>Télécharger</span>
           </button>
-          <button className="qr-action-btn primary" onClick={handlePrint}>
+          <button
+            className="qr-action-btn primary"
+            onClick={handlePrint}
+            disabled={!effectiveMenuUrl}
+          >
             <RiPrinterLine />
             <span>Imprimer</span>
           </button>

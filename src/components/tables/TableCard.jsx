@@ -20,12 +20,22 @@ const STATUS_CONFIG = {
   reservee: { label: 'Réservée', icon: RiCalendarCheckLine, color: 'info' }
 };
 
-const TableCard = ({ 
-  table, 
-  onStatusChange, 
-  onShowQR, 
+const normalizeStatus = (value) => {
+  const v = String(value ?? '').toLowerCase().trim();
+
+  if (['libre', 'free', 'available', 'disponible'].includes(v)) return 'libre';
+  if (['occupee', 'occupée', 'occupe', 'occupied', 'busy'].includes(v)) return 'occupee';
+  if (['reservee', 'réservée', 'reserve', 'reserved'].includes(v)) return 'reservee';
+
+  return 'libre';
+};
+
+const TableCard = ({
+  table,
+  onStatusChange,
+  onShowQR,
   onEdit,
-  onDelete, 
+  onDelete,
   onDownloadQR,
   onPrintQR,
   getMenuUrl,
@@ -33,20 +43,40 @@ const TableCard = ({
 }) => {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
 
-  const status = table.status || 'libre';
+  const status = normalizeStatus(
+    table?.statut ?? table?.status ?? table?.etat ?? table?.state
+  );
+
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.libre;
   const StatusIcon = config.icon;
-  
-  const tableNumber = table.numero || table.number || '?';
-  const tableId = table._id || table.id;
-  const menuUrl = getMenuUrl ? getMenuUrl(tableId, tableNumber) : '';
+
+  const tableNumber =
+    table?.numero_table ??
+    table?.numero ??
+    table?.number ??
+    table?.numeroTable ??
+    table?.tableNumber ??
+    '?';
+
+  const tableName =
+    table?.nom_table ??
+    table?.nom ??
+    table?.name ??
+    `Table ${tableNumber}`;
+
+  const tableId = table?._id || table?.id;
+
+  const menuUrl =
+    table?.qrLink ??
+    table?.qr_link ??
+    table?.qr?.link ??
+    (getMenuUrl ? getMenuUrl(table, tableNumber) : '');
 
   const handleStatusSelect = (newStatus) => {
     onStatusChange(tableId, newStatus);
     setShowStatusMenu(false);
   };
 
-  // Télécharger QR directement
   const handleDownload = (e) => {
     e.stopPropagation();
     if (onDownloadQR) {
@@ -54,7 +84,6 @@ const TableCard = ({
     }
   };
 
-  // Imprimer QR directement
   const handlePrint = (e) => {
     e.stopPropagation();
     if (onPrintQR) {
@@ -62,36 +91,31 @@ const TableCard = ({
     }
   };
 
-  // ========== VUE LISTE ==========
   if (viewMode === 'list') {
     return (
       <div className={`table-row table-row-${config.color}`}>
-        {/* Numéro */}
         <div className="table-row-number">
           <span className="table-number-badge">{tableNumber}</span>
         </div>
 
-        {/* Nom */}
         <div className="table-row-name">
-          {table.nom || `Table ${tableNumber}`}
+          {tableName}
         </div>
 
-        {/* Capacité */}
         <div className="table-row-capacity">
-          {table.capacite ? `${table.capacite} pers.` : '-'}
+          {table?.capacite ? `${table.capacite} pers.` : '-'}
         </div>
 
-        {/* Status */}
         <div className="table-row-status">
           <div className="status-selector-wrapper">
-            <button 
+            <button
               className={`status-badge status-badge-${config.color}`}
               onClick={() => setShowStatusMenu(!showStatusMenu)}
             >
               <StatusIcon />
               <span>{config.label}</span>
             </button>
-            
+
             {showStatusMenu && (
               <>
                 <div className="dropdown-backdrop" onClick={() => setShowStatusMenu(false)} />
@@ -112,7 +136,6 @@ const TableCard = ({
           </div>
         </div>
 
-        {/* QR Mini */}
         <div className="table-row-qr">
           {menuUrl && (
             <QRCodeSVG
@@ -125,38 +148,37 @@ const TableCard = ({
           )}
         </div>
 
-        {/* Actions */}
         <div className="table-row-actions">
-          <button 
-            className="table-action-btn" 
+          <button
+            className="table-action-btn"
             onClick={() => onShowQR(table)}
             title="Voir QR"
           >
             <RiEyeLine />
           </button>
-          <button 
-            className="table-action-btn" 
+          <button
+            className="table-action-btn"
             onClick={handleDownload}
             title="Télécharger"
           >
             <RiDownloadLine />
           </button>
-          <button 
-            className="table-action-btn" 
+          <button
+            className="table-action-btn"
             onClick={handlePrint}
             title="Imprimer"
           >
             <RiPrinterLine />
           </button>
-          <button 
-            className="table-action-btn" 
+          <button
+            className="table-action-btn"
             onClick={() => onEdit(table)}
             title="Modifier"
           >
             <RiEditLine />
           </button>
-          <button 
-            className="table-action-btn danger" 
+          <button
+            className="table-action-btn danger"
             onClick={() => onDelete(tableId)}
             title="Supprimer"
           >
@@ -167,17 +189,15 @@ const TableCard = ({
     );
   }
 
-  // ========== VUE GRILLE ==========
   return (
     <div className={`table-card table-card-${config.color}`}>
-      {/* Header */}
       <div className="table-card-header">
         <div className="table-card-number">
           <span className="table-number-label">Table</span>
           <span className="table-number-value">{tableNumber}</span>
         </div>
-        
-        <button 
+
+        <button
           className="table-action-btn"
           onClick={() => onEdit(table)}
           title="Modifier"
@@ -186,17 +206,16 @@ const TableCard = ({
         </button>
       </div>
 
-      {/* Status */}
       <div className="table-card-status">
         <div className="status-selector-wrapper">
-          <button 
+          <button
             className={`status-badge status-badge-${config.color}`}
             onClick={() => setShowStatusMenu(!showStatusMenu)}
           >
             <StatusIcon />
             <span>{config.label}</span>
           </button>
-          
+
           {showStatusMenu && (
             <>
               <div className="dropdown-backdrop" onClick={() => setShowStatusMenu(false)} />
@@ -217,22 +236,20 @@ const TableCard = ({
         </div>
       </div>
 
-      {/* Info */}
-      {table.nom && (
+      {tableName && (
         <div className="table-card-info">
           <span className="table-info-label">Nom:</span>
-          <span className="table-info-value">{table.nom}</span>
+          <span className="table-info-value">{tableName}</span>
         </div>
       )}
 
-      {table.capacite && (
+      {table?.capacite && (
         <div className="table-card-info">
           <span className="table-info-label">Capacité:</span>
           <span className="table-info-value">{table.capacite} pers.</span>
         </div>
       )}
 
-      {/* QR Preview */}
       <div className="table-card-qr" onClick={() => onShowQR(table)}>
         {menuUrl ? (
           <QRCodeSVG
@@ -249,31 +266,30 @@ const TableCard = ({
         )}
       </div>
 
-      {/* Quick Actions */}
       <div className="table-card-quick-actions">
-        <button 
-          className="quick-action-btn" 
+        <button
+          className="quick-action-btn"
           onClick={handleDownload}
           title="Télécharger QR"
         >
           <RiDownloadLine />
         </button>
-        <button 
-          className="quick-action-btn" 
+        <button
+          className="quick-action-btn"
           onClick={handlePrint}
           title="Imprimer QR"
         >
           <RiPrinterLine />
         </button>
-        <button 
-          className="quick-action-btn" 
+        <button
+          className="quick-action-btn"
           onClick={() => onShowQR(table)}
           title="Voir QR"
         >
           <RiQrCodeLine />
         </button>
-        <button 
-          className="quick-action-btn danger" 
+        <button
+          className="quick-action-btn danger"
           onClick={() => onDelete(tableId)}
           title="Supprimer"
         >
