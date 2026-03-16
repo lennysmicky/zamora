@@ -1,4 +1,3 @@
-// src/hooks/useOrders.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { ordersApi } from "../api/orders";
@@ -116,7 +115,6 @@ const buildTableLabel = (table) => {
 const enrichOrderWithTable = (order, tableMap) => {
   if (!order || typeof order !== "object") return order;
 
-  // si déjà bien renseigné, on garde
   if (order.tableLabel && order.tableLabel !== "-") {
     return order;
   }
@@ -350,6 +348,43 @@ export const useOrders = (opts) => {
     return () => abortRef.current?.abort();
   }, [fetchOrders]);
 
+  const removeOrderLocally = useCallback((orderId) => {
+    const id = String(orderId || "");
+    if (!id) return null;
+
+    let removedOrder = null;
+
+    setOrders((prev) => {
+      const current = Array.isArray(prev) ? prev : [];
+      removedOrder = current.find((o) => String(o?.id ?? o?._id ?? "") === id) || null;
+      return current.filter((o) => String(o?.id ?? o?._id ?? "") !== id);
+    });
+
+    setStats((prev) => ({
+      ...prev,
+      total: Math.max(0, Number(prev?.total ?? 0) - 1),
+    }));
+
+    setPagination((prev) => ({
+      ...prev,
+      totalItems: Math.max(0, Number(prev?.totalItems ?? 0) - 1),
+    }));
+
+    return removedOrder;
+  }, []);
+
+  const restoreOrdersSnapshot = useCallback((snapshotOrders, snapshotStats, snapshotPagination) => {
+    if (Array.isArray(snapshotOrders)) {
+      setOrders(snapshotOrders);
+    }
+    if (snapshotStats) {
+      setStats(snapshotStats);
+    }
+    if (snapshotPagination) {
+      setPagination(snapshotPagination);
+    }
+  }, []);
+
   const updateOrderStatus = useCallback(
     async (orderId, newStatus) => {
       try {
@@ -432,6 +467,9 @@ export const useOrders = (opts) => {
 
     updateOrderStatus,
     updatePaymentStatus,
+
+    removeOrderLocally,
+    restoreOrdersSnapshot,
   };
 };
 

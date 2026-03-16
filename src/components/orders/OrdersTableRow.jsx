@@ -1,4 +1,3 @@
-// src/components/orders/OrdersTableRow.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -104,9 +103,6 @@ const OrdersTableRow = ({
     setShowActions(false);
     if (!onDelete) return;
     if (!orderId) return;
-
-    const ok = window.confirm(t("orders.deleteConfirm", "Supprimer cette commande ?"));
-    if (!ok) return;
 
     onDelete(order);
   };

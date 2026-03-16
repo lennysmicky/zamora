@@ -15,8 +15,15 @@ import "./RevenueChart.css";
 const RevenueChart = ({ data: input, isLoading = false }) => {
   const { t } = useTranslation();
 
+  const toNumber = (value) => {
+    if (value == null || value === "") return 0;
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+    const n = Number(String(value).replace(",", "."));
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const formatCurrency = (value) => {
-    const n = Number(value) || 0;
+    const n = toNumber(value);
     return new Intl.NumberFormat("fr-FR", {
       style: "currency",
       currency: "XOF",
@@ -25,7 +32,7 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
   };
 
   const formatYAxis = (value) => {
-    const n = Number(value) || 0;
+    const n = toNumber(value);
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
     if (n >= 1000) return `${(n / 1000).toFixed(0)}k`;
     return `${n}`;
@@ -43,19 +50,33 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
     return null;
   };
 
-  // Adapter input -> recharts [{ name, revenue }]
   const chartData = useMemo(() => {
-    //  Format normalisé: [{ date, value }]
     if (Array.isArray(input)) {
       return input
         .map((x) => ({
-          name: x?.date ?? x?.label ?? "",
-          revenue: Number(x?.value ?? x?.total ?? x?.amount ?? 0) || 0,
+          name:
+            x?.date ??
+            x?.label ??
+            x?.day ??
+            x?.jour ??
+            x?.x ??
+            "",
+          revenue: toNumber(
+            x?.value ??
+            x?.total ??
+            x?.amount ??
+            x?.revenue ??
+            x?.totalRevenue ??
+            x?.revenu ??
+            x?.revenuTotal ??
+            x?.montant_total ??
+            x?.chiffreAffaire ??
+            x?.y
+          ),
         }))
         .filter((x) => x.name);
     }
 
-    // Ancien format: { labels:[], datasets:[{data:[]}] }
     const labels = input?.labels;
     const datasets = input?.datasets;
     const serie = Array.isArray(datasets) ? datasets[0] : null;
@@ -65,7 +86,7 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
       return labels
         .map((label, i) => ({
           name: label ?? "",
-          revenue: Number(values[i] ?? 0) || 0,
+          revenue: toNumber(values[i] ?? 0),
         }))
         .filter((x) => x.name);
     }
@@ -73,9 +94,6 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
     return [];
   }, [input]);
 
-  // ================================
-  // LOADING
-  // ================================
   if (isLoading) {
     return (
       <div className="chart-card">
@@ -105,9 +123,6 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // EMPTY
-  // ================================
   if (!chartData.length) {
     return (
       <div className="chart-card">
@@ -129,9 +144,6 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // DATA
-  // ================================
   return (
     <div className="chart-card">
       <div className="chart-card-header">

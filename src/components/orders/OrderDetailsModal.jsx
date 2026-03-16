@@ -1,4 +1,3 @@
-// src/components/orders/OrderDetailsModal.jsx
 import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { RiCloseLine, RiPrinterLine, RiDeleteBinLine } from "react-icons/ri";
@@ -23,7 +22,6 @@ const OrderDetailsModal = ({
   errorMessage = "",
 }) => {
   const { t } = useTranslation();
-
   const orderId = useMemo(() => order?.id ?? order?._id ?? null, [order]);
 
   useEffect(() => {
@@ -49,7 +47,6 @@ const OrderDetailsModal = ({
 
   const handleDelete = () => {
     if (!onDelete || !orderId) return;
-    if (!window.confirm(t("orders.deleteConfirm", "Supprimer cette commande ?"))) return;
     onDelete(order);
   };
 
@@ -73,9 +70,7 @@ const OrderDetailsModal = ({
         </div>
 
         <div className="order-modal-content">
-          {!!errorMessage && (
-            <div className="order-details-error">{errorMessage}</div>
-          )}
+          {!!errorMessage && <div className="order-details-error">{errorMessage}</div>}
 
           <OrderDetailsHeader order={order} />
           <OrderDetailsCustomer customer={customer} />
@@ -97,9 +92,7 @@ const OrderDetailsModal = ({
               <h3>{t("orders.details.payment", "Paiement")}</h3>
               <PaymentStatusSelect
                 currentStatus={order.payment_status}
-                onStatusChange={(newStatus) =>
-                  onUpdatePaymentStatus(orderId, newStatus)
-                }
+                onStatusChange={(newStatus) => onUpdatePaymentStatus(orderId, newStatus)}
                 disabled={busy}
               />
             </div>

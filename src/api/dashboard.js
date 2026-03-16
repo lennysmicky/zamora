@@ -102,7 +102,18 @@ const normalizeRevenus = (raw) => {
   return list
     .map((x) => ({
       date: x?.date ?? x?.day ?? x?.jour ?? x?.x ?? x?.label ?? "",
-      value: num(x?.value ?? x?.total ?? x?.amount ?? x?.revenue ?? x?.y),
+      value: num(
+        x?.value ??
+        x?.total ??
+        x?.amount ??
+        x?.revenue ??
+        x?.totalRevenue ??
+        x?.revenu ??
+        x?.revenuTotal ??
+        x?.montant_total ??
+        x?.chiffreAffaire ??
+        x?.y
+      ),
     }))
     .filter((p) => p.date !== "");
 };
@@ -130,16 +141,45 @@ const normalizeStatus = (raw) => {
 const mapStatsToKpis = (raw) => {
   const s = unwrap(raw) ?? {};
   return {
-    totalOrders: num(pick(s, ["totalOrders", "totalCommandes", "ordersTotal", "orders", "total"])),
-    growthOrders: num(pick(s, ["growthOrders", "ordersGrowth"])),
-    totalRevenue: num(pick(s, ["totalRevenue", "totalRevenu", "revenue", "revenu"])),
-    growthRevenue: num(pick(s, ["growthRevenue", "revenueGrowth"])),
-    averageOrderValue: num(
-      pick(s, ["averageOrderValue", "avgOrderValue", "panierMoyen", "averageBasket"])
+    totalOrders: num(
+      pick(s, ["totalOrders", "totalCommandes", "ordersTotal", "orders", "total"])
     ),
+    growthOrders: num(pick(s, ["growthOrders", "ordersGrowth"])),
+
+    totalRevenue: num(
+      pick(s, [
+        "totalRevenue",
+        "totalRevenu",
+        "revenue",
+        "revenu",
+        "chiffreAffaire",
+        "chiffre_affaire",
+        "montant_total",
+      ])
+    ),
+
+    growthRevenue: num(
+      pick(s, ["growthRevenue", "revenueGrowth", "croissanceRevenu"])
+    ),
+
+    averageOrderValue: num(
+      pick(s, [
+        "averageOrderValue",
+        "avgOrderValue",
+        "panierMoyen",
+        "averageBasket",
+      ])
+    ),
+
     growthBasket: num(pick(s, ["growthBasket", "basketGrowth"])),
-    totalCustomers: num(pick(s, ["totalCustomers", "customers", "clients"])),
-    growthCustomers: num(pick(s, ["growthCustomers", "customersGrowth"])),
+
+    totalCustomers: num(
+      pick(s, ["totalCustomers", "customers", "clients", "totalClients"])
+    ),
+
+    growthCustomers: num(
+      pick(s, ["growthCustomers", "customersGrowth", "croissanceClients"])
+    ),
   };
 };
 

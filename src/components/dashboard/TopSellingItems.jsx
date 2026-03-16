@@ -42,6 +42,7 @@ const TopSellingItems = ({ data = [], isLoading = false, linkFilters = {} }) => 
       const sold =
         it.sold ??
         it.totalSold ??
+        it.quantite_vendue ??
         it.qty ??
         it.qte ??
         it.quantite ??
@@ -77,6 +78,7 @@ const TopSellingItems = ({ data = [], isLoading = false, linkFilters = {} }) => 
         it.prix ??
         it.amount ??
         it.montant ??
+        it.totalRevenue ??
         it.repas?.prix ??
         it.repas?.price ??
         0;

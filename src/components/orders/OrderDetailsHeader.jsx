@@ -44,7 +44,7 @@ const OrderDetailsHeader = ({ order }) => {
 
         <div style={{ marginTop: "8px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
           <SourceBadge source={source} />
-          <span>{t("orders.table.table", "Table")} : {tableLabel}</span>
+          <span>{t("orders.table.table", "Item")} : {tableLabel}</span>
         </div>
       </div>
 

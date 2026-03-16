@@ -464,6 +464,7 @@ const urlListOrders = (rid) => `/order/${enc(rid)}`;
 const urlStats = (rid) => `/order/${enc(rid)}/stats`;
 const urlCreateCommande = (rid) => `/commande/${enc(rid)}`;
 const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`;
+const urlCommandeDelete = (id) => `/commande/${enc(id)}`;
 
 export const ordersApi = {
   getOrders: async (params = {}, options = {}) => {
@@ -635,32 +636,32 @@ export const ordersApi = {
   }
 },
 
+
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
     if (!rid) throw new Error("Missing restaurentId for updateStatus()");
     return ordersApi.updateOrder(rid, orderId, { status }, options);
   },
 
-  updatePaymentStatus: async (orderId, payment_status, options = {}) => {
-    const rid = options?.restaurentId ?? options?.restaurantId ?? null;
-    if (!rid) throw new Error("Missing restaurentId for updatePaymentStatus()");
-    return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
-  },
+updatePaymentStatus: async (orderId, payment_status, options = {}) => {
+  const rid = options?.restaurentId ?? options?.restaurantId ?? null;
+  if (!rid) throw new Error("Missing restaurentId for updatePaymentStatus()");
+  return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
+},
 
-  deleteOrder: async (restaurentId, orderId, options = {}) => {
-    if (!restaurentId) throw new Error("Missing restaurentId");
-    if (!orderId) throw new Error("Missing orderId");
+deleteOrder: async (restaurentId, orderId, options = {}) => {
+  if (!orderId) throw new Error("Missing orderId");
 
-    try {
-      const res = await client.delete(
-        urlCommandeDetail(restaurentId, orderId),
-        axiosCfg(options)
-      );
-      return unwrap(res?.data);
-    } catch (e) {
-      throw new Error(toAxiosErrorMessage(e));
-    }
-  },
+  try {
+    const res = await client.delete(
+      urlCommandeDelete(orderId),
+      axiosCfg(options)
+    );
+    return unwrap(res?.data);
+  } catch (e) {
+    throw new Error(toAxiosErrorMessage(e));
+  }
+},
 
   getTables: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];

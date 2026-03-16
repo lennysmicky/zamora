@@ -12,13 +12,13 @@ import "./KpiGrid.css";
 const KpiGrid = ({ data: kpis, isLoading = false }) => {
   const { t } = useTranslation();
 
-  // Sécuriser l'accès aux valeurs pour toujours afficher les cartes
   const safeKpis = {
     totalOrders: kpis?.totalOrders ?? 0,
     growthOrders: kpis?.growthOrders ?? 0,
     totalRevenue: kpis?.totalRevenue ?? 0,
     growthRevenue: kpis?.growthRevenue ?? 0,
-    averageOrderValue: kpis?.averageOrderValue ?? kpis?.averageBasket ?? 0, // compat
+    averageOrderValue: kpis?.averageOrderValue ?? 
+    kpis?.averageBasket ?? 0,
     growthBasket: kpis?.growthBasket ?? 0,
     totalCustomers: kpis?.totalCustomers ?? 0,
     growthCustomers: kpis?.growthCustomers ?? 0,
@@ -41,7 +41,6 @@ const KpiGrid = ({ data: kpis, isLoading = false }) => {
     return new Intl.NumberFormat("fr-FR").format(n);
   };
 
-  // Configuration des cartes KPI
   const kpiCards = [
     {
       id: 1,
@@ -68,7 +67,7 @@ const KpiGrid = ({ data: kpis, isLoading = false }) => {
       change: formatChange(safeKpis.growthBasket),
       changeType: getChangeType(safeKpis.growthBasket),
       icon: RiShoppingCartLine,
-      suffix: "",
+      suffix: "F CFA",
     },
     {
       id: 4,
