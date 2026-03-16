@@ -6,40 +6,73 @@ import "./OrdersStatusChart.css";
 const OrdersStatusChart = ({ data: input, isLoading = false }) => {
   const { t } = useTranslation();
 
-  // Couleurs par statut (clé canonique en minuscule)
+  const normalizeStatusKey = (status) => {
+    const v = String(status ?? "").trim().toLowerCase();
+
+    if (["delivered", "livres", "livree", "livré", "livrée", "livre"].includes(v)) {
+      return "delivered";
+    }
+    if (["preparing", "in_preparation", "en_preparation", "preparation", "préparation"].includes(v)) {
+      return "preparing";
+    }
+    if (["pending", "en_attente", "attente", "en attente"].includes(v)) {
+      return "pending";
+    }
+    if (["cancelled", "canceled", "annules", "annulé", "annule", "annulée"].includes(v)) {
+      return "cancelled";
+    }
+    if (["out_for_delivery", "en_livraison"].includes(v)) {
+      return "out_for_delivery";
+    }
+
+    return v || "unknown";
+  };
+
   const statusColors = {
     delivered: "#10b981",
     preparing: "#f59e0b",
     pending: "#64748b",
     cancelled: "#ef4444",
+    out_for_delivery: "#3b82f6",
+    unknown: "#94a3b8",
   };
 
   const formatNumber = (value) => new Intl.NumberFormat("fr-FR").format(value);
 
   const getStatusLabel = (status) => {
-    const key = String(status ?? "");
-    const tr = t(`status.${key}`);
-    return tr && tr !== `status.${key}` ? tr : key;
+    const key = normalizeStatusKey(status);
+
+    const labels = {
+      delivered: t("orders.status.delivered"),
+      preparing: t("orders.status.inPreparation"),
+      pending: t("orders.status.pending"),
+      cancelled: t("orders.status.cancelled"),
+      out_for_delivery: t("orders.status.outForDelivery"),
+      unknown: t("common.unknown", "Inconnu"),
+    };
+
+    return labels[key] || key;
   };
 
-  // Adapter input -> format Recharts: [{ name, value, color }]
   const data = useMemo(() => {
-    // Format normalisé attendu (hook/backend): [{ label, value }]
     if (Array.isArray(input)) {
       return input
         .map((x) => {
-          const name = x?.label ?? x?.name ?? x?.status ?? "unknown";
+          const rawName = x?.label ?? x?.name ?? x?.status ?? "unknown";
+          const key = normalizeStatusKey(rawName);
           const value = Number(x?.value ?? x?.count ?? x?.total ?? 0) || 0;
+          const color = x?.color ?? statusColors[key] ?? statusColors.unknown;
 
-          const key = String(name).toLowerCase();
-          const color = x?.color ?? statusColors[key] ?? "#64748b";
-
-          return { name, value, color };
+          return {
+            name: key,
+            rawName,
+            value,
+            color,
+          };
         })
         .filter((x) => x.name);
     }
 
-    // Ancien format: { labels:[], data:[], colors:[] }
     const labels = input?.labels;
     const values = input?.data;
     const colors = input?.colors;
@@ -47,16 +80,19 @@ const OrdersStatusChart = ({ data: input, isLoading = false }) => {
     if (Array.isArray(labels) && Array.isArray(values)) {
       return labels
         .map((label, i) => {
-          const name = label ?? "unknown";
+          const key = normalizeStatusKey(label);
           const value = Number(values[i] ?? 0) || 0;
-
-          const key = String(name).toLowerCase();
           const color =
             (Array.isArray(colors) ? colors[i] : null) ??
             statusColors[key] ??
-            "#64748b";
+            statusColors.unknown;
 
-          return { name, value, color };
+          return {
+            name: key,
+            rawName: label,
+            value,
+            color,
+          };
         })
         .filter((x) => x.name);
     }
@@ -72,9 +108,6 @@ const OrdersStatusChart = ({ data: input, isLoading = false }) => {
   const calculatePercentage = (value) =>
     total === 0 ? 0 : Math.round((value / total) * 100);
 
-  // ================================
-  // LOADING
-  // ================================
   if (isLoading) {
     return (
       <div className="chart-card status-chart">
@@ -104,9 +137,6 @@ const OrdersStatusChart = ({ data: input, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // EMPTY
-  // ================================
   if (data.length === 0 || total === 0) {
     return (
       <div className="chart-card status-chart">
@@ -125,9 +155,6 @@ const OrdersStatusChart = ({ data: input, isLoading = false }) => {
     );
   }
 
-  // ================================
-  // DATA
-  // ================================
   return (
     <div className="chart-card status-chart">
       <div className="chart-card-header">
@@ -159,7 +186,7 @@ const OrdersStatusChart = ({ data: input, isLoading = false }) => {
 
           <div className="status-chart-center">
             <span className="status-chart-total">{formatNumber(total)}</span>
-            <span className="status-chart-label">{t("status.total")}</span>
+            <span className="status-chart-label">{t("common.total", "Total")}</span>
           </div>
         </div>
 

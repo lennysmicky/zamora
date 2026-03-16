@@ -1,3 +1,4 @@
+// src/components/orders/OrderDetailsPayment.jsx
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { RiBankCardLine } from 'react-icons/ri';
@@ -11,6 +12,8 @@ const OrderDetailsPayment = ({ order }) => {
   const formatDate = (dateString) => {
     if (!dateString) return '-';
     const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return '-';
+
     return new Intl.DateTimeFormat('fr-FR', {
       day: '2-digit',
       month: '2-digit',
@@ -19,6 +22,20 @@ const OrderDetailsPayment = ({ order }) => {
       minute: '2-digit'
     }).format(date);
   };
+
+  const paymentReference =
+    order?.payment_reference ??
+    order?.paymentReference ??
+    order?.reference_paiement ??
+    order?.referencePaiement ??
+    '';
+
+  const paidAt =
+    order?.paid_at ??
+    order?.paidAt ??
+    order?.date_paiement ??
+    order?.payment_date ??
+    null;
 
   return (
     <div className="order-details-section">
@@ -30,25 +47,25 @@ const OrderDetailsPayment = ({ order }) => {
       <div className="payment-details">
         <div className="payment-detail-row">
           <span className="payment-label">{t('orders.table.paymentStatus')}</span>
-          <PaymentStatusBadge status={order.payment_status} />
+          <PaymentStatusBadge status={order?.payment_status} />
         </div>
 
         <div className="payment-detail-row">
           <span className="payment-label">{t('orders.table.paymentMethod')}</span>
-          <PaymentMethodBadge method={order.payment_method} />
+          <PaymentMethodBadge method={order?.payment_method} />
         </div>
 
-        {order.payment_reference && (
+        {paymentReference && (
           <div className="payment-detail-row">
             <span className="payment-label">{t('orders.details.reference')}</span>
-            <span className="payment-value">{order.payment_reference}</span>
+            <span className="payment-value">{paymentReference}</span>
           </div>
         )}
 
-        {order.paid_at && (
+        {paidAt && (
           <div className="payment-detail-row">
             <span className="payment-label">{t('orders.details.paidAt')}</span>
-            <span className="payment-value">{formatDate(order.paid_at)}</span>
+            <span className="payment-value">{formatDate(paidAt)}</span>
           </div>
         )}
       </div>

@@ -1,3 +1,4 @@
+// src/components/orders/OrderDetailsModal.jsx
 import React, { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { RiCloseLine, RiPrinterLine, RiDeleteBinLine } from "react-icons/ri";
@@ -16,12 +17,13 @@ const OrderDetailsModal = ({
   onClose,
   onUpdateStatus,
   onUpdatePaymentStatus,
-  onDelete,          //  AJOUT
-  onPrint,           //  AJOUT
-  busy = false,      //  AJOUT
-  errorMessage = "", //  AJOUT
+  onDelete,
+  onPrint,
+  busy = false,
+  errorMessage = "",
 }) => {
   const { t } = useTranslation();
+
   const orderId = useMemo(() => order?.id ?? order?._id ?? null, [order]);
 
   useEffect(() => {
@@ -42,7 +44,8 @@ const OrderDetailsModal = ({
 
   if (!isOpen || !order) return null;
 
-  const handlePrint = () => (typeof onPrint === "function" ? onPrint(order) : window.print());
+  const handlePrint = () =>
+    typeof onPrint === "function" ? onPrint(order) : window.print();
 
   const handleDelete = () => {
     if (!onDelete || !orderId) return;
@@ -70,7 +73,9 @@ const OrderDetailsModal = ({
         </div>
 
         <div className="order-modal-content">
-          {!!errorMessage && <div className="order-details-error">{errorMessage}</div>}
+          {!!errorMessage && (
+            <div className="order-details-error">{errorMessage}</div>
+          )}
 
           <OrderDetailsHeader order={order} />
           <OrderDetailsCustomer customer={customer} />
@@ -92,7 +97,9 @@ const OrderDetailsModal = ({
               <h3>{t("orders.details.payment", "Paiement")}</h3>
               <PaymentStatusSelect
                 currentStatus={order.payment_status}
-                onStatusChange={(newStatus) => onUpdatePaymentStatus(orderId, newStatus)}
+                onStatusChange={(newStatus) =>
+                  onUpdatePaymentStatus(orderId, newStatus)
+                }
                 disabled={busy}
               />
             </div>
@@ -103,13 +110,23 @@ const OrderDetailsModal = ({
         </div>
 
         <div className="order-modal-footer">
-          <button className="order-modal-btn secondary" onClick={handlePrint} type="button" disabled={busy}>
+          <button
+            className="order-modal-btn secondary"
+            onClick={handlePrint}
+            type="button"
+            disabled={busy}
+          >
             <RiPrinterLine />
             <span>{t("orders.details.print", "Imprimer")}</span>
           </button>
 
           {onDelete && (
-            <button className="order-modal-btn danger" onClick={handleDelete} type="button" disabled={busy}>
+            <button
+              className="order-modal-btn danger"
+              onClick={handleDelete}
+              type="button"
+              disabled={busy}
+            >
               <RiDeleteBinLine />
               <span>{t("common.delete", "Supprimer")}</span>
             </button>

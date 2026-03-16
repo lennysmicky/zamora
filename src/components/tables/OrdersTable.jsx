@@ -1,4 +1,4 @@
-// components/tables/OrdersTable.jsx
+// src/components/tables/OrdersTable.jsx
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -19,8 +19,8 @@ const OrdersTable = ({
   onSelectAll,
   onViewDetails,
   onUpdateStatus,
-  onDelete, //  AJOUT
-  onPrint,  //  AJOUT
+  onDelete,
+  onPrint,
   isRestaurantMode = false,
 }) => {
   const { t } = useTranslation();
@@ -45,6 +45,7 @@ const OrdersTable = ({
 
     return [
       ...base,
+      { key: "table", label: t("orders.table.table", "Table"), sortable: true },
       { key: "items_count", label: t("orders.table.items"), sortable: true },
       { key: "total_amount", label: t("orders.table.amount"), sortable: true },
       { key: "status", label: t("orders.table.orderStatus"), sortable: true },
@@ -67,21 +68,30 @@ const OrdersTable = ({
 
   const getSortValue = (o, key) => {
     if (!o) return "";
+
     if (key === "created_at") return new Date(o.created_at || o.createdAt || 0).getTime();
     if (key === "total_amount") return Number(o.total_amount ?? o.totalAmount ?? o.total ?? 0);
 
-    if (key === "customer")
+    if (key === "customer") {
       return String(o.customer?.name || o.customerName || o.customer_name || "").toLowerCase();
+    }
 
-    if (key === "restaurant")
+    if (key === "restaurant") {
       return String(
         o.restaurant?.name || o.restaurantName || o.restaurantId || o.raw?.restaurent || ""
       ).toLowerCase();
+    }
+
+    if (key === "table") {
+      return String(o.tableLabel || "").toLowerCase();
+    }
 
     if (key === "items_count") {
       const v = o.itemsCount ?? o.items_count;
       if (v != null) return Number(v) || 0;
-      if (Array.isArray(o.items)) return o.items.reduce((acc, it) => acc + (Number(it?.quantite) || 0), 0);
+      if (Array.isArray(o.items)) {
+        return o.items.reduce((acc, it) => acc + (Number(it?.quantite) || 0), 0);
+      }
       return 0;
     }
 
@@ -91,13 +101,16 @@ const OrdersTable = ({
   const sortedOrders = useMemo(() => {
     const arr = [...orders];
     if (!sortConfig.key) return arr;
+
     arr.sort((a, b) => {
       const aVal = getSortValue(a, sortConfig.key);
       const bVal = getSortValue(b, sortConfig.key);
+
       if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
       if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
       return 0;
     });
+
     return arr;
   }, [orders, sortConfig]);
 
@@ -130,13 +143,13 @@ const OrdersTable = ({
               >
                 <div className="orders-table-th-content">
                   <span>{column.label}</span>
-                  {column.sortable && sortConfig.key === column.key && (
-                    sortConfig.direction === "asc" ? (
+                  {column.sortable &&
+                    sortConfig.key === column.key &&
+                    (sortConfig.direction === "asc" ? (
                       <RiArrowUpLine className="sort-icon" />
                     ) : (
                       <RiArrowDownLine className="sort-icon" />
-                    )
-                  )}
+                    ))}
                 </div>
               </th>
             ))}
@@ -147,16 +160,17 @@ const OrdersTable = ({
           {sortedOrders.map((order) => {
             const orderId = getOrderId(order);
             const key = orderId || `${order?.created_at ?? ""}-${order?.customer_phone ?? ""}`;
+
             return (
               <OrdersTableRow
                 key={key}
                 order={order}
                 isSelected={orderId ? safeSelected.includes(orderId) : false}
-                onSelect={() => orderId && onSelectOrder?.(orderId)} //  cohérent
+                onSelect={() => orderId && onSelectOrder?.(orderId)}
                 onViewDetails={onViewDetails}
                 onUpdateStatus={onUpdateStatus}
-                onDelete={onDelete} //  AJOUT
-                onPrint={onPrint}   //  AJOUT
+                onDelete={onDelete}
+                onPrint={onPrint}
                 isRestaurantMode={isRestaurantMode}
               />
             );

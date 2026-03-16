@@ -31,19 +31,24 @@ const unwrap = (x) => {
     if (v == null) break;
     if (Array.isArray(v)) break;
     if (typeof v !== "object") break;
-    v = v.data ?? v.result ?? v.payload ?? v.response ?? v;
+
+    const next = v.data ?? v.result ?? v.payload ?? v.response;
+    if (!next || next === v) break;
+    v = next;
   }
   return v;
 };
 
-//  unwrap tables (supporte tables/table)
 const unwrapTables = (x) => {
   let v = x;
   for (let i = 0; i < 4; i++) {
     if (v == null) break;
     if (Array.isArray(v)) break;
     if (typeof v !== "object") break;
-    v = v.data ?? v.result ?? v.tables ?? v.table ?? v.payload ?? v.response ?? v;
+
+    const next = v.data ?? v.result ?? v.tables ?? v.table ?? v.payload ?? v.response;
+    if (!next || next === v) break;
+    v = next;
   }
   return v;
 };
@@ -86,7 +91,9 @@ const num = (v) => {
 const pick = (o, keys) => {
   const x = unwrap(o);
   if (!x || typeof x !== "object") return undefined;
-  for (const k of keys) if (x[k] != null) return x[k];
+  for (const k of keys) {
+    if (x[k] != null) return x[k];
+  }
   return undefined;
 };
 
@@ -186,6 +193,55 @@ const denormalizeSource = (s) => {
   return undefined;
 };
 
+// ---------------- table helpers ----------------
+const normalizeTableRef = (tableRaw) => {
+  if (!tableRaw) {
+    return {
+      tableId: null,
+      tableNumber: null,
+      tableName: "",
+      tableLabel: "-",
+    };
+  }
+
+  const tableObj = typeof tableRaw === "object" ? tableRaw : null;
+
+  const tableId = tableObj?._id ?? tableObj?.id ?? (typeof tableRaw === "string" ? tableRaw : null) ?? null;
+
+  const tableNumber =
+    tableObj?.numero_table ??
+    tableObj?.numeroTable ??
+    tableObj?.numero ??
+    tableObj?.tableNumber ??
+    tableObj?.table_number ??
+    tableObj?.number ??
+    tableObj?.num ??
+    null;
+
+  const tableName =
+    tableObj?.nom_table ??
+    tableObj?.table_name ??
+    tableObj?.tableName ??
+    tableObj?.nom ??
+    tableObj?.name ??
+    "";
+
+  let tableLabel = "-";
+
+  if (tableNumber != null && String(tableNumber).trim() !== "") {
+    tableLabel = `Table ${tableNumber}`;
+  } else if (tableName && String(tableName).trim() !== "") {
+    tableLabel = String(tableName).trim();
+  }
+
+  return {
+    tableId: tableId ? String(tableId) : null,
+    tableNumber: tableNumber ?? null,
+    tableName: tableName ? String(tableName).trim() : "",
+    tableLabel,
+  };
+};
+
 // ---------------- normalize backend -> UI ----------------
 const normalizeOrder = (raw) => {
   const o = unwrap(raw) ?? {};
@@ -197,7 +253,9 @@ const normalizeOrder = (raw) => {
       : resto ?? o.restaurantId ?? o.restaurentId ?? null;
 
   const restaurantName =
-    typeof resto === "object" && resto ? resto.name ?? resto.nom ?? o.restaurantName ?? "-" : undefined;
+    typeof resto === "object" && resto
+      ? resto.name ?? resto.nom ?? o.restaurantName ?? "-"
+      : undefined;
 
   const items =
     (Array.isArray(o.items) && o.items) ||
@@ -206,13 +264,24 @@ const normalizeOrder = (raw) => {
     (Array.isArray(o.panier) && o.panier) ||
     [];
 
-  const qtyOf = (it) => Number(it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0) || 0;
-  const itemsCount = items.length > 0 ? items.reduce((acc, it) => acc + qtyOf(it), 0) || items.length : 0;
+  const qtyOf = (it) =>
+    Number(it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0) || 0;
 
-  const createdAt = o.createdAt ?? o.created_at ?? o.date ?? o.dateCreation ?? o.created ?? null;
+  const itemsCount =
+    items.length > 0 ? items.reduce((acc, it) => acc + qtyOf(it), 0) || items.length : 0;
+
+  const createdAt =
+    o.createdAt ?? o.created_at ?? o.date ?? o.dateCreation ?? o.created ?? null;
 
   const orderNumber =
-    pick(o, ["order_number", "orderNumber", "numero_commande", "numeroCommande", "numero", "reference"]) ?? "";
+    pick(o, [
+      "order_number",
+      "orderNumber",
+      "numero_commande",
+      "numeroCommande",
+      "numero",
+      "reference",
+    ]) ?? "";
 
   const customerName =
     pick(o, ["customer_name", "customerName", "client_name", "clientName"]) ??
@@ -223,7 +292,13 @@ const normalizeOrder = (raw) => {
     "";
 
   const customerPhone =
-    pick(o, ["customer_phone", "customerPhone", "client_phone", "clientPhone", "telephone"]) ??
+    pick(o, [
+      "customer_phone",
+      "customerPhone",
+      "client_phone",
+      "clientPhone",
+      "telephone",
+    ]) ??
     o.customer?.phone ??
     o.customer?.telephone ??
     o.client?.phone ??
@@ -231,20 +306,57 @@ const normalizeOrder = (raw) => {
     "";
 
   const totalAmount = num(
-    pick(o, ["total_amount", "totalAmount", "total", "montant_total", "montant", "amount", "prix_total"])
+    pick(o, [
+      "total_amount",
+      "totalAmount",
+      "total",
+      "montant_total",
+      "montant",
+      "amount",
+      "prix_total",
+    ])
   );
 
-  const status = normalizeOrderStatus(pick(o, ["status", "etat", "state", "order_status", "orderStatus"]));
-  const payment_status = normalizePaymentStatus(pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"]));
-  const payment_method = normalizePaymentMethod(pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"]));
-  const source = normalizeSource(pick(o, ["source", "origine", "platform"]));
+  const status = normalizeOrderStatus(
+    pick(o, ["status", "etat", "state", "order_status", "orderStatus"])
+  );
+
+  const payment_status = normalizePaymentStatus(
+    pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"])
+  );
+
+  const payment_method = normalizePaymentMethod(
+    pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"])
+  );
+
+  const source = normalizeSource(
+    pick(o, ["source", "origine", "platform", "canal", "order_source"])
+  );
 
   const id = pick(o, ["_id", "id", "orderId", "commandeId", "commande_id"]) ?? "";
+
+  const tableCandidate =
+    o.table ??
+    o.tableId ??
+    o.table_id ??
+    o.tableRef ??
+    o.tableCommande ??
+    o.numeroTable ??
+    o.numero_table ??
+    o.tableNumber ??
+    o.table_number ??
+    o.numTable ??
+    o.raw?.table ??
+    o.raw?.tableId ??
+    null;
+
+  const tableData = normalizeTableRef(tableCandidate);
 
   return {
     id,
     _id: id,
-    restaurantId,
+
+    restaurantId: restaurantId ? String(restaurantId) : null,
 
     order_number: orderNumber,
     orderNumber,
@@ -268,7 +380,10 @@ const normalizeOrder = (raw) => {
     itemsCount,
     items_count: itemsCount,
 
-    tableId: o.table ?? o.tableId ?? null,
+    tableId: tableData.tableId,
+    tableNumber: tableData.tableNumber,
+    tableName: tableData.tableName,
+    tableLabel: tableData.tableLabel,
 
     restaurant: restaurantName ? { name: restaurantName } : undefined,
     raw: o,
@@ -278,7 +393,17 @@ const normalizeOrder = (raw) => {
 const normalizeStats = (statsRaw) => {
   const s = unwrap(statsRaw) ?? {};
   return {
-    total: num(pick(s, ["total", "count", "totalOrders", "totalCommandes", "orders", "commandes", "totalItems"])),
+    total: num(
+      pick(s, [
+        "total",
+        "count",
+        "totalOrders",
+        "totalCommandes",
+        "orders",
+        "commandes",
+        "totalItems",
+      ])
+    ),
     pending: num(pick(s, ["en_attente", "pending", "PENDING"])),
     delivered: num(pick(s, ["livres", "delivered", "DELIVERED"])),
     cancelled: num(pick(s, ["annules", "cancelled", "canceled", "CANCELLED"])),
@@ -294,18 +419,32 @@ const normalizeMeal = (m) => ({
   price: num(m?.prix ?? m?.price ?? 0),
 });
 
-//  évite "Table <restaurantId>" si API renvoie un wrapper bizarre
 const normalizeTable = (raw) => {
   const base = raw?.table && typeof raw.table === "object" ? raw.table : raw;
   const id = String(base?._id ?? base?.id ?? "").trim();
 
   const numero_table =
-    base?.numero_table ?? base?.numeroTable ?? base?.numero ?? base?.tableNumber ?? base?.number ?? base?.num ?? null;
+    base?.numero_table ??
+    base?.numeroTable ??
+    base?.numero ??
+    base?.tableNumber ??
+    base?.table_number ??
+    base?.number ??
+    base?.num ??
+    null;
 
   const nom =
-    base?.nom_table ?? base?.table_name ?? base?.tableName ?? base?.nom ?? base?.name ?? "";
+    base?.nom_table ??
+    base?.table_name ??
+    base?.tableName ??
+    base?.nom ??
+    base?.name ??
+    "";
 
-  const hasUseful = (numero_table != null && String(numero_table) !== "") || String(nom).trim() !== "";
+  const hasUseful =
+    (numero_table != null && String(numero_table) !== "") ||
+    String(nom).trim() !== "";
+
   if (!hasUseful) return null;
 
   return {
@@ -320,14 +459,13 @@ const normalizeTable = (raw) => {
   };
 };
 
-// ---------------- routes (VRAIES) ----------------
-const urlListOrders = (rid) => `/order/${enc(rid)}`;                 // GET list
-const urlStats = (rid) => `/order/${enc(rid)}/stats`;                // GET stats 
-const urlCreateCommande = (rid) => `/commande/${enc(rid)}`;          // POST create
-const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`; // GET/PATCH/DELETE
+// ---------------- routes ----------------
+const urlListOrders = (rid) => `/order/${enc(rid)}`;
+const urlStats = (rid) => `/order/${enc(rid)}/stats`;
+const urlCreateCommande = (rid) => `/commande/${enc(rid)}`;
+const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`;
 
 export const ordersApi = {
-  // LIST + STATS
   getOrders: async (params = {}, options = {}) => {
     const {
       restaurantId,
@@ -346,7 +484,15 @@ export const ordersApi = {
     } = params;
 
     const rid = restaurentId ?? restaurantId ?? null;
-    if (!rid) return { data: [], totalPages: 1, totalItems: 0, stats: normalizeStats({ total: 0 }) };
+
+    if (!rid) {
+      return {
+        data: [],
+        totalPages: 1,
+        totalItems: 0,
+        stats: normalizeStats({ total: 0 }),
+      };
+    }
 
     const listQuery = clean({
       ...rest,
@@ -380,35 +526,43 @@ export const ordersApi = {
       const listData = unwrap(listRes.value?.data);
       const orders = arr(listData).map(normalizeOrder);
 
-      const totalItems = num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
-      const totalPages = num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+      const totalItems =
+        num(listData?.totalItems ?? listData?.total ?? listData?.count) || orders.length;
 
-      const statsData = statsRes.status === "fulfilled" ? unwrap(statsRes.value?.data) : null;
+      const totalPages =
+        num(listData?.totalPages) || Math.max(1, Math.ceil(totalItems / (Number(limit) || 10)));
+
+      const statsData =
+        statsRes.status === "fulfilled" ? unwrap(statsRes.value?.data) : null;
 
       return {
         data: orders,
         totalPages,
         totalItems,
-        stats: statsData ? normalizeStats(statsData) : normalizeStats({ total: totalItems }),
+        stats: statsData
+          ? normalizeStats(statsData)
+          : normalizeStats({ total: totalItems }),
       };
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
-  // DETAIL
   getOrderById: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
+
     try {
-      const res = await client.get(urlCommandeDetail(restaurentId, orderId), axiosCfg(options));
+      const res = await client.get(
+        urlCommandeDetail(restaurentId, orderId),
+        axiosCfg(options)
+      );
       return normalizeOrder(unwrap(res?.data));
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
-  // CREATE
   createOrder: async (payload, options = {}) => {
     const rid =
       payload?.restaurent ??
@@ -421,6 +575,7 @@ export const ordersApi = {
     if (!rid) throw new Error("Missing restaurentId for createOrder()");
 
     const items = Array.isArray(payload?.items) ? payload.items : [];
+
     const mappedItems = items
       .map((it) => {
         const repas = it?.repas ?? it?.mealId ?? it?.id ?? it?._id;
@@ -433,7 +588,9 @@ export const ordersApi = {
     const body = clean({
       customer_name: payload?.customer_name ?? payload?.customer?.name,
       customer_phone: payload?.customer_phone ?? payload?.customer?.phone,
-      payment_method: payload?.payment_method ? denormalizePaymentMethod(payload.payment_method) : undefined,
+      payment_method: payload?.payment_method
+        ? denormalizePaymentMethod(payload.payment_method)
+        : undefined,
       source: payload?.source ? denormalizeSource(payload.source) : undefined,
       table: payload?.table ?? payload?.tableId ?? undefined,
       items: mappedItems,
@@ -450,28 +607,34 @@ export const ordersApi = {
   createCommande: async (restaurentId, body, options = {}) =>
     ordersApi.createOrder({ ...body, restaurent: restaurentId }, options),
 
-  // UPDATE (PATCH)
   updateOrder: async (restaurentId, orderId, patch, options = {}) => {
-    if (!restaurentId) throw new Error("Missing restaurentId");
-    if (!orderId) throw new Error("Missing orderId");
+  if (!restaurentId) throw new Error("Missing restaurentId");
+  if (!orderId) throw new Error("Missing orderId");
 
-    const payload = clean({
-      ...patch,
-      status: patch?.status ? denormalizeOrderStatus(patch.status) : patch?.status,
-      payment_status: patch?.payment_status ? denormalizePaymentStatus(patch.payment_status) : patch?.payment_status,
-      payment_method: patch?.payment_method ? denormalizePaymentMethod(patch.payment_method) : patch?.payment_method,
-      source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
-    });
+  const payload = clean({
+    ...patch,
+    status: patch?.status ? denormalizeOrderStatus(patch.status) : patch?.status,
+    payment_status: patch?.payment_status
+      ? denormalizePaymentStatus(patch.payment_status)
+      : patch?.payment_status,
+    payment_method: patch?.payment_method
+      ? denormalizePaymentMethod(patch.payment_method)
+      : patch?.payment_method,
+    source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
+  });
 
-    try {
-      const res = await client.patch(urlCommandeDetail(restaurentId, orderId), payload, axiosCfg(options));
-      return unwrap(res?.data);
-    } catch (e) {
-      throw new Error(toAxiosErrorMessage(e));
-    }
-  },
+  try {
+    const res = await client.put(
+      urlCommandeDetail(restaurentId, orderId),
+      payload,
+      axiosCfg(options)
+    );
+    return unwrap(res?.data);
+  } catch (e) {
+    throw new Error(toAxiosErrorMessage(e));
+  }
+},
 
-  // Helpers (exigent le restaurentId via options)
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
     if (!rid) throw new Error("Missing restaurentId for updateStatus()");
@@ -484,25 +647,31 @@ export const ordersApi = {
     return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
   },
 
-  // DELETE
   deleteOrder: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
+
     try {
-      const res = await client.delete(urlCommandeDetail(restaurentId, orderId), axiosCfg(options));
+      const res = await client.delete(
+        urlCommandeDetail(restaurentId, orderId),
+        axiosCfg(options)
+      );
       return unwrap(res?.data);
     } catch (e) {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
 
-  // TABLES (route réelle)
   getTables: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
+
     try {
       const res = await client.get(`/table/${enc(restaurentId)}`, axiosCfg(options));
       const list = arrTables(res?.data);
-      const out = (Array.isArray(list) ? list : []).map(normalizeTable).filter(Boolean);
+      const out = (Array.isArray(list) ? list : [])
+        .map(normalizeTable)
+        .filter(Boolean);
+
       out.sort((a, b) => Number(a.numero_table ?? 0) - Number(b.numero_table ?? 0));
       return out;
     } catch (e) {

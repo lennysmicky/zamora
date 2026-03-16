@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 import { RiArrowDownSLine, RiCheckLine } from "react-icons/ri";
 import "./css/OrderStatusSelect.css";
 
-const PaymentStatusSelect = ({ currentStatus = "PENDING", onStatusChange }) => {
+const PaymentStatusSelect = ({
+  currentStatus = "PENDING",
+  onStatusChange,
+  disabled = false,
+}) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -13,12 +17,16 @@ const PaymentStatusSelect = ({ currentStatus = "PENDING", onStatusChange }) => {
     { value: "PENDING", label: t("orders.paymentStatus.pending"), color: "warning" },
     { value: "PAID", label: t("orders.paymentStatus.paid"), color: "success" },
     { value: "FAILED", label: t("orders.paymentStatus.failed"), color: "error" },
+    { value: "PROCESSING", label: t("orders.paymentStatus.processing", "En traitement"), color: "info" },
+    { value: "REFUNDED", label: t("orders.paymentStatus.refunded", "Remboursé"), color: "purple" },
   ];
 
   const currentOption =
     statusOptions.find((opt) => opt.value === currentStatus) || statusOptions[0];
 
   const handleSelect = async (value) => {
+    if (disabled || loading) return;
+
     if (value === currentStatus) {
       setIsOpen(false);
       return;
@@ -37,26 +45,30 @@ const PaymentStatusSelect = ({ currentStatus = "PENDING", onStatusChange }) => {
     <div className="status-select-wrapper">
       <button
         className={`status-select-trigger status-${currentOption?.color}`}
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={loading}
+        onClick={() => !disabled && !loading && setIsOpen((prev) => !prev)}
+        disabled={disabled || loading}
         type="button"
       >
         <span>{currentOption?.label}</span>
         <RiArrowDownSLine className={`select-arrow ${isOpen ? "open" : ""}`} />
       </button>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="status-select-dropdown">
           {statusOptions.map((option) => (
             <button
               key={option.value}
-              className={`status-select-option ${option.value === currentStatus ? "active" : ""}`}
+              className={`status-select-option ${
+                option.value === currentStatus ? "active" : ""
+              }`}
               onClick={() => handleSelect(option.value)}
               type="button"
             >
               <span className={`status-dot status-${option.color}`}></span>
               <span>{option.label}</span>
-              {option.value === currentStatus && <RiCheckLine className="check-icon" />}
+              {option.value === currentStatus && (
+                <RiCheckLine className="check-icon" />
+              )}
             </button>
           ))}
         </div>

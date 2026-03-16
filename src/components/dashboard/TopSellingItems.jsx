@@ -35,21 +35,66 @@ const TopSellingItems = ({ data = [], isLoading = false, linkFilters = {} }) => 
 
   const topSellingItems = useMemo(() => {
     const arr = Array.isArray(data) ? data : [];
+
     return arr.map((x, idx) => {
       const it = x ?? {};
-      const sold = it.sold ?? it.qty ?? it.qte ?? it.count ?? it.total ?? it.nb ?? 0;
+
+      const sold =
+        it.sold ??
+        it.totalSold ??
+        it.qty ??
+        it.qte ??
+        it.quantite ??
+        it.quantity ??
+        it.count ??
+        it.nb ??
+        it.nombre ??
+        it.ordersCount ??
+        it.commandes ??
+        it.vente ??
+        it.ventes ??
+        0;
+
       const id =
         it.id ??
         it._id ??
         it.mealId ??
         it.productId ??
+        it.repasId ??
         `${it.name ?? it.nom ?? "item"}-${it.category ?? it.categorie ?? ""}-${idx}`;
+
+      const name =
+        it.name ??
+        it.nom ??
+        it.title ??
+        it.libelle ??
+        it.repas?.nom ??
+        it.repas?.name ??
+        "-";
+
+      const price =
+        it.price ??
+        it.prix ??
+        it.amount ??
+        it.montant ??
+        it.repas?.prix ??
+        it.repas?.price ??
+        0;
+
+      const category =
+        it.category ??
+        it.categorie ??
+        it.categorie_nom ??
+        it.category_name ??
+        it.repas?.categorie?.nom ??
+        it.repas?.categorie?.name ??
+        "-";
 
       return {
         id,
-        name: it.name ?? it.nom ?? it.title ?? "-",
-        price: it.price ?? it.prix ?? it.amount ?? 0,
-        category: it.category ?? it.categorie ?? "-",
+        name,
+        price,
+        category,
         sold,
       };
     });

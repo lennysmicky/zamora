@@ -18,6 +18,22 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
     navigate(`${path}${buildOrdersQuery(linkFilters)}`);
   };
 
+  const normalizeStatus = (s) => {
+    const v = String(s ?? "").toLowerCase();
+
+    if (["livres", "livree", "livré", "livrée", "delivered"].includes(v)) return "delivered";
+    if (["in_preparation", "en_preparation", "preparing", "préparation", "preparation"].includes(v)) {
+      return "preparing";
+    }
+    if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) return "out_for_delivery";
+    if (["en_attente", "attente", "pending"].includes(v)) return "pending";
+    if (["annules", "annulee", "annulé", "annulée", "cancelled", "canceled"].includes(v)) {
+      return "cancelled";
+    }
+
+    return v || "pending";
+  };
+
   const getStatusClass = (status) => {
     const statusClasses = {
       delivered: "status-delivered",
@@ -58,55 +74,87 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
   const orders = useMemo(() => {
     const list = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : [];
 
-    const normalizeStatus = (s) => {
-      const v = String(s ?? "").toLowerCase();
-      if (["livres", "livree", "livré", "livrée", "delivered"].includes(v)) return "delivered";
-      if (["in_preparation", "en_preparation", "preparing", "préparation", "preparation"].includes(v))
-        return "preparing";
-      if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) return "out_for_delivery";
-      if (["en_attente", "attente", "pending"].includes(v)) return "pending";
-      if (["annules", "annulee", "annulé", "annulée", "cancelled", "canceled"].includes(v))
-        return "cancelled";
-      return v || "pending";
-    };
-
     const pickCustomer = (o) => {
+      const direct =
+        o?.customer_name ??
+        o?.customerName ??
+        o?.client_name ??
+        o?.clientName ??
+        o?.nomClient ??
+        o?.nom_client ??
+        o?.userName ??
+        o?.username;
+
+      if (direct) return String(direct);
+
       const c =
         o?.customer ??
         o?.client ??
         o?.user ??
-        o?.utilisateur ??
-        o?.customerName ??
-        o?.clientName ??
-        o?.userName ??
-        o?.nomClient;
+        o?.utilisateur;
 
       if (typeof c === "string") return c;
-      if (c && typeof c === "object") return c.name ?? c.nom ?? "—";
+      if (c && typeof c === "object") {
+        return c.name ?? c.nom ?? c.fullName ?? c.username ?? "—";
+      }
+
       return "—";
     };
 
     const pickItemsCount = (o) => {
-      const direct = o?.itemsCount ?? o?.items_count ?? o?.nbrItems ?? o?.nbItems ?? o?.quantite;
+      const direct =
+        o?.itemsCount ??
+        o?.items_count ??
+        o?.nbrItems ??
+        o?.nbItems ??
+        o?.nombreItems ??
+        o?.quantite ??
+        o?.quantity;
+
       if (direct != null && direct !== "") return Number(direct) || 0;
 
       if (Array.isArray(o?.items)) {
-        const sumQty = o.items.reduce((acc, it) => acc + (Number(it?.quantite) || 0), 0);
+        const sumQty = o.items.reduce(
+          (acc, it) =>
+            acc +
+            (Number(
+              it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0
+            ) || 0),
+          0
+        );
         return sumQty || o.items.length;
       }
+
       if (Array.isArray(o?.orderItems)) return o.orderItems.length;
       return 0;
     };
 
     const pickTotal = (o) => {
       const v =
-        o?.total ?? o?.total_amount ?? o?.amount ?? o?.montant ?? o?.priceTotal ?? o?.totalPrice ?? o?.somme ?? o?.revenue;
+        o?.total ??
+        o?.total_amount ??
+        o?.amount ??
+        o?.montant ??
+        o?.priceTotal ??
+        o?.totalPrice ??
+        o?.somme ??
+        o?.revenue;
+
       const n = Number(v);
       return Number.isFinite(n) ? n : 0;
     };
 
     const pickId = (o) =>
-      o?.order_number ?? o?.orderNumber ?? o?.id ?? o?._id ?? o?.orderId ?? o?.commandeId ?? o?.numero ?? o?.reference ?? o?.ref ?? null;
+      o?.order_number ??
+      o?.orderNumber ??
+      o?.id ??
+      o?._id ??
+      o?.orderId ??
+      o?.commandeId ??
+      o?.numero ??
+      o?.reference ??
+      o?.ref ??
+      null;
 
     return list.map((o, idx) => {
       const id = pickId(o) ?? `row-${idx}`;
@@ -178,7 +226,7 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
               <th>{t("orders.customer")}</th>
               <th>{t("orders.items")}</th>
               <th>{t("orders.total")}</th>
-              <th>{t("orders.status")}</th>
+              <th>{t("common.status", "Statut")}</th>
             </tr>
           </thead>
           <tbody>

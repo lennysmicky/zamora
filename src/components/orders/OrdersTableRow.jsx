@@ -1,4 +1,4 @@
-// OrdersTableRow.jsx
+// src/components/orders/OrdersTableRow.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -21,11 +21,11 @@ const getOrderId = (o) => String(o?.id ?? o?._id ?? "");
 const OrdersTableRow = ({
   order,
   isSelected,
-  onSelect,        //  callback sans param
+  onSelect,
   onViewDetails,
   onUpdateStatus,
-  onDelete,        //  AJOUT
-  onPrint,         //  AJOUT
+  onDelete,
+  onPrint,
   isRestaurantMode = false,
 }) => {
   const { t } = useTranslation();
@@ -34,8 +34,11 @@ const OrdersTableRow = ({
 
   useEffect(() => {
     const onClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setShowActions(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setShowActions(false);
+      }
     };
+
     if (showActions) document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, [showActions]);
@@ -43,13 +46,23 @@ const OrdersTableRow = ({
   const orderId = getOrderId(order);
   const createdAt = order?.createdAt || order?.created_at || order?.raw?.createdAt;
 
-  const orderNumber = order?.orderNumber || order?.order_number || (orderId ? `ORD-${orderId}` : "-");
+  const orderNumber =
+    order?.orderNumber || order?.order_number || (orderId ? `ORD-${orderId}` : "-");
 
-  const customerName = order?.customer?.name || order?.customerName || order?.customer_name || "-";
-  const customerPhone = order?.customer?.phone || order?.customerPhone || order?.customer_phone || "";
+  const customerName =
+    order?.customer?.name || order?.customerName || order?.customer_name || "-";
+
+  const customerPhone =
+    order?.customer?.phone || order?.customerPhone || order?.customer_phone || "";
 
   const restaurantName =
-    order?.restaurant?.name || order?.restaurantName || order?.restaurantId || order?.raw?.restaurent || "-";
+    order?.restaurant?.name ||
+    order?.restaurantName ||
+    order?.restaurantId ||
+    order?.raw?.restaurent ||
+    "-";
+
+  const tableLabel = order?.tableLabel || "-";
 
   const itemsCount =
     order?.itemsCount ??
@@ -64,6 +77,7 @@ const OrdersTableRow = ({
     if (!dateString) return "-";
     const date = new Date(dateString);
     if (Number.isNaN(date.getTime())) return "-";
+
     return new Intl.DateTimeFormat("fr-FR", {
       day: "2-digit",
       month: "2-digit",
@@ -122,6 +136,10 @@ const OrdersTableRow = ({
         </td>
       )}
 
+      <td className="orders-table-table">
+        <span>{tableLabel}</span>
+      </td>
+
       <td className="orders-table-items">
         <span>{itemsCount}</span>
       </td>
@@ -162,18 +180,34 @@ const OrdersTableRow = ({
           </button>
 
           <div className="actions-dropdown-wrapper">
-            <button className="action-btn action-btn-more" onClick={() => setShowActions((v) => !v)} type="button">
+            <button
+              className="action-btn action-btn-more"
+              onClick={() => setShowActions((v) => !v)}
+              type="button"
+            >
               <RiMoreLine />
             </button>
 
             {showActions && (
               <div className="actions-dropdown">
-                <button onClick={() => (setShowActions(false), onViewDetails?.(order))} type="button">
+                <button
+                  onClick={() => {
+                    setShowActions(false);
+                    onViewDetails?.(order);
+                  }}
+                  type="button"
+                >
                   <RiEyeLine />
                   <span>{t("common.view")}</span>
                 </button>
 
-                <button onClick={() => (setShowActions(false), onViewDetails?.(order))} type="button">
+                <button
+                  onClick={() => {
+                    setShowActions(false);
+                    onViewDetails?.(order);
+                  }}
+                  type="button"
+                >
                   <RiEditLine />
                   <span>{t("common.edit")}</span>
                 </button>
@@ -185,7 +219,12 @@ const OrdersTableRow = ({
 
                 <div className="dropdown-divider"></div>
 
-                <button className="danger" type="button" onClick={handleDelete} disabled={!onDelete}>
+                <button
+                  className="danger"
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={!onDelete}
+                >
                   <RiDeleteBinLine />
                   <span>{t("common.delete")}</span>
                 </button>
