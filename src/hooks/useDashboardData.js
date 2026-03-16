@@ -1,4 +1,3 @@
-// src/hooks/useDashboardData.js
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "../stores/authStore";
@@ -13,15 +12,60 @@ const toYmdUtc = (d) => {
 
 const addDaysUtcYmd = (ymd, days) => {
   if (!ymd) return null;
-  // force UTC to avoid timezone shifts
   const d = new Date(`${ymd}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return ymd;
   d.setUTCDate(d.getUTCDate() + days);
   return toYmdUtc(d) ?? ymd;
 };
 
+const unwrap = (x) => {
+  let v = x;
+  for (let i = 0; i < 4; i++) {
+    if (v == null) break;
+    if (Array.isArray(v)) break;
+    if (typeof v !== "object") break;
+
+    const next = v.data ?? v.result ?? v.payload ?? v.response;
+    if (!next || next === v) break;
+    v = next;
+  }
+  return v;
+};
+
+const normalizeRevenueData = (revenue = []) => {
+  if (!Array.isArray(revenue)) return [];
+
+  return revenue
+    .map((item) => ({
+      name: item?.name ?? item?.date ?? item?.label ?? "",
+      revenue: Number(item?.revenue ?? item?.value ?? item?.total ?? 0),
+    }))
+    .filter((item) => item.name);
+};
+
+const extractRevenue = (data) => {
+  const d = unwrap(data);
+
+  if (Array.isArray(d)) return d;
+  if (Array.isArray(d?.charts?.revenue)) return d.charts.revenue;
+  if (Array.isArray(d?.revenue)) return d.revenue;
+  if (Array.isArray(d?.chart?.revenue)) return d.chart.revenue;
+  if (Array.isArray(d?.stats?.revenue)) return d.stats.revenue;
+
+  return [];
+};
+
+const extractOrdersStatus = (data) => {
+  const d = unwrap(data);
+
+  if (Array.isArray(d?.charts?.ordersStatus)) return d.charts.ordersStatus;
+  if (Array.isArray(d?.ordersStatus)) return d.ordersStatus;
+
+  return [];
+};
+
 const useDashboardData = ({
-  restaurantId: restaurantIdParam = null, // override (rare)
+  restaurantId: restaurantIdParam = null,
   startDate = null,
   endDate = null,
   period = null,
@@ -29,28 +73,22 @@ const useDashboardData = ({
 } = {}) => {
   const { t } = useTranslation();
 
-  // normalize type (robuste si "ADMIN"/"Restaurant")
-  const userType = useAuthStore((s) => String(s.userType ?? "").trim().toLowerCase());
+  const userType = useAuthStore((s) =>
+    String(s.userType ?? "").trim().toLowerCase()
+  );
   const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
   const isAdminMode = userType === "admin";
   const isRestaurantMode = userType === "restaurant";
 
-  //   Dashboard filters store (source of truth UI)
-  const dashRestaurant = useDashboardFiltersStore((s) => s.restaurant); // {id|_id,name}|string|null
-  const dashPeriod = useDashboardFiltersStore((s) => s.period); // "30days" | "7days" | "today" | "custom" | ""
+  const dashRestaurant = useDashboardFiltersStore((s) => s.restaurant);
+  const dashPeriod = useDashboardFiltersStore((s) => s.period);
   const dashFrom = useDashboardFiltersStore((s) => s.from);
   const dashTo = useDashboardFiltersStore((s) => s.to);
 
-  /**
-   *   restaurantId effectif:
-   * - restaurant mode: PRIORITÉ AU STORE (JWT restaurantId), puis param en fallback
-   * - admin mode: param override, sinon selector (id/_id/string)
-   */
   const restaurantId = useMemo(() => {
     if (isRestaurantMode) return storeRestaurantId || restaurantIdParam || null;
 
-    // admin
     if (restaurantIdParam) return restaurantIdParam;
 
     const selected =
@@ -58,7 +96,7 @@ const useDashboardData = ({
         ? dashRestaurant
         : dashRestaurant?.id ?? dashRestaurant?._id ?? null;
 
-    return selected; // null => "Tous les restaurants"
+    return selected;
   }, [isRestaurantMode, storeRestaurantId, restaurantIdParam, dashRestaurant]);
 
   const [kpis, setKpis] = useState({
@@ -82,8 +120,6 @@ const useDashboardData = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  //   build filters depuis props OU store
-  //  Fix: si custom et from==to, on envoie to = from + 1 jour (to exclusif)
   const filters = useMemo(() => {
     const f = {};
 
@@ -115,73 +151,118 @@ const useDashboardData = ({
     setError(null);
 
     try {
-      // Restaurant: sans restaurantId => rien à fetch
-      if (isRestaurantMode && !restaurantId) return;
-
-      // Admin: global désactivé ET aucun resto => rien à fetch
-      if (isAdminMode && !restaurantId && !allowGlobalAdminDashboard) return;
-
-      if (isAdminMode) {
-        const data = await dashboardAPI.getAdminDashboard({ restaurantId, ...filters });
-        if (seq !== seqRef.current) return;
-
+      if (isRestaurantMode && !restaurantId) {
         setKpis({
-          totalOrders: data?.kpis?.totalOrders ?? 0,
-          growthOrders: data?.kpis?.growthOrders ?? 0,
-          totalRevenue: data?.kpis?.totalRevenue ?? 0,
-          growthRevenue: data?.kpis?.growthRevenue ?? 0,
-          averageOrderValue: data?.kpis?.averageOrderValue ?? data?.kpis?.averageBasket ?? 0,
-          growthBasket: data?.kpis?.growthBasket ?? 0,
-          totalCustomers: data?.kpis?.totalCustomers ?? 0,
-          growthCustomers: data?.kpis?.growthCustomers ?? 0,
+          totalOrders: 0,
+          growthOrders: 0,
+          totalRevenue: 0,
+          growthRevenue: 0,
+          averageOrderValue: 0,
+          growthBasket: 0,
+          totalCustomers: 0,
+          growthCustomers: 0,
         });
-
-        setRevenueData(data?.charts?.revenue || []);
-        setOrdersStatusData(data?.charts?.ordersStatus || []);
-        setTopSellingItems(data?.topSellingItems || []);
-        setRecentOrders(data?.recentOrders || []);
-        setTopRestaurants(data?.topRestaurants || []);
+        setRevenueData([]);
+        setOrdersStatusData([]);
+        setTopSellingItems([]);
+        setRecentOrders([]);
+        setTopRestaurants([]);
         setHourlyOrders([]);
         return;
       }
 
-      if (isRestaurantMode) {
-        const data = await dashboardAPI.getRestaurantDashboard({ restaurantId, ...filters });
-        if (seq !== seqRef.current) return;
-
+      if (isAdminMode && !restaurantId && !allowGlobalAdminDashboard) {
         setKpis({
-          totalOrders: data?.kpis?.totalOrders ?? 0,
-          growthOrders: data?.kpis?.growthOrders ?? 0,
-          totalRevenue: data?.kpis?.totalRevenue ?? 0,
-          growthRevenue: data?.kpis?.growthRevenue ?? 0,
-          averageOrderValue: data?.kpis?.averageOrderValue ?? data?.kpis?.averageBasket ?? 0,
-          growthBasket: data?.kpis?.growthBasket ?? 0,
-          totalCustomers: data?.kpis?.totalCustomers ?? 0,
-          growthCustomers: data?.kpis?.growthCustomers ?? 0,
+          totalOrders: 0,
+          growthOrders: 0,
+          totalRevenue: 0,
+          growthRevenue: 0,
+          averageOrderValue: 0,
+          growthBasket: 0,
+          totalCustomers: 0,
+          growthCustomers: 0,
         });
-
-        setRevenueData(data?.charts?.revenue || []);
-        setOrdersStatusData(data?.charts?.ordersStatus || []);
-        setTopSellingItems(data?.topSellingItems || []);
-        setRecentOrders(data?.recentOrders || []);
-        setHourlyOrders(data?.hourlyOrders || []);
+        setRevenueData([]);
+        setOrdersStatusData([]);
+        setTopSellingItems([]);
+        setRecentOrders([]);
         setTopRestaurants([]);
+        setHourlyOrders([]);
+        return;
       }
+
+      const data = isAdminMode
+        ? await dashboardAPI.getAdminDashboard({ restaurantId, ...filters })
+        : await dashboardAPI.getRestaurantDashboard({ restaurantId, ...filters });
+
+      if (seq !== seqRef.current) return;
+
+      const unwrapped = unwrap(data);
+
+      setKpis({
+        totalOrders: unwrapped?.kpis?.totalOrders ?? 0,
+        growthOrders: unwrapped?.kpis?.growthOrders ?? 0,
+        totalRevenue: unwrapped?.kpis?.totalRevenue ?? 0,
+        growthRevenue: unwrapped?.kpis?.growthRevenue ?? 0,
+        averageOrderValue:
+          unwrapped?.kpis?.averageOrderValue ??
+          unwrapped?.kpis?.averageBasket ??
+          0,
+        growthBasket: unwrapped?.kpis?.growthBasket ?? 0,
+        totalCustomers: unwrapped?.kpis?.totalCustomers ?? 0,
+        growthCustomers: unwrapped?.kpis?.growthCustomers ?? 0,
+      });
+
+      setRevenueData(normalizeRevenueData(extractRevenue(unwrapped)));
+      setOrdersStatusData(extractOrdersStatus(unwrapped));
+      setTopSellingItems(unwrapped?.topSellingItems || []);
+      setRecentOrders(unwrapped?.recentOrders || []);
+      setTopRestaurants(isAdminMode ? unwrapped?.topRestaurants || [] : []);
+      setHourlyOrders(isRestaurantMode ? unwrapped?.hourlyOrders || [] : []);
     } catch (err) {
       console.error("Dashboard error:", err);
+
       if (seq === seqRef.current) {
-        setError(t("dashboard.errors.fetchFailed", "Erreur lors du chargement du dashboard"));
+        setError(
+          t(
+            "dashboard.errors.fetchFailed",
+            "Erreur lors du chargement du dashboard"
+          )
+        );
+
+        setKpis({
+          totalOrders: 0,
+          growthOrders: 0,
+          totalRevenue: 0,
+          growthRevenue: 0,
+          averageOrderValue: 0,
+          growthBasket: 0,
+          totalCustomers: 0,
+          growthCustomers: 0,
+        });
+        setRevenueData([]);
+        setOrdersStatusData([]);
+        setTopSellingItems([]);
+        setRecentOrders([]);
+        setTopRestaurants([]);
+        setHourlyOrders([]);
       }
     } finally {
       if (seq === seqRef.current) setIsLoading(false);
     }
-  }, [isAdminMode, isRestaurantMode, restaurantId, filters, allowGlobalAdminDashboard, t]);
+  }, [
+    isAdminMode,
+    isRestaurantMode,
+    restaurantId,
+    filters,
+    allowGlobalAdminDashboard,
+    t,
+  ]);
 
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  //   cleanup (évite listeners multiples)
   useEffect(() => {
     const unsubscribe = onDashboardRefresh(() => fetchDashboard());
     return unsubscribe;

@@ -51,10 +51,14 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
   };
 
   const chartData = useMemo(() => {
+    let mapped = [];
+
     if (Array.isArray(input)) {
-      return input
+      mapped = input
         .map((x) => ({
           name:
+            x?.name ??
+            x?._id ??
             x?.date ??
             x?.label ??
             x?.day ??
@@ -62,10 +66,10 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
             x?.x ??
             "",
           revenue: toNumber(
+            x?.revenue ??
             x?.value ??
             x?.total ??
             x?.amount ??
-            x?.revenue ??
             x?.totalRevenue ??
             x?.revenu ??
             x?.revenuTotal ??
@@ -75,23 +79,31 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
           ),
         }))
         .filter((x) => x.name);
+    } else {
+      const labels = input?.labels;
+      const datasets = input?.datasets;
+      const serie = Array.isArray(datasets) ? datasets[0] : null;
+      const values = serie?.data;
+
+      if (Array.isArray(labels) && Array.isArray(values)) {
+        mapped = labels
+          .map((label, i) => ({
+            name: label ?? "",
+            revenue: toNumber(values[i] ?? 0),
+          }))
+          .filter((x) => x.name);
+      }
     }
 
-    const labels = input?.labels;
-    const datasets = input?.datasets;
-    const serie = Array.isArray(datasets) ? datasets[0] : null;
-    const values = serie?.data;
-
-    if (Array.isArray(labels) && Array.isArray(values)) {
-      return labels
-        .map((label, i) => ({
-          name: label ?? "",
-          revenue: toNumber(values[i] ?? 0),
-        }))
-        .filter((x) => x.name);
+    // Si une seule donnée, on la duplique pour forcer un tracé visible
+    if (mapped.length === 1) {
+      return [
+        { ...mapped[0] },
+        { ...mapped[0], name: `${mapped[0].name} ` }, // espace pour différencier
+      ];
     }
 
-    return [];
+    return mapped;
   }, [input]);
 
   if (isLoading) {
@@ -114,7 +126,7 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
                   key={i}
                   className="chart-skeleton-bar"
                   style={{ height: `${height}%` }}
-                ></div>
+                />
               ))}
             </div>
           </div>
@@ -157,14 +169,14 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
       </div>
 
       <div className="chart-card-body">
-        <ResponsiveContainer width="100%" height={200}>
+        <ResponsiveContainer width="100%" height={240}>
           <AreaChart
             data={chartData}
-            margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
           >
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
+                <stop offset="5%" stopColor="#2563eb" stopOpacity={0.2} />
                 <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -183,6 +195,7 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
               tickLine={false}
               tick={{ fontSize: 11, fill: "#64748b" }}
               tickFormatter={formatYAxis}
+              domain={[0, "dataMax + 1000"]}
             />
 
             <Tooltip content={<CustomTooltip />} />
@@ -191,9 +204,11 @@ const RevenueChart = ({ data: input, isLoading = false }) => {
               type="monotone"
               dataKey="revenue"
               stroke="#2563eb"
-              strokeWidth={2}
+              strokeWidth={3}
               fillOpacity={1}
               fill="url(#colorRevenue)"
+              dot={{ r: 4, fill: "#2563eb" }}
+              activeDot={{ r: 6 }}
             />
           </AreaChart>
         </ResponsiveContainer>

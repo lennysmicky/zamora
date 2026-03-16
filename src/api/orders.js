@@ -318,20 +318,16 @@ const normalizeOrder = (raw) => {
   );
 
   const status = normalizeOrderStatus(
-    pick(o, ["status", "etat", "state", "order_status", "orderStatus"])
-  );
+    pick(o, ["status", "etat", "state", "order_status", "orderStatus"]));
 
   const payment_status = normalizePaymentStatus(
-    pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"])
-  );
+    pick(o, ["payment_status", "paymentStatus", "statut_paiement", "payment_state"]));
 
   const payment_method = normalizePaymentMethod(
-    pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"])
-  );
+    pick(o, ["payment_method", "paymentMethod", "mode_paiement", "payment_mode"]));
 
   const source = normalizeSource(
-    pick(o, ["source", "origine", "platform", "canal", "order_source"])
-  );
+    pick(o, ["source", "origine", "platform", "canal", "order_source"]));
 
   const id = pick(o, ["_id", "id", "orderId", "commandeId", "commande_id"]) ?? "";
 

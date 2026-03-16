@@ -96,12 +96,21 @@ const resolveRestaurantId = (src = {}) => {
   );
 };
 
-// ---------------- normalizers ----------------
+// ---------------- normalizers CORRIGÉS ----------------
 const normalizeRevenus = (raw) => {
   const list = arr(raw);
+
   return list
     .map((x) => ({
-      date: x?.date ?? x?.day ?? x?.jour ?? x?.x ?? x?.label ?? "",
+      date:
+        x?.date ??
+        x?._id ??                    // 👈 CORRECTION ICI
+        x?.day ??
+        x?.jour ??
+        x?.x ??
+        x?.label ??
+        x?.name ??
+        "",
       value: num(
         x?.value ??
         x?.total ??
