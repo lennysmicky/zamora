@@ -1,0 +1,2046 @@
+// import React, { useEffect, useRef, useState } from 'react';
+// import { Link } from 'react-router-dom';
+// import { useTranslation } from 'react-i18next';
+// import {
+//     RiQrCodeLine,
+//     RiSmartphoneLine,
+//     RiTimeLine,
+//     RiSecurePaymentLine,
+//     RiPieChartLine,
+//     RiTeamLine,
+//     RiNotification3Line,
+//     RiTableLine,
+//     RiArrowRightLine,
+//     RiCheckLine,
+//     RiStarFill,
+//     RiPlayCircleLine,
+//     RiDownloadLine,
+//     RiAndroidLine,
+//     RiAppleLine,
+//     RiHome4Line,
+//     RiRestaurantLine
+// } from 'react-icons/ri';
+
+// // Images
+// import Logo from '../../assets/images/logo.png';
+// import BurgerImg from '../../assets/images/food/burger.png';
+// import PizzaImg from '../../assets/images/food/pizza.png';
+// import TacoImg from '../../assets/images/food/taco.png';
+// import FriesImg from '../../assets/images/food/fries.png';
+// import HotdogImg from '../../assets/images/food/hotdog.png';
+// import DrinkImg from '../../assets/images/food/drink.png';
+// import DonutImg from '../../assets/images/food/donut.png';
+// import IcecreamImg from '../../assets/images/food/icecream.png';
+// import PhoneMockup from '../../assets/images/phoo-left.png';
+
+// import './LandingPage.css';
+
+// // Liste des plats pour le slider
+// const foodItems = [
+//     { img: BurgerImg, name: 'Classic Burger', desc: 'Boeuf juteux, salade fraîche, tomate et sauce maison' },
+//     { img: PizzaImg, name: 'Pizza Margherita', desc: 'Sauce tomate, mozzarella fondante et basilic frais' },
+//     { img: TacoImg, name: 'Taco Mexicain', desc: 'Poulet épicé, poivrons grillés et guacamole' },
+//     { img: FriesImg, name: 'Frites Maison', desc: 'Croustillantes à l\'extérieur, fondantes à l\'intérieur' },
+//     { img: HotdogImg, name: 'Hot Dog', desc: 'Saucisse premium, moutarde et oignons caramélisés' },
+//     { img: DrinkImg, name: 'Boissons Fraîches', desc: 'Sodas, jus de fruits et cocktails maison' },
+//     { img: DonutImg, name: 'Donut Gourmand', desc: 'Glacé au chocolat avec topping colorés' },
+//     { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
+// ];
+
+// const LandingPage = () => {
+//     const { t } = useTranslation();
+//     const [currentFood, setCurrentFood] = useState(0);
+//     const [isAnimating, setIsAnimating] = useState(false);
+//     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+//     const particlesRef = useRef(null);
+
+//     // Animation au scroll
+//     useEffect(() => {
+//         const observerOptions = {
+//             threshold: 0.1,
+//             rootMargin: '0px 0px -50px 0px'
+//         };
+
+//         const observer = new IntersectionObserver((entries) => {
+//             entries.forEach(entry => {
+//                 if (entry.isIntersecting) {
+//                     entry.target.classList.add('animate-in');
+//                 }
+//             });
+//         }, observerOptions);
+
+//         const animatedElements = document.querySelectorAll('.animate-on-scroll');
+//         animatedElements.forEach(el => observer.observe(el));
+
+//         return () => observer.disconnect();
+//     }, []);
+
+//     // Slider automatique des images
+//     useEffect(() => {
+//         const interval = setInterval(() => {
+//             setIsAnimating(true);
+//             setTimeout(() => {
+//                 setCurrentFood(prev => (prev + 1) % foodItems.length);
+//                 setIsAnimating(false);
+//             }, 500);
+//         }, 4000);
+
+//         return () => clearInterval(interval);
+//     }, []);
+
+//     // Générer des particules
+//     const generateParticles = () => {
+//         const particles = [];
+//         for (let i = 0; i < 15; i++) {
+//             const style = {
+//                 '--x': `${Math.random() * 100}%`,
+//                 '--y': `${Math.random() * 100}%`,
+//                 '--delay': `${Math.random() * 2}s`,
+//                 '--size': `${Math.random() * 6 + 3}px`,
+//                 '--duration': `${Math.random() * 3 + 2}s`
+//             };
+//             particles.push(<div key={i} className="particle" style={style} />);
+//         }
+//         return particles;
+//     };
+
+//     const features = [
+//         {
+//             icon: RiQrCodeLine,
+//             title: 'Commande via QR Code',
+//             description: 'Au restaurant, scannez le QR code sur votre table pour accéder au menu et commander instantanément.'
+//         },
+//         {
+//             icon: RiSmartphoneLine,
+//             title: 'Commande depuis l\'app',
+//             description: 'Chez vous, commandez directement depuis l\'application mobile et faites-vous livrer.'
+//         },
+//         {
+//             icon: RiTimeLine,
+//             title: 'Suivi en temps réel',
+//             description: 'Suivez votre commande en direct, de la préparation jusqu\'à la livraison ou le service.'
+//         },
+//         {
+//             icon: RiSecurePaymentLine,
+//             title: 'Paiement sécurisé',
+//             description: 'Payez par carte bancaire, mobile money ou en espèces à la livraison.'
+//         },
+//         {
+//             icon: RiTableLine,
+//             title: 'Réservation de table',
+//             description: 'Réservez votre table à l\'avance et évitez l\'attente au restaurant.'
+//         },
+//         {
+//             icon: RiPieChartLine,
+//             title: 'Historique & favoris',
+//             description: 'Retrouvez vos commandes passées et recommandez vos plats préférés en un clic.'
+//         }
+//     ];
+
+//     const howItWorks = [
+//         {
+//             icon: RiRestaurantLine,
+//             title: 'Au restaurant',
+//             description: 'Scannez le QR code sur votre table, consultez le menu, passez commande et payez. Tout depuis votre téléphone.',
+//             step: '1'
+//         },
+//         {
+//             icon: RiHome4Line,
+//             title: 'Chez vous',
+//             description: 'Ouvrez l\'app Zamora, choisissez votre restaurant, commandez et faites-vous livrer directement.',
+//             step: '2'
+//         },
+//         {
+//             icon: RiTimeLine,
+//             title: 'Suivez en direct',
+//             description: 'Recevez des notifications à chaque étape : préparation, en route, arrivée imminente.',
+//             step: '3'
+//         }
+//     ];
+
+//     const benefits = [
+//         'Réduction du temps d\'attente',
+//         'Commandez où que vous soyez',
+//         'Paiement simple et sécurisé',
+//         'Suivi de commande en temps réel',
+//         'Historique de vos commandes',
+//         'Offres exclusives dans l\'app'
+//     ];
+
+//     return (
+//         <div className="landing-page">
+//             {/* Header */}
+//             <header className="landing-header">
+//                 <div className="landing-container">
+//                     <Link to="/" className="landing-logo">
+//                         <img src={Logo} alt="Zamora" />
+//                         <span>Zamora</span>
+//                     </Link>
+
+//                     <nav className={`landing-nav ${mobileMenuOpen ? 'open' : ''}`}>
+//                         <a href="#features" onClick={() => setMobileMenuOpen(false)}>Fonctionnalités</a>
+//                         <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Comment ça marche</a>
+//                         <a href="#download" onClick={() => setMobileMenuOpen(false)}>Télécharger</a>
+//                         <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+//                     </nav>
+
+//                     <div className="landing-header-actions">
+//                         <Link to="/login" className="btn-login">
+//                             Connexion
+//                         </Link>
+//                         <Link to="/register" className="btn-register">
+//                             <span className="btn-register-text">Espace Restaurant</span>
+//                             <RiArrowRightLine />
+//                         </Link>
+//                     </div>
+
+//                     {/* Mobile menu toggle */}
+//                     <button
+//                         className="mobile-menu-toggle"
+//                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+//                     >
+//                         <span></span>
+//                         <span></span>
+//                         <span></span>
+//                     </button>
+//                 </div>
+//             </header>
+
+//             {/* Hero Section */}
+//             <section className="landing-hero">
+//                 <div className="landing-container">
+//                     <div className="hero-content">
+//                         <div className="hero-badge animate-on-scroll">
+//                             <RiStarFill />
+//                             <span>Application #1 de commande restaurant</span>
+//                         </div>
+//                         <h1 className="hero-title animate-on-scroll">
+//                             <span className="hero-title-line">Commandez vos plats</span>
+//                             <span className="hero-title-highlight">Le vrai goût</span>
+//                         </h1>
+//                         <p className="hero-subtitle animate-on-scroll">
+//                             Au restaurant ou chez vous, commandez facilement vos plats préférés.
+//                             Scannez, commandez, payez et savourez !
+//                         </p>
+//                         <div className="hero-actions animate-on-scroll">
+//                             <a href="#download" className="btn-primary-lg">
+//                                 <RiDownloadLine />
+//                                 Télécharger l'app
+//                             </a>
+//                             <Link to="/register" className="btn-secondary-lg">
+//                                 <RiRestaurantLine />
+//                                 Je suis restaurateur
+//                             </Link>
+//                         </div>
+//                         <div className="hero-stats animate-on-scroll">
+//                             <div className="hero-stat">
+//                                 <span className="stat-number">500+</span>
+//                                 <span className="stat-label">Restaurants</span>
+//                             </div>
+//                             <div className="hero-stat-divider"></div>
+//                             <div className="hero-stat">
+//                                 <span className="stat-number">50K+</span>
+//                                 <span className="stat-label">Téléchargements</span>
+//                             </div>
+//                             <div className="hero-stat-divider"></div>
+//                             <div className="hero-stat">
+//                                 <span className="stat-number">4.9</span>
+//                                 <span className="stat-label">Note moyenne</span>
+//                             </div>
+//                         </div>
+//                     </div>
+
+//                     {/* Hero Visual - Single Image Slider with Particles */}
+//                     <div className="hero-visual animate-on-scroll">
+//                         <div className="hero-slider">
+//                             {/* Particules */}
+//                             <div className="particles-container" ref={particlesRef}>
+//                                 {generateParticles()}
+//                             </div>
+
+//                             {/* Image principale */}
+//                             <div className={`hero-food-container ${isAnimating ? 'animating-out' : 'animating-in'}`}>
+//                                 <img
+//                                     src={foodItems[currentFood].img}
+//                                     alt={foodItems[currentFood].name}
+//                                     className="hero-food-image"
+//                                 />
+//                             </div>
+
+//                             {/* Info sous l'image - séparé pour éviter les chevauchements */}
+//                             <div className={`hero-food-info ${isAnimating ? 'animating-out' : 'animating-in'}`}>
+//                                 <h3 className="hero-food-name">{foodItems[currentFood].name}</h3>
+//                                 <p className="hero-food-desc">{foodItems[currentFood].desc}</p>
+//                             </div>
+
+//                             {/* Indicateurs */}
+//                             <div className="slider-indicators">
+//                                 {foodItems.map((_, index) => (
+//                                     <button
+//                                         key={index}
+//                                         className={`slider-dot ${index === currentFood ? 'active' : ''}`}
+//                                         onClick={() => {
+//                                             setIsAnimating(true);
+//                                             setTimeout(() => {
+//                                                 setCurrentFood(index);
+//                                                 setIsAnimating(false);
+//                                             }, 300);
+//                                         }}
+//                                     />
+//                                 ))}
+//                             </div>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* Features Section */}
+//             <section className="landing-features" id="features">
+//                 <div className="landing-container">
+//                     <div className="section-header animate-on-scroll">
+//                         <span className="section-badge">Fonctionnalités</span>
+//                         <h2>Tout pour commander facilement</h2>
+//                         <p>Que vous soyez au restaurant ou chez vous, Zamora simplifie votre expérience culinaire</p>
+//                     </div>
+//                     <div className="features-grid">
+//                         {features.map((feature, index) => (
+//                             <div
+//                                 key={index}
+//                                 className="feature-card animate-on-scroll"
+//                                 style={{ animationDelay: `${index * 0.1}s` }}
+//                             >
+//                                 <div className="feature-icon">
+//                                     <feature.icon />
+//                                 </div>
+//                                 <h3>{feature.title}</h3>
+//                                 <p>{feature.description}</p>
+//                             </div>
+//                         ))}
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* How It Works */}
+//             <section className="landing-how-it-works" id="how-it-works">
+//                 <div className="landing-container">
+//                     <div className="section-header animate-on-scroll">
+//                         <span className="section-badge">Comment ça marche</span>
+//                         <h2>Simple comme bonjour</h2>
+//                     </div>
+//                     <div className="steps-container">
+//                         {howItWorks.map((step, index) => (
+//                             <React.Fragment key={index}>
+//                                 <div className="step animate-on-scroll">
+//                                     <div className="step-number">{step.step}</div>
+//                                     <div className="step-icon-wrapper">
+//                                         <step.icon />
+//                                     </div>
+//                                     <div className="step-content">
+//                                         <h3>{step.title}</h3>
+//                                         <p>{step.description}</p>
+//                                     </div>
+//                                 </div>
+//                                 {index < howItWorks.length - 1 && <div className="step-connector"></div>}
+//                             </React.Fragment>
+//                         ))}
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* Download Section */}
+//             <section className="landing-download" id="download">
+//                 <div className="landing-container">
+//                     <div className="download-content">
+//                         <div className="download-text animate-on-scroll">
+//                             <span className="section-badge">Téléchargement</span>
+//                             <h2>Téléchargez l'app Zamora</h2>
+//                             <p>
+//                                 Commandez vos plats préférés où que vous soyez.
+//                                 L'application est disponible en téléchargement direct,
+//                                 pas besoin de passer par un store !
+//                             </p>
+//                             <div className="download-buttons">
+//                                 <a href="/downloads/zamora-android.apk" className="download-btn android" download>
+//                                     <RiAndroidLine />
+//                                     <div className="download-btn-text">
+//                                         <span className="download-btn-label">Télécharger pour</span>
+//                                         <span className="download-btn-platform">Android</span>
+//                                     </div>
+//                                 </a>
+//                                 <a href="/downloads/zamora-ios.ipa" className="download-btn ios" download>
+//                                     <RiAppleLine />
+//                                     <div className="download-btn-text">
+//                                         <span className="download-btn-label">Télécharger pour</span>
+//                                         <span className="download-btn-platform">iOS</span>
+//                                     </div>
+//                                 </a>
+//                             </div>
+//                             <div className="download-note">
+//                                 <RiCheckLine />
+//                                 <span>Installation facile • Mises à jour automatiques • 100% gratuit</span>
+//                             </div>
+//                         </div>
+//                         <div className="download-visual animate-on-scroll">
+//                             <img src={PhoneMockup} alt="Application Zamora" className="phone-mockup-image" />
+//                         </div>
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* Benefits Section */}
+//             <section className="landing-benefits" id="benefits">
+//                 <div className="landing-container">
+//                     <div className="benefits-content">
+//                         <div className="benefits-text animate-on-scroll">
+//                             <span className="section-badge">Avantages</span>
+//                             <h2>Pourquoi choisir Zamora ?</h2>
+//                             <p>Une expérience de commande unique, pensée pour vous simplifier la vie</p>
+//                             <ul className="benefits-list">
+//                                 {benefits.map((benefit, index) => (
+//                                     <li key={index}>
+//                                         <RiCheckLine />
+//                                         <span>{benefit}</span>
+//                                     </li>
+//                                 ))}
+//                             </ul>
+//                             <a href="#download" className="btn-primary-lg">
+//                                 <RiDownloadLine />
+//                                 Télécharger maintenant
+//                             </a>
+//                         </div>
+//                         <div className="benefits-visual animate-on-scroll">
+//                             <div className="benefits-image-container">
+//                                 <img src={BurgerImg} alt="Burger" className="benefit-food food-main" />
+//                                 <img src={PizzaImg} alt="Pizza" className="benefit-food food-secondary" />
+//                                 <img src={FriesImg} alt="Fries" className="benefit-food food-tertiary" />
+//                                 <div className="benefits-stats-card">
+//                                     <div className="stats-card-header">
+//                                         <RiPieChartLine />
+//                                         <span>Satisfaction client</span>
+//                                     </div>
+//                                     <div className="stats-card-value">98%</div>
+//                                     <div className="stats-card-label">de clients satisfaits</div>
+//                                 </div>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* CTA Section - Pour les restaurateurs */}
+//             <section className="landing-cta" id="contact">
+//                 <div className="landing-container">
+//                     <div className="cta-content animate-on-scroll">
+//                         <h2>Vous êtes restaurateur ?</h2>
+//                         <p>
+//                             Rejoignez Zamora et digitalisez votre restaurant.
+//                             Gérez vos commandes, menus et paiements depuis un seul tableau de bord.
+//                         </p>
+//                         <div className="cta-actions">
+//                             <Link to="/register" className="btn-cta-primary">
+//                                 Créer mon restaurant
+//                                 <RiArrowRightLine />
+//                             </Link>
+//                             <Link to="/login" className="btn-cta-secondary">
+//                                 J'ai déjà un compte
+//                             </Link>
+//                         </div>
+//                     </div>
+//                 </div>
+//             </section>
+
+//             {/* Footer */}
+//             <footer className="landing-footer">
+//                 <div className="landing-container">
+//                     <div className="footer-content">
+//                         <div className="footer-brand">
+//                             <Link to="/" className="footer-logo">
+//                                 <img src={Logo} alt="Zamora" />
+//                                 <span>Zamora</span>
+//                             </Link>
+//                             <p className="footer-tagline">
+//                                 Le vrai goût - Commandez vos plats préférés au restaurant ou chez vous,
+//                                 en toute simplicité.
+//                             </p>
+//                         </div>
+//                         <div className="footer-links">
+//                             <div className="footer-column">
+//                                 <h4>Application</h4>
+//                                 <a href="#download">Télécharger</a>
+//                                 <a href="#features">Fonctionnalités</a>
+//                                 <a href="#how-it-works">Comment ça marche</a>
+//                             </div>
+//                             <div className="footer-column">
+//                                 <h4>Restaurateurs</h4>
+//                                 <Link to="/register">Créer un compte</Link>
+//                                 <Link to="/login">Connexion</Link>
+//                                 <a href="#benefits">Avantages</a>
+//                             </div>
+//                             <div className="footer-column">
+//                                 <h4>Légal</h4>
+//                                 <a href="#privacy">Confidentialité</a>
+//                                 <a href="#terms">CGU</a>
+//                                 <a href="#contact">Contact</a>
+//                             </div>
+//                         </div>
+//                     </div>
+//                     <div className="footer-bottom">
+//                         <p>&copy; {new Date().getFullYear()} Zamora. Tous droits réservés.</p>
+//                     </div>
+//                 </div>
+//             </footer>
+//         </div>
+//     );
+// };
+
+// export default LandingPage;
+
+// /* ========================================
+//    LANDING PAGE - Zamora
+//    Fond blanc, couleurs bleu/noir
+//    ======================================== */
+
+// :root {
+//   --landing-primary: #2563eb;
+//   --landing-primary-dark: #1d4ed8;
+//   --landing-primary-light: #3b82f6;
+//   --landing-bg-white: #ffffff;
+//   --landing-bg-light: #f8fafc;
+//   --landing-bg-dark: #0f172a;
+//   --landing-text-dark: #1e293b;
+//   --landing-text-gray: #64748b;
+//   --landing-text-light: #94a3b8;
+//   --landing-border: #e2e8f0;
+// }
+
+// /* ========================================
+//    Base
+//    ======================================== */
+// .landing-page {
+//   min-height: 100vh;
+//   background: var(--landing-bg-white);
+//   color: var(--landing-text-dark);
+//   overflow-x: hidden;
+// }
+
+// .landing-container {
+//   max-width: 1140px;
+//   margin: 0 auto;
+//   padding: 0 1.5rem;
+// }
+
+// /* ========================================
+//    Header
+//    ======================================== */
+// .landing-header {
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   right: 0;
+//   z-index: 100;
+//   padding: 0.875rem 0;
+//   background: rgba(255, 255, 255, 0.95);
+//   backdrop-filter: blur(20px);
+//   border-bottom: 1px solid var(--landing-border);
+// }
+
+// .landing-header .landing-container {
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+// }
+
+// .landing-logo {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.625rem;
+//   text-decoration: none;
+// }
+
+// .landing-logo img {
+//   width: 36px;
+//   height: 36px;
+//   border-radius: 8px;
+// }
+
+// .landing-logo span {
+//   font-size: 1.375rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+// }
+
+// .landing-nav {
+//   display: none;
+//   gap: 2rem;
+// }
+
+// @media (min-width: 768px) {
+//   .landing-nav {
+//     display: flex;
+//   }
+// }
+
+// .landing-nav a {
+//   color: var(--landing-text-gray);
+//   text-decoration: none;
+//   font-size: 0.875rem;
+//   font-weight: 500;
+//   transition: color 0.3s;
+// }
+
+// .landing-nav a:hover {
+//   color: var(--landing-primary);
+// }
+
+// .landing-header-actions {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.75rem;
+// }
+
+// .btn-login {
+//   padding: 0.5rem 1rem;
+//   color: var(--landing-text-gray);
+//   text-decoration: none;
+//   font-size: 0.875rem;
+//   font-weight: 500;
+//   border-radius: 8px;
+//   transition: all 0.3s;
+// }
+
+// .btn-login:hover {
+//   color: var(--landing-primary);
+//   background: rgba(37, 99, 235, 0.05);
+// }
+
+// .btn-register {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.375rem;
+//   padding: 0.5rem 1.25rem;
+//   background: var(--landing-primary);
+//   color: white;
+//   text-decoration: none;
+//   font-size: 0.875rem;
+//   font-weight: 600;
+//   border-radius: 8px;
+//   transition: all 0.3s;
+// }
+
+// .btn-register:hover {
+//   background: var(--landing-primary-dark);
+//   transform: translateY(-1px);
+// }
+
+// .btn-register svg {
+//   font-size: 1rem;
+// }
+
+// /* ========================================
+//    Hero Section
+//    ======================================== */
+// .landing-hero {
+//   padding: 7rem 0 4rem;
+//   background: linear-gradient(180deg, var(--landing-bg-white) 0%, var(--landing-bg-light) 100%);
+// }
+
+// .landing-hero .landing-container {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 3rem;
+//   align-items: center;
+// }
+
+// @media (min-width: 1024px) {
+//   .landing-hero .landing-container {
+//     grid-template-columns: 1fr 1fr;
+//   }
+// }
+
+// .hero-content {
+//   text-align: center;
+// }
+
+// @media (min-width: 1024px) {
+//   .hero-content {
+//     text-align: left;
+//   }
+// }
+
+// .hero-badge {
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 0.375rem;
+//   padding: 0.375rem 0.875rem;
+//   background: rgba(37, 99, 235, 0.08);
+//   border: 1px solid rgba(37, 99, 235, 0.2);
+//   border-radius: 50px;
+//   color: var(--landing-primary);
+//   font-size: 0.75rem;
+//   font-weight: 600;
+//   margin-bottom: 1.25rem;
+// }
+
+// .hero-badge svg {
+//   font-size: 0.75rem;
+//   color: #f59e0b;
+// }
+
+// .hero-title {
+//   font-size: 2.25rem;
+//   font-weight: 800;
+//   line-height: 1.15;
+//   margin-bottom: 1rem;
+//   color: var(--landing-text-dark);
+// }
+
+// @media (min-width: 768px) {
+//   .hero-title {
+//     font-size: 2.75rem;
+//   }
+// }
+
+// @media (min-width: 1024px) {
+//   .hero-title {
+//     font-size: 3.25rem;
+//   }
+// }
+
+// .hero-title-line {
+//   display: block;
+// }
+
+// .hero-title-highlight {
+//   display: block;
+//   color: var(--landing-primary);
+// }
+
+// .hero-subtitle {
+//   font-size: 1rem;
+//   color: var(--landing-text-gray);
+//   line-height: 1.7;
+//   margin-bottom: 1.75rem;
+//   max-width: 480px;
+// }
+
+// @media (min-width: 1024px) {
+//   .hero-subtitle {
+//     margin-left: 0;
+//     margin-right: auto;
+//   }
+// }
+
+// .hero-actions {
+//   display: flex;
+//   flex-wrap: wrap;
+//   gap: 0.75rem;
+//   justify-content: center;
+//   margin-bottom: 2rem;
+// }
+
+// @media (min-width: 1024px) {
+//   .hero-actions {
+//     justify-content: flex-start;
+//   }
+// }
+
+// .btn-primary-lg {
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 0.5rem;
+//   padding: 0.875rem 1.75rem;
+//   background: var(--landing-primary);
+//   color: white;
+//   text-decoration: none;
+//   font-size: 0.9375rem;
+//   font-weight: 600;
+//   border-radius: 10px;
+//   border: none;
+//   cursor: pointer;
+//   transition: all 0.3s;
+//   box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+// }
+
+// .btn-primary-lg:hover {
+//   background: var(--landing-primary-dark);
+//   transform: translateY(-2px);
+//   box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+// }
+
+// .btn-secondary-lg {
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 0.5rem;
+//   padding: 0.875rem 1.75rem;
+//   background: white;
+//   border: 1px solid var(--landing-border);
+//   color: var(--landing-text-dark);
+//   font-size: 0.9375rem;
+//   font-weight: 600;
+//   border-radius: 10px;
+//   cursor: pointer;
+//   transition: all 0.3s;
+// }
+
+// .btn-secondary-lg:hover {
+//   border-color: var(--landing-primary);
+//   color: var(--landing-primary);
+// }
+
+// .btn-secondary-lg svg {
+//   font-size: 1.25rem;
+//   color: var(--landing-primary);
+// }
+
+// /* Hero Stats */
+// .hero-stats {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   gap: 1.75rem;
+// }
+
+// @media (min-width: 1024px) {
+//   .hero-stats {
+//     justify-content: flex-start;
+//   }
+// }
+
+// .hero-stat {
+//   text-align: center;
+// }
+
+// .stat-number {
+//   display: block;
+//   font-size: 1.5rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+// }
+
+// .stat-label {
+//   display: block;
+//   font-size: 0.75rem;
+//   color: var(--landing-text-light);
+// }
+
+// .hero-stat-divider {
+//   width: 1px;
+//   height: 36px;
+//   background: var(--landing-border);
+// }
+
+// /* ========================================
+//    Hero Visual - Image Slider with Particles
+//    ======================================== */
+// .hero-visual {
+//   position: relative;
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+// }
+
+// .hero-slider {
+//   position: relative;
+//   width: 100%;
+//   max-width: 450px;
+//   height: 400px;
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+// }
+
+// /* Particules */
+// .particles-container {
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   right: 0;
+//   bottom: 0;
+//   pointer-events: none;
+//   overflow: hidden;
+// }
+
+// .particle {
+//   position: absolute;
+//   left: var(--x);
+//   top: var(--y);
+//   width: var(--size);
+//   height: var(--size);
+//   background: var(--landing-primary);
+//   border-radius: 50%;
+//   opacity: 0;
+//   animation: particleFloat var(--duration) ease-in-out infinite;
+//   animation-delay: var(--delay);
+// }
+
+// @keyframes particleFloat {
+//   0%, 100% {
+//     opacity: 0;
+//     transform: translateY(0) scale(0);
+//   }
+//   20% {
+//     opacity: 0.6;
+//     transform: translateY(-10px) scale(1);
+//   }
+//   80% {
+//     opacity: 0.4;
+//     transform: translateY(-40px) scale(0.8);
+//   }
+// }
+
+// /* Food Container */
+// .hero-food-container {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   text-align: center;
+//   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+// }
+
+// .hero-food-container.animating-out {
+//   opacity: 0;
+//   transform: translateX(100px) scale(0.8);
+// }
+
+// .hero-food-container.animating-in {
+//   opacity: 1;
+//   transform: translateX(0) scale(1);
+// }
+
+// .hero-food-image {
+//   width: 220px;
+//   height: 220px;
+//   object-fit: contain;
+//   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+//   animation: floatFood 3s ease-in-out infinite;
+// }
+
+// @keyframes floatFood {
+//   0%, 100% {
+//     transform: translateY(0);
+//   }
+//   50% {
+//     transform: translateY(-15px);
+//   }
+// }
+
+// .hero-food-info {
+//   margin-top: 1.5rem;
+//   max-width: 300px;
+// }
+
+// .hero-food-name {
+//   font-size: 1.375rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+//   margin-bottom: 0.5rem;
+// }
+
+// .hero-food-desc {
+//   font-size: 0.875rem;
+//   color: var(--landing-text-gray);
+//   line-height: 1.5;
+// }
+
+// /* Slider Indicators */
+// .slider-indicators {
+//   display: flex;
+//   gap: 0.5rem;
+//   margin-top: 1.5rem;
+// }
+
+// .slider-dot {
+//   width: 8px;
+//   height: 8px;
+//   border-radius: 50%;
+//   border: none;
+//   background: var(--landing-border);
+//   cursor: pointer;
+//   transition: all 0.3s;
+// }
+
+// .slider-dot.active {
+//   background: var(--landing-primary);
+//   width: 24px;
+//   border-radius: 4px;
+// }
+
+// .slider-dot:hover {
+//   background: var(--landing-primary-light);
+// }
+
+// /* Floating Cards */
+// .floating-card {
+//   position: absolute;
+//   display: flex;
+//   align-items: center;
+//   gap: 0.625rem;
+//   padding: 0.75rem 1rem;
+//   background: white;
+//   border: 1px solid var(--landing-border);
+//   border-radius: 12px;
+//   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+//   animation: floatCard 4s ease-in-out infinite;
+// }
+
+// .floating-card svg {
+//   font-size: 1.25rem;
+//   color: var(--landing-primary);
+// }
+
+// .card-title {
+//   display: block;
+//   font-size: 0.75rem;
+//   font-weight: 600;
+//   color: var(--landing-text-dark);
+// }
+
+// .card-subtitle {
+//   display: block;
+//   font-size: 0.625rem;
+//   color: var(--landing-text-light);
+// }
+
+// .card-order {
+//   top: 10%;
+//   left: -10%;
+//   animation-delay: 0s;
+// }
+
+// .card-payment {
+//   top: 50%;
+//   right: -5%;
+//   animation-delay: -1.5s;
+// }
+
+// .card-notification {
+//   bottom: 15%;
+//   left: -5%;
+//   animation-delay: -3s;
+// }
+
+// @keyframes floatCard {
+//   0%, 100% {
+//     transform: translateY(0);
+//   }
+//   50% {
+//     transform: translateY(-8px);
+//   }
+// }
+
+// @media (max-width: 1023px) {
+//   .floating-card {
+//     display: none;
+//   }
+// }
+
+// /* ========================================
+//    Section Styles
+//    ======================================== */
+// .section-header {
+//   text-align: center;
+//   margin-bottom: 2.5rem;
+// }
+
+// .section-badge {
+//   display: inline-block;
+//   padding: 0.375rem 0.875rem;
+//   background: rgba(37, 99, 235, 0.08);
+//   border: 1px solid rgba(37, 99, 235, 0.2);
+//   border-radius: 50px;
+//   color: var(--landing-primary);
+//   font-size: 0.75rem;
+//   font-weight: 600;
+//   margin-bottom: 0.875rem;
+// }
+
+// .section-header h2 {
+//   font-size: 1.75rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+//   margin-bottom: 0.625rem;
+// }
+
+// @media (min-width: 768px) {
+//   .section-header h2 {
+//     font-size: 2.125rem;
+//   }
+// }
+
+// .section-header p {
+//   font-size: 0.9375rem;
+//   color: var(--landing-text-gray);
+//   max-width: 550px;
+//   margin: 0 auto;
+// }
+
+// /* ========================================
+//    Features Section
+//    ======================================== */
+// .landing-features {
+//   padding: 5rem 0;
+//   background: var(--landing-bg-white);
+// }
+
+// .features-grid {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 1.25rem;
+// }
+
+// @media (min-width: 768px) {
+//   .features-grid {
+//     grid-template-columns: repeat(2, 1fr);
+//   }
+// }
+
+// @media (min-width: 1024px) {
+//   .features-grid {
+//     grid-template-columns: repeat(3, 1fr);
+//   }
+// }
+
+// .feature-card {
+//   padding: 1.5rem;
+//   background: var(--landing-bg-white);
+//   border: 1px solid var(--landing-border);
+//   border-radius: 14px;
+//   transition: all 0.3s;
+// }
+
+// .feature-card:hover {
+//   border-color: var(--landing-primary);
+//   box-shadow: 0 10px 30px rgba(37, 99, 235, 0.08);
+//   transform: translateY(-4px);
+// }
+
+// .feature-icon {
+//   width: 48px;
+//   height: 48px;
+//   background: rgba(37, 99, 235, 0.08);
+//   border-radius: 12px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   margin-bottom: 1rem;
+// }
+
+// .feature-icon svg {
+//   font-size: 1.375rem;
+//   color: var(--landing-primary);
+// }
+
+// .feature-card h3 {
+//   font-size: 1rem;
+//   font-weight: 600;
+//   color: var(--landing-text-dark);
+//   margin-bottom: 0.5rem;
+// }
+
+// .feature-card p {
+//   font-size: 0.875rem;
+//   color: var(--landing-text-gray);
+//   line-height: 1.6;
+// }
+
+// /* ========================================
+//    How It Works Section
+//    ======================================== */
+// .landing-how-it-works {
+//   padding: 5rem 0;
+//   background: var(--landing-bg-light);
+// }
+
+// .steps-container {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   gap: 1rem;
+// }
+
+// @media (min-width: 1024px) {
+//   .steps-container {
+//     flex-direction: row;
+//     justify-content: center;
+//     gap: 0;
+//   }
+// }
+
+// .step {
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   text-align: center;
+//   padding: 1.5rem;
+//   max-width: 280px;
+// }
+
+// .step-number {
+//   width: 44px;
+//   height: 44px;
+//   background: var(--landing-primary);
+//   border-radius: 50%;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   font-size: 1.125rem;
+//   font-weight: 700;
+//   color: white;
+//   margin-bottom: 1rem;
+// }
+
+// .step-content h3 {
+//   font-size: 1rem;
+//   font-weight: 600;
+//   color: var(--landing-text-dark);
+//   margin-bottom: 0.5rem;
+// }
+
+// .step-content p {
+//   font-size: 0.875rem;
+//   color: var(--landing-text-gray);
+// }
+
+// .step-image {
+//   margin-top: 1rem;
+// }
+
+// .step-image svg {
+//   font-size: 2.5rem;
+//   color: rgba(37, 99, 235, 0.2);
+// }
+
+// .step-connector {
+//   width: 2px;
+//   height: 40px;
+//   background: linear-gradient(180deg, var(--landing-primary) 0%, transparent 100%);
+// }
+
+// @media (min-width: 1024px) {
+//   .step-connector {
+//     width: 80px;
+//     height: 2px;
+//     background: linear-gradient(90deg, var(--landing-primary) 0%, transparent 100%);
+//   }
+// }
+
+// /* ========================================
+//    Benefits Section
+//    ======================================== */
+// .landing-benefits {
+//   padding: 5rem 0;
+//   background: var(--landing-bg-white);
+// }
+
+// .benefits-content {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 3rem;
+//   align-items: center;
+// }
+
+// @media (min-width: 1024px) {
+//   .benefits-content {
+//     grid-template-columns: 1fr 1fr;
+//   }
+// }
+
+// .benefits-text h2 {
+//   font-size: 1.75rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+//   margin: 0.875rem 0;
+// }
+
+// @media (min-width: 768px) {
+//   .benefits-text h2 {
+//     font-size: 2.125rem;
+//   }
+// }
+
+// .benefits-text > p {
+//   font-size: 0.9375rem;
+//   color: var(--landing-text-gray);
+//   margin-bottom: 1.75rem;
+// }
+
+// .benefits-list {
+//   list-style: none;
+//   padding: 0;
+//   margin: 0 0 1.75rem 0;
+//   display: flex;
+//   flex-direction: column;
+//   gap: 0.75rem;
+// }
+
+// .benefits-list li {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.625rem;
+//   font-size: 0.9375rem;
+//   color: var(--landing-text-dark);
+// }
+
+// .benefits-list li svg {
+//   font-size: 1.125rem;
+//   color: #22c55e;
+//   flex-shrink: 0;
+// }
+
+// /* Benefits Visual */
+// .benefits-visual {
+//   display: flex;
+//   justify-content: center;
+// }
+
+// .benefits-image-container {
+//   position: relative;
+//   width: 320px;
+//   height: 320px;
+// }
+
+// .benefit-food {
+//   position: absolute;
+//   object-fit: contain;
+//   filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1));
+//   animation: floatBenefit 6s ease-in-out infinite;
+// }
+
+// .food-main {
+//   width: 160px;
+//   top: 50%;
+//   left: 50%;
+//   transform: translate(-50%, -50%);
+//   z-index: 3;
+//   animation-name: floatBenefitMain;
+// }
+
+// .food-secondary {
+//   width: 100px;
+//   top: 5%;
+//   right: 5%;
+//   animation-delay: -2s;
+//   z-index: 2;
+// }
+
+// .food-tertiary {
+//   width: 90px;
+//   bottom: 10%;
+//   left: 5%;
+//   animation-delay: -4s;
+//   z-index: 2;
+// }
+
+// @keyframes floatBenefit {
+//   0%, 100% {
+//     transform: translateY(0) rotate(0deg);
+//   }
+//   50% {
+//     transform: translateY(-12px) rotate(3deg);
+//   }
+// }
+
+// @keyframes floatBenefitMain {
+//   0%, 100% {
+//     transform: translate(-50%, -50%) rotate(0deg);
+//   }
+//   50% {
+//     transform: translate(-50%, calc(-50% - 12px)) rotate(2deg);
+//   }
+// }
+
+// .benefits-stats-card {
+//   position: absolute;
+//   bottom: 10%;
+//   right: -5%;
+//   padding: 1rem;
+//   background: white;
+//   border: 1px solid var(--landing-border);
+//   border-radius: 12px;
+//   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+//   z-index: 4;
+//   animation: floatCard 4s ease-in-out infinite;
+// }
+
+// .stats-card-header {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.375rem;
+//   margin-bottom: 0.375rem;
+// }
+
+// .stats-card-header svg {
+//   font-size: 1rem;
+//   color: #22c55e;
+// }
+
+// .stats-card-header span {
+//   font-size: 0.6875rem;
+//   color: var(--landing-text-gray);
+// }
+
+// .stats-card-value {
+//   font-size: 1.625rem;
+//   font-weight: 700;
+//   color: #22c55e;
+// }
+
+// .stats-card-label {
+//   font-size: 0.6875rem;
+//   color: var(--landing-text-light);
+// }
+
+// /* ========================================
+//    CTA Section
+//    ======================================== */
+// .landing-cta {
+//   padding: 5rem 0;
+//   background: var(--landing-primary);
+//   position: relative;
+//   overflow: hidden;
+// }
+
+// .landing-cta::before {
+//   content: '';
+//   position: absolute;
+//   top: 0;
+//   left: 0;
+//   right: 0;
+//   bottom: 0;
+//   background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+// }
+
+// .cta-content {
+//   text-align: center;
+//   position: relative;
+//   z-index: 1;
+// }
+
+// .cta-content h2 {
+//   font-size: 1.75rem;
+//   font-weight: 700;
+//   color: white;
+//   margin-bottom: 0.625rem;
+// }
+
+// @media (min-width: 768px) {
+//   .cta-content h2 {
+//     font-size: 2.125rem;
+//   }
+// }
+
+// .cta-content p {
+//   font-size: 1rem;
+//   color: rgba(255, 255, 255, 0.9);
+//   margin-bottom: 1.75rem;
+//   max-width: 480px;
+//   margin-left: auto;
+//   margin-right: auto;
+// }
+
+// .cta-actions {
+//   display: flex;
+//   flex-wrap: wrap;
+//   justify-content: center;
+//   gap: 0.875rem;
+// }
+
+// .btn-cta-primary {
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 0.5rem;
+//   padding: 0.875rem 1.75rem;
+//   background: white;
+//   color: var(--landing-primary);
+//   text-decoration: none;
+//   font-size: 0.9375rem;
+//   font-weight: 600;
+//   border-radius: 10px;
+//   transition: all 0.3s;
+//   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+// }
+
+// .btn-cta-primary:hover {
+//   transform: translateY(-2px);
+//   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+// }
+
+// .btn-cta-secondary {
+//   display: inline-flex;
+//   align-items: center;
+//   gap: 0.5rem;
+//   padding: 0.875rem 1.75rem;
+//   background: transparent;
+//   border: 2px solid white;
+//   color: white;
+//   text-decoration: none;
+//   font-size: 0.9375rem;
+//   font-weight: 600;
+//   border-radius: 10px;
+//   transition: all 0.3s;
+// }
+
+// .btn-cta-secondary:hover {
+//   background: white;
+//   color: var(--landing-primary);
+// }
+
+// /* ========================================
+//    Footer
+//    ======================================== */
+// .landing-footer {
+//   padding: 4rem 0 2rem;
+//   background: var(--landing-bg-dark);
+//   color: white;
+// }
+
+// .footer-content {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 2.5rem;
+//   margin-bottom: 2.5rem;
+// }
+
+// @media (min-width: 768px) {
+//   .footer-content {
+//     grid-template-columns: 1.5fr 2fr;
+//   }
+// }
+
+// .footer-logo {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.625rem;
+//   text-decoration: none;
+//   margin-bottom: 0.875rem;
+// }
+
+// .footer-logo img {
+//   width: 36px;
+//   height: 36px;
+//   border-radius: 8px;
+// }
+
+// .footer-logo span {
+//   font-size: 1.375rem;
+//   font-weight: 700;
+//   color: white;
+// }
+
+// .footer-tagline {
+//   font-size: 0.875rem;
+//   color: rgba(255, 255, 255, 0.6);
+//   max-width: 300px;
+//   line-height: 1.6;
+// }
+
+// .footer-links {
+//   display: grid;
+//   grid-template-columns: repeat(3, 1fr);
+//   gap: 2rem;
+// }
+
+// .footer-column h4 {
+//   font-size: 0.875rem;
+//   font-weight: 600;
+//   color: white;
+//   margin-bottom: 0.875rem;
+// }
+
+// .footer-column a {
+//   display: block;
+//   font-size: 0.8125rem;
+//   color: rgba(255, 255, 255, 0.6);
+//   text-decoration: none;
+//   margin-bottom: 0.625rem;
+//   transition: color 0.3s;
+// }
+
+// .footer-column a:hover {
+//   color: var(--landing-primary-light);
+// }
+
+// .footer-bottom {
+//   padding-top: 2rem;
+//   border-top: 1px solid rgba(255, 255, 255, 0.1);
+//   text-align: center;
+// }
+
+// .footer-bottom p {
+//   font-size: 0.8125rem;
+//   color: rgba(255, 255, 255, 0.5);
+// }
+
+// /* ========================================
+//    Animations
+//    ======================================== */
+// .animate-on-scroll {
+//   opacity: 0;
+//   transform: translateY(25px);
+//   transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+// }
+
+// .animate-on-scroll.animate-in {
+//   opacity: 1;
+//   transform: translateY(0);
+// }
+
+// /* ========================================
+//    Responsive
+//    ======================================== */
+// @media (max-width: 767px) {
+//   .landing-header-actions .btn-login {
+//     display: none;
+//   }
+  
+//   .hero-slider {
+//     max-width: 320px;
+//     height: 350px;
+//   }
+  
+//   .hero-food-image {
+//     width: 180px;
+//     height: 180px;
+//   }
+  
+//   .benefits-image-container {
+//     width: 260px;
+//     height: 260px;
+//   }
+  
+//   .food-main {
+//     width: 130px;
+//   }
+  
+//   .food-secondary {
+//     width: 80px;
+//   }
+  
+//   .food-tertiary {
+//     width: 70px;
+//   }
+  
+//   .footer-links {
+//     grid-template-columns: repeat(2, 1fr);
+//     gap: 1.5rem;
+//   }
+// }
+// /* ========================================
+//    Header Responsive Fix
+//    ======================================== */
+// .btn-register-text {
+//   display: none;
+// }
+
+// @media (min-width: 480px) {
+//   .btn-register-text {
+//     display: inline;
+//   }
+// }
+
+// .btn-register {
+//   padding: 0.5rem 0.75rem;
+// }
+
+// @media (min-width: 480px) {
+//   .btn-register {
+//     padding: 0.5rem 1.25rem;
+//   }
+// }
+
+// /* Mobile Menu Toggle */
+// .mobile-menu-toggle {
+//   display: flex;
+//   flex-direction: column;
+//   justify-content: center;
+//   gap: 4px;
+//   width: 32px;
+//   height: 32px;
+//   background: none;
+//   border: none;
+//   cursor: pointer;
+//   padding: 4px;
+// }
+
+// .mobile-menu-toggle span {
+//   display: block;
+//   width: 100%;
+//   height: 2px;
+//   background: var(--landing-text-dark);
+//   border-radius: 2px;
+//   transition: all 0.3s;
+// }
+
+// @media (min-width: 768px) {
+//   .mobile-menu-toggle {
+//     display: none;
+//   }
+// }
+
+// /* Mobile Nav */
+// @media (max-width: 767px) {
+//   .landing-nav {
+//     position: absolute;
+//     top: 100%;
+//     left: 0;
+//     right: 0;
+//     background: white;
+//     flex-direction: column;
+//     padding: 1rem;
+//     gap: 0;
+//     border-bottom: 1px solid var(--landing-border);
+//     display: none;
+//   }
+  
+//   .landing-nav.open {
+//     display: flex;
+//   }
+  
+//   .landing-nav a {
+//     padding: 0.75rem 0;
+//     border-bottom: 1px solid var(--landing-border);
+//   }
+  
+//   .landing-nav a:last-child {
+//     border-bottom: none;
+//   }
+// }
+
+// /* ========================================
+//    Hero Visual - Fix floating cards overlap
+//    ======================================== */
+// .hero-slider {
+//   position: relative;
+//   width: 100%;
+//   max-width: 400px;
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: flex-start;
+//   padding-top: 2rem;
+// }
+
+// .hero-food-container {
+//   display: flex;
+//   justify-content: center;
+//   align-items: center;
+//   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+// }
+
+// .hero-food-info {
+//   text-align: center;
+//   margin-top: 1rem;
+//   padding: 0 1rem;
+//   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+//   position: relative;
+//   z-index: 10;
+//   background: var(--landing-bg-light);
+//   border-radius: 12px;
+//   padding: 1rem;
+// }
+
+// .hero-food-info.animating-out {
+//   opacity: 0;
+//   transform: translateX(50px);
+// }
+
+// .hero-food-info.animating-in {
+//   opacity: 1;
+//   transform: translateX(0);
+// }
+
+// /* Floating cards - repositionnés */
+// .floating-card {
+//   z-index: 5;
+// }
+
+// .card-order {
+//   top: 0;
+//   left: -15%;
+// }
+
+// .card-payment {
+//   top: 35%;
+//   right: -20%;
+// }
+
+// .card-notification {
+//   bottom: 30%;
+//   left: -10%;
+// }
+
+// @media (max-width: 1200px) {
+//   .card-order {
+//     left: -5%;
+//   }
+  
+//   .card-payment {
+//     right: -10%;
+//   }
+  
+//   .card-notification {
+//     left: 0;
+//   }
+// }
+
+// /* ========================================
+//    Download Section
+//    ======================================== */
+// .landing-download {
+//   padding: 5rem 0;
+//   background: var(--landing-bg-light);
+// }
+
+// .download-content {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 3rem;
+//   align-items: center;
+// }
+
+// @media (min-width: 1024px) {
+//   .download-content {
+//     grid-template-columns: 1fr 1fr;
+//   }
+// }
+
+// .download-text h2 {
+//   font-size: 1.75rem;
+//   font-weight: 700;
+//   color: var(--landing-text-dark);
+//   margin: 0.875rem 0;
+// }
+
+// @media (min-width: 768px) {
+//   .download-text h2 {
+//     font-size: 2.125rem;
+//   }
+// }
+
+// .download-text > p {
+//   font-size: 0.9375rem;
+//   color: var(--landing-text-gray);
+//   margin-bottom: 1.75rem;
+//   line-height: 1.7;
+// }
+
+// .download-buttons {
+//   display: flex;
+//   flex-wrap: wrap;
+//   gap: 1rem;
+//   margin-bottom: 1.5rem;
+// }
+
+// .download-btn {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.75rem;
+//   padding: 0.875rem 1.5rem;
+//   border-radius: 12px;
+//   text-decoration: none;
+//   transition: all 0.3s;
+//   min-width: 180px;
+// }
+
+// .download-btn svg {
+//   font-size: 1.75rem;
+// }
+
+// .download-btn-text {
+//   display: flex;
+//   flex-direction: column;
+// }
+
+// .download-btn-label {
+//   font-size: 0.6875rem;
+//   opacity: 0.8;
+// }
+
+// .download-btn-platform {
+//   font-size: 1rem;
+//   font-weight: 600;
+// }
+
+// .download-btn.android {
+//   background: #3ddc84;
+//   color: white;
+// }
+
+// .download-btn.android:hover {
+//   background: #32c972;
+//   transform: translateY(-2px);
+// }
+
+// .download-btn.ios {
+//   background: var(--landing-text-dark);
+//   color: white;
+// }
+
+// .download-btn.ios:hover {
+//   background: #000;
+//   transform: translateY(-2px);
+// }
+
+// .download-note {
+//   display: flex;
+//   align-items: center;
+//   gap: 0.5rem;
+//   font-size: 0.8125rem;
+//   color: var(--landing-text-gray);
+// }
+
+// .download-note svg {
+//   color: #22c55e;
+//   font-size: 1rem;
+// }
+
+// /* Phone Mockup - Image */
+// .download-visual {
+//   display: flex;
+//   justify-content: center;
+// }
+
+// .phone-mockup-image {
+//   max-width: 280px;
+//   width: 100%;
+//   height: auto;
+//   filter: drop-shadow(0 25px 50px rgba(0, 0, 0, 0.15));
+//   animation: floatPhone 4s ease-in-out infinite;
+// }
+
+// @keyframes floatPhone {
+//   0%, 100% {
+//     transform: translateY(0);
+//   }
+//   50% {
+//     transform: translateY(-15px);
+//   }
+// }
+
+// @media (max-width: 767px) {
+//   .phone-mockup-image {
+//     max-width: 220px;
+//   }
+// }
+
+// @media (max-width: 480px) {
+//   .phone-mockup-image {
+//     max-width: 180px;
+//   }
+// }
+
+// /* ========================================
+//    How It Works - Updated with icons
+//    ======================================== */
+// .step-icon-wrapper {
+//   width: 48px;
+//   height: 48px;
+//   background: rgba(37, 99, 235, 0.1);
+//   border-radius: 12px;
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+//   margin-bottom: 0.75rem;
+// }
+
+// .step-icon-wrapper svg {
+//   font-size: 1.5rem;
+//   color: var(--landing-primary);
+// }
+
+// .step-image {
+//   display: none;
+// }
+
+// /* ========================================
+//    Responsive fixes
+//    ======================================== */
+// @media (max-width: 767px) {
+//   .landing-header .landing-container {
+//     padding: 0 1rem;
+//   }
+  
+//   .landing-header-actions {
+//     gap: 0.5rem;
+//   }
+  
+//   .btn-login {
+//     padding: 0.375rem 0.625rem;
+//     font-size: 0.8125rem;
+//   }
+  
+//   .btn-register {
+//     padding: 0.375rem 0.625rem;
+//     font-size: 0.8125rem;
+//   }
+  
+//   .btn-register svg {
+//     font-size: 1rem;
+//   }
+  
+//   .hero-title {
+//     font-size: 1.875rem;
+//   }
+  
+//   .hero-subtitle {
+//     font-size: 0.9375rem;
+//   }
+  
+//   .hero-actions {
+//     flex-direction: column;
+//     align-items: stretch;
+//   }
+  
+//   .hero-actions a,
+//   .hero-actions button {
+//     justify-content: center;
+//   }
+  
+//   .hero-stats {
+//     gap: 1rem;
+//   }
+  
+//   .stat-number {
+//     font-size: 1.25rem;
+//   }
+  
+//   .hero-slider {
+//     max-width: 300px;
+//   }
+  
+//   .hero-food-image {
+//     width: 160px;
+//     height: 160px;
+//   }
+  
+//   .download-btn {
+//     min-width: auto;
+//     flex: 1;
+//   }
+  
+//   .phone-mockup {
+//     width: 180px;
+//     height: 360px;
+//   }
+// }
+
+// @media (max-width: 480px) {
+//   .hero-stat-divider {
+//     display: none;
+//   }
+  
+//   .hero-stats {
+//     flex-wrap: wrap;
+//     justify-content: space-around;
+//   }
+  
+//   .download-buttons {
+//     flex-direction: column;
+//   }
+  
+//   .download-btn {
+//     width: 100%;
+//     justify-content: center;
+//   }
+// }

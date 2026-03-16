@@ -1,4 +1,3 @@
-// src/api/dashboard.js
 import client from "./client";
 
 // ---------------- config ----------------
@@ -8,27 +7,19 @@ const DASH_TIMEOUT = 10000;
 const clean = (p = {}) =>
   Object.fromEntries(Object.entries(p).filter(([, v]) => v !== "" && v != null));
 
-/**
- * unwrap() robuste:
- * - supporte data/result/payload/response (plusieurs couches)
- * - ne casse pas si backend renvoie directement un array
- */
 const unwrap = (x) => {
   let v = x;
   for (let i = 0; i < 4; i++) {
     if (v == null) break;
     if (Array.isArray(v)) break;
     if (typeof v !== "object") break;
-    v = v.data ?? v.result ?? v.payload ?? v.response ?? v;
+    const next = v.data ?? v.result ?? v.payload ?? v.response;
+    if (!next || next === v) break;
+    v = next;
   }
   return v;
 };
 
-/**
- * arr() robuste:
- * supporte: [] | {items:[]} | {data:[]} | {result:[]} | {payload:[]} | {topSellingItems:[]}
- * + variantes backend fréquentes
- */
 const arr = (v) => {
   const x = unwrap(v);
   if (Array.isArray(x)) return x;
@@ -45,7 +36,6 @@ const arr = (v) => {
   if (Array.isArray(x?.top_sell)) return x.top_sell;
   if (Array.isArray(x?.topSell)) return x.topSell;
 
-  // resto variants
   if (Array.isArray(x?.meilleurs_ventes)) return x.meilleurs_ventes;
 
   return [];
@@ -64,21 +54,21 @@ const num = (v) => {
 const pick = (obj, keys) => {
   const o = unwrap(obj);
   if (!o || typeof o !== "object") return undefined;
-  for (const k of keys) if (o[k] != null) return o[k];
+  for (const k of keys) {
+    if (o[k] != null) return o[k];
+  }
   return undefined;
 };
 
-//  IMPORTANT: ne JAMAIS fallback sur src.id (souvent user.id)
 const resolveRestaurantId = (src = {}) => {
   const s = src ?? {};
 
-  // selector admin peut être {id,_id,name} ou string
   const adminSelected =
     typeof s.restaurant === "object" && s.restaurant
       ? s.restaurant.id ?? s.restaurant._id ?? null
       : typeof s.restaurant === "string"
-        ? s.restaurant
-        : null;
+      ? s.restaurant
+      : null;
 
   return (
     s.restaurantId ??
@@ -96,7 +86,7 @@ const resolveRestaurantId = (src = {}) => {
   );
 };
 
-// ---------------- normalizers CORRIGÉS ----------------
+// ---------------- normalizers ----------------
 const normalizeRevenus = (raw) => {
   const list = arr(raw);
 
@@ -104,7 +94,7 @@ const normalizeRevenus = (raw) => {
     .map((x) => ({
       date:
         x?.date ??
-        x?._id ??                    // 👈 CORRECTION ICI
+        x?._id ??
         x?.day ??
         x?.jour ??
         x?.x ??
@@ -113,15 +103,15 @@ const normalizeRevenus = (raw) => {
         "",
       value: num(
         x?.value ??
-        x?.total ??
-        x?.amount ??
-        x?.revenue ??
-        x?.totalRevenue ??
-        x?.revenu ??
-        x?.revenuTotal ??
-        x?.montant_total ??
-        x?.chiffreAffaire ??
-        x?.y
+          x?.total ??
+          x?.amount ??
+          x?.revenue ??
+          x?.totalRevenue ??
+          x?.revenu ??
+          x?.revenuTotal ??
+          x?.montant_total ??
+          x?.chiffreAffaire ??
+          x?.y
       ),
     }))
     .filter((p) => p.date !== "");
@@ -197,6 +187,102 @@ const extractStatusPayload = (raw) => {
   return v?.status ?? v?.ordersStatus ?? v?.byStatus ?? v?.breakdown ?? v ?? null;
 };
 
+const normalizeRecentOrderItemsCount = (o) => {
+  const direct =
+    o?.itemsCount ??
+    o?.items_count ??
+    o?.nbrItems ??
+    o?.nbItems ??
+    o?.nombreItems ??
+    o?.quantite ??
+    o?.quantity;
+
+  if (direct != null && direct !== "") return num(direct);
+
+  if (typeof o?.items === "number" || typeof o?.items === "string") {
+    return num(o.items);
+  }
+
+  if (Array.isArray(o?.items)) {
+    const totalQty = o.items.reduce(
+      (acc, it) =>
+        acc +
+        num(it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0),
+      0
+    );
+    return totalQty || o.items.length;
+  }
+
+  if (Array.isArray(o?.orderItems)) {
+    const totalQty = o.orderItems.reduce(
+      (acc, it) =>
+        acc +
+        num(it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0),
+      0
+    );
+    return totalQty || o.orderItems.length;
+  }
+
+  return 0;
+};
+
+const normalizeRecentOrders = (raw) => {
+  const list = arr(raw);
+
+  return list.map((o, idx) => ({
+    id:
+      o?.order_number ??
+      o?.orderNumber ??
+      o?.id ??
+      o?._id ??
+      o?.orderId ??
+      o?.commandeId ??
+      o?.numero ??
+      o?.reference ??
+      o?.ref ??
+      `row-${idx}`,
+
+    order_number:
+      o?.order_number ??
+      o?.orderNumber ??
+      o?.reference ??
+      o?.ref ??
+      o?.id ??
+      o?._id ??
+      `row-${idx}`,
+
+    customer_name:
+      o?.customer_name ??
+      o?.customerName ??
+      o?.client_name ??
+      o?.clientName ??
+      o?.nomClient ??
+      o?.nom_client ??
+      o?.customer?.name ??
+      o?.customer?.nom ??
+      o?.client?.name ??
+      o?.client?.nom ??
+      "—",
+
+    total_amount: num(
+      o?.total_amount ??
+        o?.total ??
+        o?.amount ??
+        o?.montant ??
+        o?.priceTotal ??
+        o?.totalPrice ??
+        o?.somme ??
+        o?.revenue
+    ),
+
+    status: o?.status ?? o?.etat ?? o?.state ?? "pending",
+
+    items: normalizeRecentOrderItemsCount(o),
+
+    createdAt: o?.createdAt ?? o?.created_at ?? o?.date ?? null,
+  }));
+};
+
 // ---------------- http helpers ----------------
 const toAxiosErrorMessage = (err) => {
   const status = err?.response?.status;
@@ -209,7 +295,11 @@ const toAxiosErrorMessage = (err) => {
 };
 
 const safeGet = async (url, params, signal) => {
-  const res = await client.get(url, { params, timeout: DASH_TIMEOUT, signal });
+  const res = await client.get(url, {
+    params,
+    timeout: DASH_TIMEOUT,
+    signal,
+  });
   return res?.data;
 };
 
@@ -228,10 +318,6 @@ const readSettled = (r, label) => {
 
 // ---------------- bases ----------------
 const ADMIN_BASE = "/admin/dashboard";
-
-// RESTAURANT: backend actuel en mix
-// - stats déplacé sur /order/:id/stats
-// - le reste répond encore sur /commande/:id/*
 const restoCommandeBase = (id) => `/commande/${encodeURIComponent(id)}`;
 const restoOrderBase = (id) => `/order/${encodeURIComponent(id)}`;
 
@@ -242,7 +328,6 @@ const buildAdminParams = (src, restaurantId) =>
     restaurant_id: restaurantId || undefined,
     id_restaurant: restaurantId || undefined,
     idRestaurant: restaurantId || undefined,
-
     from: src.from ?? src.startDate,
     to: src.to ?? src.endDate,
     period: src.period,
@@ -257,7 +342,6 @@ const buildRestaurantParams = (src) =>
 
 // ---------------- API ----------------
 const dashboardAPI = {
-  // ADMIN: global (sans restaurantId) OU filtré (avec restaurantId)
   getAdminDashboard: async (args = {}) => {
     const src = args.filters ?? args;
     const restaurantId = resolveRestaurantId(src);
@@ -286,17 +370,16 @@ const dashboardAPI = {
         ordersStatus: statusPayload ? normalizeStatus(statusPayload) : [],
       },
       topSellingItems: arr(topSell),
-      recentOrders: arr(recentOrders),
+      recentOrders: normalizeRecentOrders(recentOrders),
       topRestaurants: [],
       hourlyOrders: [],
     };
   },
 
-  // RESTAURANT: routes existantes (stats sur /order, reste sur /commande)
   getRestaurantDashboard: async (args = {}) => {
     const src = args.filters ?? args;
-
-    const restaurantId = args.restaurantId ?? args.restaurentId ?? resolveRestaurantId(src);
+    const restaurantId =
+      args.restaurantId ?? args.restaurentId ?? resolveRestaurantId(src);
 
     if (!restaurantId) {
       return {
@@ -312,7 +395,7 @@ const dashboardAPI = {
     const params = buildRestaurantParams(src);
 
     const results = await Promise.allSettled([
-      safeGet(`${restoOrderBase(restaurantId)}/stats`, params, args.signal), // FIX: /order/:id/stats
+      safeGet(`${restoOrderBase(restaurantId)}/stats`, params, args.signal),
       safeGet(`${restoCommandeBase(restaurantId)}/revenus`, params, args.signal),
       safeGet(`${restoCommandeBase(restaurantId)}/status`, params, args.signal),
       safeGet(`${restoCommandeBase(restaurantId)}/meilleurs_ventes`, params, args.signal),
@@ -334,7 +417,7 @@ const dashboardAPI = {
         ordersStatus: normalizeStatus(status),
       },
       topSellingItems: arr(topSell),
-      recentOrders: arr(recentOrders),
+      recentOrders: normalizeRecentOrders(recentOrders),
       topRestaurants: [],
       hourlyOrders: [],
     };

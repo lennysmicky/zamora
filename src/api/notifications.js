@@ -1,77 +1,150 @@
-// src/api/notifications.js
-import client from './client';
+import client from "./client";
 
-// =========================
-// PARAMÈTRES DE NOTIFICATION
-// =========================
-// À conserver seulement si ces routes existent dans ton backend
-
-export const getNotificationSettings = async (restaurantId = null) => {
-  const url = restaurantId
-    ? `/notifications/settings/${restaurantId}`
-    : '/notifications/settings';
-
-  const response = await client.get(url);
-  return response.data;
+const getErrorMessage = (err) => {
+  return (
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    err?.message ||
+    "Request failed"
+  );
 };
 
-export const updateNotificationSettings = async (data, restaurantId = null) => {
-  const url = restaurantId
-    ? `/notifications/settings/${restaurantId}`
-    : '/notifications/settings';
+export const getNotificationSettings = async (restaurantId) => {
+  if (!restaurantId) {
+    throw new Error("restaurantId est requis pour récupérer les paramètres de notification");
+  }
 
-  const response = await client.put(url, data);
-  return response.data;
+  try {
+    const response = await client.get(`/notification/settings/${restaurantId}`);
+    console.log("GET notification settings response =", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("GET notification settings error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// =========================
-// NOTIFICATIONS
-// =========================
+export const updateNotificationSettings = async (data, restaurantId) => {
+  if (!restaurantId) {
+    throw new Error("restaurantId est requis pour modifier les paramètres de notification");
+  }
 
-// Statistiques des notifications
+  const payload = {
+    events: {
+      newOrder: !!data?.events?.newOrder,
+      orderClient: !!data?.events?.orderClient,
+      statusOrderChanged: !!data?.events?.statusOrderChanged,
+      promotion: !!data?.events?.promotion,
+    },
+    channels: {
+      email: !!data?.channels?.email,
+      push: !!data?.channels?.push,
+    },
+  };
+
+  try {
+    console.log("PUT notification settings url =", `/notification/settings/${restaurantId}`);
+    console.log("PUT notification settings payload =", payload);
+
+    const response = await client.put(`/notification/settings/${restaurantId}`, payload);
+
+    console.log("PUT notification settings response =", response.data);
+    return response.data;
+  } catch (err) {
+    console.error("PUT notification settings error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
+};
+
 export const getNotificationStats = async (params = {}) => {
-  const response = await client.get('/notification/stats', { params });
-  return response.data;
+  try {
+    const response = await client.get("/notification/stats", { params });
+    return response.data;
+  } catch (err) {
+    console.error("GET notification stats error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Liste des notifications
 export const getNotificationsLog = async (params = {}) => {
-  const response = await client.get('/notification', { params });
-  return response.data;
+  try {
+    const response = await client.get("/notification", { params });
+    return response.data;
+  } catch (err) {
+    console.error("GET notifications log error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Détail d'une notification
 export const getNotificationById = async (id) => {
-  const response = await client.get(`/notification/${id}`);
-  return response.data;
+  try {
+    const response = await client.get(`/notification/${id}`);
+    return response.data;
+  } catch (err) {
+    console.error("GET notification by id error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Créer une notification
 export const createNotification = async (data) => {
-  const response = await client.post('/notification', data);
-  return response.data;
+  try {
+    const response = await client.post("/notification", data);
+    return response.data;
+  } catch (err) {
+    console.error("POST notification error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Modifier une notification
 export const updateNotification = async (id, data) => {
-  const response = await client.put(`/notification/${id}`, data);
-  return response.data;
+  try {
+    const response = await client.put(`/notification/${id}`, data);
+    return response.data;
+  } catch (err) {
+    console.error("PUT notification error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Supprimer une notification
 export const deleteNotificationLog = async (id) => {
-  const response = await client.delete(`/notification/${id}`);
-  return response.data;
+  try {
+    const response = await client.delete(`/notification/${id}`);
+    return response.data;
+  } catch (err) {
+    console.error("DELETE notification error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Marquer une notification comme lue
 export const markNotificationAsRead = async (notificationId) => {
-  const response = await client.put(`/notification/read/${notificationId}`);
-  return response.data;
+  try {
+    const response = await client.put(`/notification/read/${notificationId}`);
+    return response.data;
+  } catch (err) {
+    console.error("PUT mark as read error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
 };
 
-// Nombre de notifications non lues
 export const getUnreadNotificationCount = async (userId) => {
-  const response = await client.get(`/notification/count/${userId}`);
-  return response.data;
+  try {
+    const response = await client.get(`/notification/count/${userId}`);
+    return response.data;
+  } catch (err) {
+    console.error("GET unread count error =", err?.response || err);
+    throw new Error(getErrorMessage(err));
+  }
+};
+
+export default {
+  getNotificationSettings,
+  updateNotificationSettings,
+  getNotificationStats,
+  getNotificationsLog,
+  getNotificationById,
+  createNotification,
+  updateNotification,
+  deleteNotificationLog,
+  markNotificationAsRead,
+  getUnreadNotificationCount,
 };

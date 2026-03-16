@@ -21,12 +21,18 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
   const normalizeStatus = (s) => {
     const v = String(s ?? "").toLowerCase();
 
-    if (["livres", "livree", "livré", "livrée", "delivered"].includes(v)) return "delivered";
+    if (["livres", "livree", "livré", "livrée", "delivered"].includes(v)) {
+      return "delivered";
+    }
     if (["in_preparation", "en_preparation", "preparing", "préparation", "preparation"].includes(v)) {
       return "preparing";
     }
-    if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) return "out_for_delivery";
-    if (["en_attente", "attente", "pending"].includes(v)) return "pending";
+    if (["out_for_delivery", "en_livraison", "delivery"].includes(v)) {
+      return "out_for_delivery";
+    }
+    if (["en_attente", "attente", "pending"].includes(v)) {
+      return "pending";
+    }
     if (["annules", "annulee", "annulé", "annulée", "cancelled", "canceled"].includes(v)) {
       return "cancelled";
     }
@@ -87,11 +93,7 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
 
       if (direct) return String(direct);
 
-      const c =
-        o?.customer ??
-        o?.client ??
-        o?.user ??
-        o?.utilisateur;
+      const c = o?.customer ?? o?.client ?? o?.user ?? o?.utilisateur;
 
       if (typeof c === "string") return c;
       if (c && typeof c === "object") {
@@ -111,8 +113,16 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
         o?.quantite ??
         o?.quantity;
 
-      if (direct != null && direct !== "") return Number(direct) || 0;
+      if (direct != null && direct !== "") {
+        return Number(direct) || 0;
+      }
 
+      // Cas backend actuel: items est directement un nombre
+      if (typeof o?.items === "number" || typeof o?.items === "string") {
+        return Number(o.items) || 0;
+      }
+
+      // Cas classique: items est un tableau
       if (Array.isArray(o?.items)) {
         const sumQty = o.items.reduce(
           (acc, it) =>
@@ -125,7 +135,18 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
         return sumQty || o.items.length;
       }
 
-      if (Array.isArray(o?.orderItems)) return o.orderItems.length;
+      if (Array.isArray(o?.orderItems)) {
+        const sumQty = o.orderItems.reduce(
+          (acc, it) =>
+            acc +
+            (Number(
+              it?.quantite ?? it?.quantity ?? it?.qty ?? it?.qte ?? it?.count ?? 0
+            ) || 0),
+          0
+        );
+        return sumQty || o.orderItems.length;
+      }
+
       return 0;
     };
 
@@ -167,7 +188,7 @@ const RecentOrdersTable = ({ data = [], isLoading = false, linkFilters = {} }) =
         raw: o,
       };
     });
-  }, [data]);
+  }, [data, t]);
 
   if (isLoading) {
     return (

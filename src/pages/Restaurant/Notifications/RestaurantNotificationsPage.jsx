@@ -1,6 +1,5 @@
-// src/pages/Restaurant/Notifications/RestaurantNotificationsPage.jsx
-import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RiSettings4Line,
   RiFileList3Line,
@@ -18,12 +17,12 @@ import {
   RiCloseCircleLine,
   RiDeleteBinLine,
   RiMailSendLine,
-  RiSmartphoneLine
-} from 'react-icons/ri';
-import useNotifications from '../../../hooks/useNotifications';
-import ConfirmDialog from '../../../components/common/ConfirmDialog';
-import LoadingSpinner from '../../../components/common/LoadingSpinner';
-import './RestaurantNotificationsPage.css';
+  RiSmartphoneLine,
+} from "react-icons/ri";
+import useNotifications from "../../../hooks/useNotifications";
+import ConfirmDialog from "../../../components/common/ConfirmDialog";
+import LoadingSpinner from "../../../components/common/LoadingSpinner";
+import "./RestaurantNotificationsPage.css";
 
 const RestaurantNotificationsPage = () => {
   const { t } = useTranslation();
@@ -40,32 +39,36 @@ const RestaurantNotificationsPage = () => {
     updateSetting,
     fetchLogs,
     fetchStats,
-    removeLog
+    removeLog,
+    clearMessages,
   } = useNotifications();
 
-  const [activeTab, setActiveTab] = useState('settings');
+  const [activeTab, setActiveTab] = useState("settings");
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
   const [selectedLogId, setSelectedLogId] = useState(null);
 
+  const loadLogsAndStats = useCallback(async () => {
+    await Promise.all([fetchLogs(), fetchStats()]);
+  }, [fetchLogs, fetchStats]);
+
   useEffect(() => {
-    if (activeTab === 'log') {
-      fetchLogs();
-      fetchStats();
+    if (activeTab === "log") {
+      loadLogsAndStats();
     }
-  }, [activeTab, fetchLogs, fetchStats]);
+  }, [activeTab, loadLogsAndStats]);
 
   const handleSave = async () => {
     await saveSettings(settings);
   };
 
-  const handleRefresh = () => {
-    if (activeTab === 'log') {
-      fetchLogs();
-      fetchStats();
+  const handleRefresh = async () => {
+    if (activeTab === "log") {
+      await loadLogsAndStats();
     }
   };
 
   const handleDeleteLog = (id) => {
+    if (!id) return;
     setSelectedLogId(id);
     setShowConfirmDelete(true);
   };
@@ -84,13 +87,15 @@ const RestaurantNotificationsPage = () => {
 
   const getEventIcon = (eventType) => {
     switch (eventType) {
-      case 'new_order':
-      case 'commande':
+      case "new_order":
+      case "commande":
+      case "newOrder":
         return <RiShoppingBag3Line />;
-      case 'status_change':
-      case 'changement_statut':
+      case "status_change":
+      case "changement_statut":
+      case "statusOrderChanged":
         return <RiExchangeLine />;
-      case 'promotion':
+      case "promotion":
         return <RiMegaphoneLine />;
       default:
         return <RiNotification3Line />;
@@ -99,14 +104,14 @@ const RestaurantNotificationsPage = () => {
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'sent':
-      case 'envoye':
+      case "sent":
+      case "envoye":
         return <RiCheckboxCircleLine />;
-      case 'pending':
-      case 'en_attente':
+      case "pending":
+      case "en_attente":
         return <RiTimeLine />;
-      case 'failed':
-      case 'echec':
+      case "failed":
+      case "echec":
         return <RiCloseCircleLine />;
       default:
         return <RiTimeLine />;
@@ -115,29 +120,65 @@ const RestaurantNotificationsPage = () => {
 
   const getChannelIcon = (channel) => {
     switch (channel) {
-      case 'email':
+      case "email":
         return <RiMailLine />;
-      case 'push':
+      case "push":
         return <RiNotification4Line />;
-      case 'sms':
+      case "sms":
         return <RiSmartphoneLine />;
       default:
         return <RiNotification4Line />;
     }
   };
 
+  const getEventLabel = (eventType) => {
+    switch (eventType) {
+      case "new_order":
+      case "newOrder":
+      case "commande":
+        return t("notifications.eventType.new_order", "Nouvelle commande");
+
+      case "status_change":
+      case "statusOrderChanged":
+      case "changement_statut":
+        return t("notifications.eventType.status_change", "Changement de statut");
+
+      case "promotion":
+        return t("notifications.eventType.promotion", "Promotion");
+
+      default:
+        return t("notifications.eventType.default", "Notification");
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "sent":
+      case "envoye":
+        return t("notifications.status.sent", "Envoyée");
+      case "pending":
+      case "en_attente":
+        return t("notifications.status.pending", "En attente");
+      case "failed":
+      case "echec":
+        return t("notifications.status.failed", "Échouée");
+      default:
+        return t("notifications.status.pending", "En attente");
+    }
+  };
+
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
+    if (!dateString) return "-";
 
     try {
-      return new Date(dateString).toLocaleString('fr-FR', {
-        day: '2-digit',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit'
+      return new Date(dateString).toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
-      return '-';
+      return "-";
     }
   };
 
@@ -145,16 +186,20 @@ const RestaurantNotificationsPage = () => {
     total: stats?.total ?? 0,
     sent: stats?.sent ?? 0,
     pending: stats?.pending ?? 0,
-    failed: stats?.failed ?? 0
+    failed: stats?.failed ?? 0,
   };
 
   const safeSettings = {
-    notify_owner_new_order: settings?.notify_owner_new_order ?? true,
-    notify_client_order_created: settings?.notify_client_order_created ?? true,
-    notify_client_status_change: settings?.notify_client_status_change ?? true,
-    notify_client_new_promotion: settings?.notify_client_new_promotion ?? false,
-    channel_email: settings?.channel_email ?? true,
-    channel_push: settings?.channel_push ?? false
+    events: {
+      newOrder: settings?.events?.newOrder ?? true,
+      orderClient: settings?.events?.orderClient ?? true,
+      statusOrderChanged: settings?.events?.statusOrderChanged ?? true,
+      promotion: settings?.events?.promotion ?? false,
+    },
+    channels: {
+      email: settings?.channels?.email ?? true,
+      push: settings?.channels?.push ?? false,
+    },
   };
 
   return (
@@ -162,42 +207,56 @@ const RestaurantNotificationsPage = () => {
       <div className="notifications-header-row">
         <div className="notifications-tabs">
           <button
-            className={`notifications-tab ${activeTab === 'settings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('settings')}
+            className={`notifications-tab ${activeTab === "settings" ? "active" : ""}`}
+            onClick={() => {
+              clearMessages?.();
+              setActiveTab("settings");
+            }}
+            type="button"
           >
             <RiSettings4Line />
-            <span>{t('notifications.settings')}</span>
+            <span>{t("notifications.settings", "Paramètres")}</span>
           </button>
 
           <button
-            className={`notifications-tab ${activeTab === 'log' ? 'active' : ''}`}
-            onClick={() => setActiveTab('log')}
+            className={`notifications-tab ${activeTab === "log" ? "active" : ""}`}
+            onClick={() => {
+              clearMessages?.();
+              setActiveTab("log");
+            }}
+            type="button"
           >
             <RiFileList3Line />
-            <span>{t('notifications.log')}</span>
+            <span>{t("notifications.log", "Journal")}</span>
           </button>
         </div>
 
         <div className="notifications-header-actions">
-          {activeTab === 'log' && (
+          {activeTab === "log" && (
             <button
               className="notifications-btn-secondary"
               onClick={handleRefresh}
               disabled={loading}
-              title={t('common.refresh')}
+              title={t("common.refresh", "Rafraîchir")}
+              type="button"
             >
-              <RiRefreshLine className={loading ? 'spin' : ''} />
+              <RiRefreshLine className={loading ? "spin" : ""} />
             </button>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === "settings" && (
             <button
               className="notifications-btn-primary"
               onClick={handleSave}
               disabled={saving}
+              type="button"
             >
               {saving ? <RiLoader4Line className="spin" /> : <RiSave3Line />}
-              <span>{saving ? t('notifications.saving') : t('notifications.save')}</span>
+              <span>
+                {saving
+                  ? t("notifications.saving", "Enregistrement...")
+                  : t("notifications.save", "Enregistrer")}
+              </span>
             </button>
           )}
         </div>
@@ -217,12 +276,8 @@ const RestaurantNotificationsPage = () => {
         </div>
       )}
 
-      {activeTab === 'settings' ? (
-        <SettingsTab
-          settings={safeSettings}
-          updateSetting={updateSetting}
-          t={t}
-        />
+      {activeTab === "settings" ? (
+        <SettingsTab settings={safeSettings} updateSetting={updateSetting} t={t} />
       ) : (
         <LogsTab
           logs={logs || []}
@@ -232,6 +287,8 @@ const RestaurantNotificationsPage = () => {
           getEventIcon={getEventIcon}
           getStatusIcon={getStatusIcon}
           getChannelIcon={getChannelIcon}
+          getEventLabel={getEventLabel}
+          getStatusLabel={getStatusLabel}
           formatDate={formatDate}
           t={t}
         />
@@ -244,10 +301,13 @@ const RestaurantNotificationsPage = () => {
           setSelectedLogId(null);
         }}
         onConfirm={confirmDeleteLog}
-        title={t('notifications.deleteTitle')}
-        message={t('notifications.deleteConfirm')}
-        confirmText={t('notifications.delete')}
-        cancelText={t('notifications.cancel')}
+        title={t("notifications.deleteTitle", "Supprimer la notification")}
+        message={t(
+          "notifications.deleteConfirm",
+          "Voulez-vous vraiment supprimer cette notification ?"
+        )}
+        confirmText={t("notifications.delete", "Supprimer")}
+        cancelText={t("notifications.cancel", "Annuler")}
         variant="danger"
       />
     </div>
@@ -260,33 +320,36 @@ const SettingsTab = ({ settings, updateSetting, t }) => {
       <div className="notifications-card">
         <div className="notifications-card-header">
           <RiNotification3Line />
-          <h3>{t('notifications.events')}</h3>
+          <h3>{t("notifications.events", "Événements")}</h3>
         </div>
 
         <div className="notifications-card-body">
           <ToggleItem
             icon={<RiShoppingBag3Line />}
-            label={t('notifications.ownerNewOrder')}
-            checked={settings.notify_owner_new_order}
-            onChange={(value) => updateSetting('notify_owner_new_order', value)}
+            label={t("notifications.ownerNewOrder", "Nouvelle commande restaurant")}
+            checked={settings.events.newOrder}
+            onChange={(value) => updateSetting("events.newOrder", value)}
           />
+
           <ToggleItem
             icon={<RiMailSendLine />}
-            label={t('notifications.clientOrderCreated')}
-            checked={settings.notify_client_order_created}
-            onChange={(value) => updateSetting('notify_client_order_created', value)}
+            label={t("notifications.clientOrderCreated", "Commande créée côté client")}
+            checked={settings.events.orderClient}
+            onChange={(value) => updateSetting("events.orderClient", value)}
           />
+
           <ToggleItem
             icon={<RiExchangeLine />}
-            label={t('notifications.clientStatusChange')}
-            checked={settings.notify_client_status_change}
-            onChange={(value) => updateSetting('notify_client_status_change', value)}
+            label={t("notifications.clientStatusChange", "Changement de statut de commande")}
+            checked={settings.events.statusOrderChanged}
+            onChange={(value) => updateSetting("events.statusOrderChanged", value)}
           />
+
           <ToggleItem
             icon={<RiMegaphoneLine />}
-            label={t('notifications.clientNewPromotion')}
-            checked={settings.notify_client_new_promotion}
-            onChange={(value) => updateSetting('notify_client_new_promotion', value)}
+            label={t("notifications.clientNewPromotion", "Promotion")}
+            checked={settings.events.promotion}
+            onChange={(value) => updateSetting("events.promotion", value)}
           />
         </div>
       </div>
@@ -294,21 +357,22 @@ const SettingsTab = ({ settings, updateSetting, t }) => {
       <div className="notifications-card">
         <div className="notifications-card-header">
           <RiMailLine />
-          <h3>{t('notifications.channels')}</h3>
+          <h3>{t("notifications.channels", "Canaux")}</h3>
         </div>
 
         <div className="notifications-card-body">
           <ToggleItem
             icon={<RiMailLine />}
-            label={t('notifications.channelEmail')}
-            checked={settings.channel_email}
-            onChange={(value) => updateSetting('channel_email', value)}
+            label={t("notifications.channelEmail", "Email")}
+            checked={settings.channels.email}
+            onChange={(value) => updateSetting("channels.email", value)}
           />
+
           <ToggleItem
             icon={<RiNotification4Line />}
-            label={t('notifications.channelPush')}
-            checked={settings.channel_push}
-            onChange={(value) => updateSetting('channel_push', value)}
+            label={t("notifications.channelPush", "Push")}
+            checked={settings.channels.push}
+            onChange={(value) => updateSetting("channels.push", value)}
           />
         </div>
       </div>
@@ -323,6 +387,7 @@ const ToggleItem = ({ icon, label, checked = false, onChange }) => {
         <span className="notifications-toggle-icon">{icon}</span>
         <span className="notifications-toggle-text">{label}</span>
       </div>
+
       <div className="notifications-toggle-switch-wrapper">
         <input
           type="checkbox"
@@ -343,8 +408,10 @@ const LogsTab = ({
   getEventIcon,
   getStatusIcon,
   getChannelIcon,
+  getEventLabel,
+  getStatusLabel,
   formatDate,
-  t
+  t,
 }) => {
   return (
     <div className="notifications-logs">
@@ -355,7 +422,9 @@ const LogsTab = ({
           </div>
           <div className="notifications-stat-content">
             <span className="notifications-stat-value">{stats.total}</span>
-            <span className="notifications-stat-label">Total</span>
+            <span className="notifications-stat-label">
+              {t("notifications.total", "Total")}
+            </span>
           </div>
         </div>
 
@@ -365,7 +434,9 @@ const LogsTab = ({
           </div>
           <div className="notifications-stat-content">
             <span className="notifications-stat-value">{stats.sent}</span>
-            <span className="notifications-stat-label">{t('notifications.status.sent')}</span>
+            <span className="notifications-stat-label">
+              {t("notifications.status.sent", "Envoyées")}
+            </span>
           </div>
         </div>
 
@@ -375,7 +446,9 @@ const LogsTab = ({
           </div>
           <div className="notifications-stat-content">
             <span className="notifications-stat-value">{stats.pending}</span>
-            <span className="notifications-stat-label">{t('notifications.status.pending')}</span>
+            <span className="notifications-stat-label">
+              {t("notifications.status.pending", "En attente")}
+            </span>
           </div>
         </div>
 
@@ -385,7 +458,9 @@ const LogsTab = ({
           </div>
           <div className="notifications-stat-content">
             <span className="notifications-stat-value">{stats.failed}</span>
-            <span className="notifications-stat-label">{t('notifications.status.failed')}</span>
+            <span className="notifications-stat-label">
+              {t("notifications.status.failed", "Échouées")}
+            </span>
           </div>
         </div>
       </div>
@@ -393,7 +468,7 @@ const LogsTab = ({
       <div className="notifications-card notifications-logs-card">
         <div className="notifications-card-header">
           <RiFileList3Line />
-          <h3>{t('notifications.log')}</h3>
+          <h3>{t("notifications.log", "Journal")}</h3>
         </div>
 
         <div className="notifications-card-body">
@@ -406,17 +481,17 @@ const LogsTab = ({
               <div className="notifications-empty-icon">
                 <RiNotification3Line />
               </div>
-              <h4>{t('notifications.noLogs')}</h4>
+              <h4>{t("notifications.noLogs", "Aucune notification disponible")}</h4>
             </div>
           ) : (
             <div className="notifications-log-list">
               {logs.map((log) => {
                 const logId = log.id || log._id;
-                const eventType = log.event_type || 'default';
-                const status = log.status || 'pending';
-                const channel = log.channel || 'push';
-                const title = log.title || '-';
-                const message = log.message || '-';
+                const eventType = log.event_type || "default";
+                const status = log.status || "pending";
+                const channel = log.channel || "push";
+                const title = log.title || "-";
+                const message = log.message || "-";
                 const createdAt = log.created_at || log.createdAt;
 
                 return (
@@ -428,7 +503,7 @@ const LogsTab = ({
                     <div className="notifications-log-content">
                       <div className="notifications-log-header">
                         <span className={`notifications-log-type ${eventType}`}>
-                          {t(`notifications.eventType.${eventType}`)}
+                          {getEventLabel(eventType)}
                         </span>
                         <span className="notifications-log-date">
                           {formatDate(createdAt)}
@@ -452,7 +527,7 @@ const LogsTab = ({
 
                         <span className={`notifications-log-status ${status}`}>
                           {getStatusIcon(status)}
-                          <span>{t(`notifications.status.${status}`)}</span>
+                          <span>{getStatusLabel(status)}</span>
                         </span>
                       </div>
                     </div>
@@ -460,7 +535,8 @@ const LogsTab = ({
                     <button
                       className="notifications-log-delete"
                       onClick={() => onDelete(logId)}
-                      title={t('notifications.delete')}
+                      title={t("notifications.delete", "Supprimer")}
+                      type="button"
                     >
                       <RiDeleteBinLine />
                     </button>
