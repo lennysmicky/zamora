@@ -15,11 +15,12 @@ import {
     RiStarFill,
     RiPlayCircleLine,
     RiDownloadLine,
-    RiAndroidLine,
-    RiAppleLine,
     RiHome4Line,
-    RiRestaurantLine
+    RiRestaurantLine,
+    RiMenuLine,
+    RiCloseLine
 } from 'react-icons/ri';
+import { FaGooglePlay, FaAppStore } from 'react-icons/fa';
 
 // Images
 import Logo from '../../assets/images/logo.png';
@@ -185,10 +186,10 @@ const LandingPage = () => {
                     </nav>
 
                     <div className="landing-header-actions">
-                        <Link to="/login" className="btn-login">
+                        <Link to="/auth/admin/login" className="btn-login">
                             Connexion
                         </Link>
-                        <Link to="/register" className="btn-register">
+                        <Link to="/auth/restaurant/register" className="btn-register">
                             <span className="btn-register-text">Espace Restaurant</span>
                             <RiArrowRightLine />
                         </Link>
@@ -198,10 +199,9 @@ const LandingPage = () => {
                     <button
                         className="mobile-menu-toggle"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                        aria-label="Toggle menu"
                     >
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                        {mobileMenuOpen ? <RiCloseLine size={24} /> : <RiMenuLine size={24} />}
                     </button>
                 </div>
             </header>
@@ -211,7 +211,7 @@ const LandingPage = () => {
                 <div className="landing-container">
                     <div className="hero-content">
                         <div className="hero-badge animate-on-scroll">
-                            <RiStarFill />
+                        
                             <span>Application #1 de commande restaurant</span>
                         </div>
                         <h1 className="hero-title animate-on-scroll">
@@ -227,7 +227,7 @@ const LandingPage = () => {
                                 <RiDownloadLine />
                                 Télécharger l'app
                             </a>
-                            <Link to="/register" className="btn-secondary-lg">
+                            <Link to="/auth/restaurant/register" className="btn-secondary-lg">
                                 <RiRestaurantLine />
                                 Je suis restaurateur
                             </Link>
@@ -267,7 +267,7 @@ const LandingPage = () => {
                                 />
                             </div>
 
-                            {/* Info sous l'image - séparé pour éviter les chevauchements */}
+                            {/* Info sous l'image */}
                             <div className={`hero-food-info ${isAnimating ? 'animating-out' : 'animating-in'}`}>
                                 <h3 className="hero-food-name">{foodItems[currentFood].name}</h3>
                                 <p className="hero-food-desc">{foodItems[currentFood].desc}</p>
@@ -286,6 +286,7 @@ const LandingPage = () => {
                                                 setIsAnimating(false);
                                             }, 300);
                                         }}
+                                        aria-label={`Voir ${foodItems[index].name}`}
                                     />
                                 ))}
                             </div>
@@ -356,22 +357,31 @@ const LandingPage = () => {
                             <h2>Téléchargez l'app Zamora</h2>
                             <p>
                                 Commandez vos plats préférés où que vous soyez.
-                                L'application est disponible en téléchargement direct,
-                                pas besoin de passer par un store !
+                                L'application est disponible sur Google Play Store et App Store.
                             </p>
                             <div className="download-buttons">
-                                <a href="/downloads/zamora-android.apk" className="download-btn android" download>
-                                    <RiAndroidLine />
+                                <a 
+                                    href="https://play.google.com/store" 
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="download-btn playstore"
+                                >
+                                    <FaGooglePlay />
                                     <div className="download-btn-text">
-                                        <span className="download-btn-label">Télécharger pour</span>
-                                        <span className="download-btn-platform">Android</span>
+                                        <span className="download-btn-label">Disponible sur</span>
+                                        <span className="download-btn-platform">Google Play</span>
                                     </div>
                                 </a>
-                                <a href="/downloads/zamora-ios.ipa" className="download-btn ios" download>
-                                    <RiAppleLine />
+                                <a 
+                                    href="https://www.apple.com/app-store/" 
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="download-btn appstore"
+                                >
+                                    <FaAppStore />
                                     <div className="download-btn-text">
-                                        <span className="download-btn-label">Télécharger pour</span>
-                                        <span className="download-btn-platform">iOS</span>
+                                        <span className="download-btn-label">Télécharger sur</span>
+                                        <span className="download-btn-platform">App Store</span>
                                     </div>
                                 </a>
                             </div>
@@ -437,11 +447,11 @@ const LandingPage = () => {
                             Gérez vos commandes, menus et paiements depuis un seul tableau de bord.
                         </p>
                         <div className="cta-actions">
-                            <Link to="/register" className="btn-cta-primary">
+                            <Link to="/auth/restaurant/register" className="btn-cta-primary">
                                 Créer mon restaurant
                                 <RiArrowRightLine />
                             </Link>
-                            <Link to="/login" className="btn-cta-secondary">
+                            <Link to="/auth/restaurant/login" className="btn-cta-secondary">
                                 J'ai déjà un compte
                             </Link>
                         </div>
@@ -472,8 +482,8 @@ const LandingPage = () => {
                             </div>
                             <div className="footer-column">
                                 <h4>Restaurateurs</h4>
-                                <Link to="/register">Créer un compte</Link>
-                                <Link to="/login">Connexion</Link>
+                                <Link to="/auth/restaurant/register">Créer un compte</Link>
+                                <Link to="/auth/restaurant/login">Connexion</Link>
                                 <a href="#benefits">Avantages</a>
                             </div>
                             <div className="footer-column">
