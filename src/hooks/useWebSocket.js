@@ -1,33 +1,45 @@
 import { useEffect, useCallback, useState } from 'react';
-import { wsService } from '../services/websocket';
-import useAuthStore from '../stores/authStore';
 
 /**
- * Hook pour utiliser WebSocket facilement dans les composants React
+ * Hook WebSocket qui se désactive automatiquement si pas d'URL
  */
 export const useWebSocket = (options = {}) => {
   const [isConnected, setIsConnected] = useState(false);
-  const [connectionState, setConnectionState] = useState('CLOSED');
+  const [connectionState, setConnectionState] = useState('DISABLED');
+  
+  const {
+    url = import.meta.env.VITE_WS_URL || '',
+    autoConnect = false,
+    onConnected,
+    onDisconnected,
+    onError,
+    onMessage,
+  } = options;
+
+  //  Si pas d'URL WebSocket, retourner un hook inactif
+  if (!url || url.trim() === '') {
+    console.log(' WebSocket désactivé (pas d\'URL configurée)');
+    
+    return {
+      isConnected: false,
+      connectionState: 'DISABLED',
+      connect: () => console.log('WebSocket désactivé'),
+      disconnect: () => {},
+      send: () => {},
+      subscribe: () => () => {}, // Retourne une fonction de désabonnement vide
+    };
+  }
+
+  // Si URL existe, charger le vrai service WebSocket
+  const { wsService } = require('../services/websocket');
+  const useAuthStore = require('../stores/authStore').default;
 
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const restaurantId = useAuthStore((s) => s.restaurantId);
 
-  const {
-    url = import.meta.env.VITE_WS_URL || 'ws://localhost:3001',
-    autoConnect = true,
-    onMessage,
-    onConnected,
-    onDisconnected,
-    onError,
-  } = options;
-
-  // Connecter au WebSocket
   const connect = useCallback(() => {
-    if (!url) {
-      console.warn('⚠️ URL WebSocket non définie');
-      return;
-    }
+    if (!url) return;
 
     wsService.connect(url, {
       token,
@@ -36,23 +48,19 @@ export const useWebSocket = (options = {}) => {
     });
   }, [url, token, user, restaurantId]);
 
-  // Déconnecter
   const disconnect = useCallback(() => {
     wsService.disconnect();
   }, []);
 
-  // Envoyer un message
   const send = useCallback((data) => {
     wsService.send(data);
   }, []);
 
-  // S'abonner à un événement
   const subscribe = useCallback((event, callback) => {
     return wsService.on(event, callback);
   }, []);
 
   useEffect(() => {
-    // Écouter les événements de connexion
     const unsubConnected = wsService.on('connected', () => {
       setIsConnected(true);
       setConnectionState('OPEN');
@@ -73,23 +81,21 @@ export const useWebSocket = (options = {}) => {
       onMessage?.(data);
     });
 
-    // Connexion automatique
-    if (autoConnect && !wsService.isConnected()) {
+    if (autoConnect) {
       connect();
     }
 
-    // Mettre à jour l'état initial
     setIsConnected(wsService.isConnected());
     setConnectionState(wsService.getState());
 
-    // Nettoyage
     return () => {
       unsubConnected();
       unsubDisconnected();
       unsubError();
       unsubMessage();
+      disconnect();
     };
-  }, [autoConnect, connect, onMessage, onConnected, onDisconnected, onError]);
+  }, [autoConnect, connect, disconnect, onMessage, onConnected, onDisconnected, onError]);
 
   return {
     isConnected,
