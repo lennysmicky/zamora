@@ -24,14 +24,13 @@ import { FaGooglePlay, FaAppStore } from 'react-icons/fa';
 
 // Images
 import Logo from '../../assets/images/logo.png';
-import BurgerImg from '../../assets/images/food/burger.png';
-import PizzaImg from '../../assets/images/food/pizza.png';
-import TacoImg from '../../assets/images/food/taco.png';
+import BurgerImg from '../../assets/images/food/burger.jpg';
+import PizzaImg from '../../assets/images/food/pizza.jpg';
+import foutouImg from '../../assets/images/food/Le-foutou.jpg';
 import FriesImg from '../../assets/images/food/fries.png';
-import HotdogImg from '../../assets/images/food/hotdog.png';
-import DrinkImg from '../../assets/images/food/drink.png';
-import DonutImg from '../../assets/images/food/donut.png';
-import IcecreamImg from '../../assets/images/food/icecream.png';
+import RiceImg from '../../assets/images/food/rice.jpg';
+import DrinkImg from '../../assets/images/food/drink.jpg';
+import IcecreamImg from '../../assets/images/food/icecream.jpg';
 import PhoneMockup from '../../assets/images/phoo-left.png';
 
 import './LandingPage.css';
@@ -40,11 +39,10 @@ import './LandingPage.css';
 const foodItems = [
     { img: BurgerImg, name: 'Classic Burger', desc: 'Boeuf juteux, salade fraîche, tomate et sauce maison' },
     { img: PizzaImg, name: 'Pizza Margherita', desc: 'Sauce tomate, mozzarella fondante et basilic frais' },
-    { img: TacoImg, name: 'Taco Mexicain', desc: 'Poulet épicé, poivrons grillés et guacamole' },
+    { img: foutouImg, name: 'Le Fufu', desc: 'Plat traditionnel togolais avec viande et légumes' },
     { img: FriesImg, name: 'Frites Maison', desc: 'Croustillantes à l\'extérieur, fondantes à l\'intérieur' },
-    { img: HotdogImg, name: 'Hot Dog', desc: 'Saucisse premium, moutarde et oignons caramélisés' },
+    { img: RiceImg, name: 'riz aux légumes', desc: 'Riz cuit avec une variété de légumes frais' },
     { img: DrinkImg, name: 'Boissons Fraîches', desc: 'Sodas, jus de fruits et cocktails maison' },
-    { img: DonutImg, name: 'Donut Gourmand', desc: 'Glacé au chocolat avec topping colorés' },
     { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
 ];
 
