@@ -6,6 +6,8 @@ import { ordersStore } from "../../stores/ordersStore";
 import { useSelectedOrders, useIsCreateModalOpen } from "../../hooks/useOrdersStore";
 import useAuthStore from "../../stores/authStore";
 import { emitDashboardRefresh } from "../../utils/dashboardEvents";
+import { useOrderNotifications } from "../../hooks/useOrderNotifications";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 import OrdersStats from "../../components/orders/OrdersStats";
 import OrdersFilters from "../../components/orders/OrderFilters";
@@ -78,6 +80,9 @@ const OrdersPage = ({
   const userType = useAuthStore((s) => s.userType);
   const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
+  //  Hook de notifications
+  const { notifyStatusChange, notifySuccess, notifyError, notifyNewOrder } = useOrderNotifications();
+
   const forcedMode =
     modeProp === "restaurant" ? "restaurant" : modeProp === "admin" ? "admin" : null;
 
@@ -130,6 +135,54 @@ const OrdersPage = ({
   useEffect(() => {
     fetchOrdersRef.current = fetchOrders;
   }, [fetchOrders]);
+
+  //  Configuration WebSocket
+  const { isConnected, subscribe } = useWebSocket({
+    autoConnect: true,
+    onConnected: () => {
+      console.log(' WebSocket connecté - Écoute des commandes en temps réel');
+    },
+    onDisconnected: () => {
+      console.log('🔌 WebSocket déconnecté');
+    },
+    onMessage: (data) => {
+      console.log('Message WebSocket reçu:', data);
+    },
+  });
+
+  //  Écouter les événements WebSocket
+  useEffect(() => {
+    // Nouvelle commande
+    const unsubNewOrder = subscribe('new_order', (data) => {
+      console.log('Nouvelle commande WebSocket:', data);
+      fetchOrdersRef.current?.();
+    });
+
+    // Changement de statut
+    const unsubStatusUpdate = subscribe('order_status_updated', (data) => {
+      console.log(' Mise à jour statut WebSocket:', data);
+      fetchOrdersRef.current?.();
+    });
+
+    // Commande supprimée
+    const unsubOrderDeleted = subscribe('order_deleted', (data) => {
+      console.log(' Commande supprimée WebSocket:', data);
+      fetchOrdersRef.current?.();
+    });
+
+    // Paiement mis à jour
+    const unsubPaymentUpdate = subscribe('payment_status_updated', (data) => {
+      console.log('Paiement mis à jour WebSocket:', data);
+      fetchOrdersRef.current?.();
+    });
+
+    return () => {
+      unsubNewOrder();
+      unsubStatusUpdate();
+      unsubOrderDeleted();
+      unsubPaymentUpdate();
+    };
+  }, [subscribe]);
 
   const setFiltersUI = useCallback(
     (updater) => {
@@ -246,13 +299,15 @@ const OrdersPage = ({
 
   const handleExport = useCallback((format) => {
     console.log(`Exporting as ${format}`);
-  }, []);
+    notifySuccess(`Export ${format} en cours...`);
+  }, [notifySuccess]);
 
   const handleBulkAction = useCallback((action) => {
     const ids = ordersStore.getState()?.selectedOrders ?? [];
     console.log(`Bulk action: ${action}`, ids);
+    notifySuccess(`Action ${action} appliquée à ${ids.length} commandes`);
     ordersStore.clearSelection();
-  }, []);
+  }, [notifySuccess]);
 
   const handleNewOrder = useCallback(() => {
     openCreateModal();
@@ -261,8 +316,9 @@ const OrdersPage = ({
   const handleCreateSuccess = useCallback(() => {
     closeCreateModal();
     fetchOrdersRef.current?.();
+    notifySuccess("Commande créée avec succès");
     emitDashboardRefresh({ reason: "order_created" });
-  }, [closeCreateModal]);
+  }, [closeCreateModal, notifySuccess]);
 
   useEffect(() => {
     ordersStore.setHandlers({
@@ -296,13 +352,26 @@ const OrdersPage = ({
 
       if (!rid) {
         setActionBusy(false);
-        setActionError("RestaurantId introuvable pour cette commande.");
+        const errorMsg = "RestaurantId introuvable pour cette commande.";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
         return;
       }
 
       try {
         await ordersApi.updateOrder(rid, id, { status: newStatus });
         await fetchOrdersRef.current?.();
+
+        //  Notifier le changement de statut
+        const updatedOrder = {
+          orderNumber: order?.orderNumber || id,
+          restaurant: order?.restaurant?.name || order?.restaurantName,
+          items: order?.items || [],
+          total: order?.total || order?.totalAmount,
+          status: newStatus,
+        };
+        
+        notifyStatusChange(updatedOrder, newStatus);
 
         emitDashboardRefresh({
           reason: "order_status_updated",
@@ -311,12 +380,23 @@ const OrdersPage = ({
           restaurantId: rid,
         });
       } catch (e) {
-        setActionError(e?.message || "Erreur mise à jour statut");
+        const errorMsg = e?.message || "Erreur mise à jour statut";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
       } finally {
         setActionBusy(false);
       }
     },
-    [orders, selectedOrder, mode, restaurantIdForHook, storeRestaurantId, filters]
+    [
+      orders,
+      selectedOrder,
+      mode,
+      restaurantIdForHook,
+      storeRestaurantId,
+      filters,
+      notifyStatusChange,
+      notifyError,
+    ]
   );
 
   const handleUpdatePaymentStatus = useCallback(
@@ -338,13 +418,18 @@ const OrdersPage = ({
 
       if (!rid) {
         setActionBusy(false);
-        setActionError("RestaurantId introuvable pour cette commande.");
+        const errorMsg = "RestaurantId introuvable pour cette commande.";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
         return;
       }
 
       try {
         await ordersApi.updateOrder(rid, id, { payment_status: newStatus });
         await fetchOrdersRef.current?.();
+
+        //  Notifier le succès
+        notifySuccess(`Statut de paiement mis à jour : ${newStatus}`);
 
         emitDashboardRefresh({
           reason: "payment_status_updated",
@@ -353,12 +438,23 @@ const OrdersPage = ({
           restaurantId: rid,
         });
       } catch (e) {
-        setActionError(e?.message || "Erreur mise à jour paiement");
+        const errorMsg = e?.message || "Erreur mise à jour paiement";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
       } finally {
         setActionBusy(false);
       }
     },
-    [orders, selectedOrder, mode, restaurantIdForHook, storeRestaurantId, filters]
+    [
+      orders,
+      selectedOrder,
+      mode,
+      restaurantIdForHook,
+      storeRestaurantId,
+      filters,
+      notifySuccess,
+      notifyError,
+    ]
   );
 
   const handleDeleteOrder = useCallback(
@@ -380,7 +476,9 @@ const OrdersPage = ({
       });
 
       if (!rid) {
-        setActionError("RestaurantId introuvable pour suppression.");
+        const errorMsg = "RestaurantId introuvable pour suppression.";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
         return;
       }
 
@@ -398,6 +496,9 @@ const OrdersPage = ({
       try {
         await ordersApi.deleteOrder(rid, id);
 
+        //  Notifier la suppression
+        notifySuccess(`Commande #${id} supprimée avec succès`);
+
         emitDashboardRefresh({
           reason: "order_deleted",
           orderId: id,
@@ -405,7 +506,9 @@ const OrdersPage = ({
         });
       } catch (e) {
         restoreOrdersSnapshot(ordersSnapshot, statsSnapshot, paginationSnapshot);
-        setActionError(e?.message || "Erreur suppression commande");
+        const errorMsg = e?.message || "Erreur suppression commande";
+        setActionError(errorMsg);
+        notifyError(errorMsg);
       }
     },
     [
@@ -420,16 +523,27 @@ const OrdersPage = ({
       handleCloseModal,
       removeOrderLocally,
       restoreOrdersSnapshot,
+      notifySuccess,
+      notifyError,
     ]
   );
 
   const handlePrintOrder = useCallback((order) => {
     console.log("PRINT ORDER", order);
+    notifySuccess("Impression en cours...");
     window.print();
-  }, []);
+  }, [notifySuccess]);
 
   return (
     <div className={`orders-page ${isRestaurantMode ? "restaurant-mode" : "admin-mode"}`}>
+      {/* Indicateur de connexion WebSocket */}
+      {isConnected && (
+        <div className="websocket-indicator">
+          <span className="ws-dot"></span>
+          <span>Temps réel activé</span>
+        </div>
+      )}
+
       <OrdersStats stats={stats} loading={loading} isRestaurantMode={isRestaurantMode} />
 
       <OrdersFilters

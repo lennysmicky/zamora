@@ -1,7 +1,7 @@
 import React from 'react';
 import { toast } from 'react-toastify';
 import { 
-  RiCheckCircleLine, 
+  RiCheckboxCircleLine,     
   RiErrorWarningLine, 
   RiInformationLine,
   RiCloseLine,
@@ -21,21 +21,27 @@ const getStatusIcon = (status) => {
     case 'pending':
     case 'en_attente':
       return <RiTimeLine className="notification-icon pending" />;
+    
     case 'confirmed':
     case 'confirmee':
       return <RiCheckLine className="notification-icon confirmed" />;
+    
     case 'preparing':
     case 'en_preparation':
       return <RiShoppingBag2Line className="notification-icon preparing" />;
+    
     case 'ready':
     case 'prete':
-      return <RiCheckCircleLine className="notification-icon ready" />;
+      return <RiCheckboxCircleLine className="notification-icon ready" />; // ✅ Corrigé
+    
     case 'delivered':
     case 'livree':
       return <RiTruckLine className="notification-icon delivered" />;
+    
     case 'cancelled':
     case 'annulee':
       return <RiErrorWarningLine className="notification-icon cancelled" />;
+    
     default:
       return <RiInformationLine className="notification-icon info" />;
   }
