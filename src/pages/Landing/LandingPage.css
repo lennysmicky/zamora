@@ -774,7 +774,7 @@
 }
 
 .download-btn.playstore {
-  background: #414141;
+  background: #057c01;
   color: white;
 }
 
@@ -785,7 +785,7 @@
 }
 
 .download-btn.appstore {
-  background: var(--landing-text-dark);
+  background: blue;
   color: white;
 }
 
