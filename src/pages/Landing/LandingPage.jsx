@@ -184,10 +184,10 @@ const LandingPage = () => {
                     </nav>
 
                     <div className="landing-header-actions">
-                        <Link to="/auth/admin/login" className="btn-login">
+                        <Link to="/login" className="btn-login">
                             Connexion
                         </Link>
-                        <Link to="/auth/restaurant/register" className="btn-register">
+                        <Link to="/register" className="btn-register">
                             <span className="btn-register-text">Espace Restaurant</span>
                             <RiArrowRightLine />
                         </Link>

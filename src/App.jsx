@@ -16,19 +16,24 @@ function App() {
     <BrowserRouter>
       <AppRouter />
 
-      {/* Toast Notifications */}
+      {/* Toast Notifications - Configuration optimisée */}
       <ToastContainer
         position="top-right"
-        autoClose={3000}
+        autoClose={5000}
         hideProgressBar={false}
-        newestOnTop
-        closeOnClick
+        newestOnTop={true}
+        closeOnClick={true}
         rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="dark"
-        limit={3}
+        pauseOnFocusLoss={true}
+        draggable={true}
+        pauseOnHover={true}
+        theme="light"
+        limit={5}
+        style={{
+          top: '80px',
+          right: '1rem',
+          zIndex: 9999,
+        }}
       />
     </BrowserRouter>
   );
