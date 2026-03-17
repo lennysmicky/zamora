@@ -157,7 +157,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       localStorage.removeItem('zamora-auth'); // persist
 
       if (currentRole === 'admin') navigate('/admin/login', { replace: true });
-      else navigate('/login', { replace: true });
+      else navigate('/', { replace: true });
     }
   };
 

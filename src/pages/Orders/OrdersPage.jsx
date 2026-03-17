@@ -140,13 +140,13 @@ const OrdersPage = ({
   const { isConnected, subscribe } = useWebSocket({
     autoConnect: true,
     onConnected: () => {
-      console.log(' WebSocket connecté - Écoute des commandes en temps réel');
+      // console.log(' WebSocket connecté - Écoute des commandes en temps réel');
     },
     onDisconnected: () => {
-      console.log('🔌 WebSocket déconnecté');
+      // console.log('🔌 WebSocket déconnecté');
     },
     onMessage: (data) => {
-      console.log('Message WebSocket reçu:', data);
+      // console.log('Message WebSocket reçu:', data);
     },
   });
 
@@ -154,25 +154,25 @@ const OrdersPage = ({
   useEffect(() => {
     // Nouvelle commande
     const unsubNewOrder = subscribe('new_order', (data) => {
-      console.log('Nouvelle commande WebSocket:', data);
+      // console.log('Nouvelle commande WebSocket:', data);
       fetchOrdersRef.current?.();
     });
 
     // Changement de statut
     const unsubStatusUpdate = subscribe('order_status_updated', (data) => {
-      console.log(' Mise à jour statut WebSocket:', data);
+      // console.log(' Mise à jour statut WebSocket:', data);
       fetchOrdersRef.current?.();
     });
 
     // Commande supprimée
     const unsubOrderDeleted = subscribe('order_deleted', (data) => {
-      console.log(' Commande supprimée WebSocket:', data);
+      // console.log(' Commande supprimée WebSocket:', data);
       fetchOrdersRef.current?.();
     });
 
     // Paiement mis à jour
     const unsubPaymentUpdate = subscribe('payment_status_updated', (data) => {
-      console.log('Paiement mis à jour WebSocket:', data);
+      // console.log('Paiement mis à jour WebSocket:', data);
       fetchOrdersRef.current?.();
     });
 
@@ -298,13 +298,13 @@ const OrdersPage = ({
   }, []);
 
   const handleExport = useCallback((format) => {
-    console.log(`Exporting as ${format}`);
+    // console.log(`Exporting as ${format}`);
     notifySuccess(`Export ${format} en cours...`);
   }, [notifySuccess]);
 
   const handleBulkAction = useCallback((action) => {
     const ids = ordersStore.getState()?.selectedOrders ?? [];
-    console.log(`Bulk action: ${action}`, ids);
+    // console.log(`Bulk action: ${action}`, ids);
     notifySuccess(`Action ${action} appliquée à ${ids.length} commandes`);
     ordersStore.clearSelection();
   }, [notifySuccess]);
@@ -529,7 +529,7 @@ const OrdersPage = ({
   );
 
   const handlePrintOrder = useCallback((order) => {
-    console.log("PRINT ORDER", order);
+    // console.log("PRINT ORDER", order);
     notifySuccess("Impression en cours...");
     window.print();
   }, [notifySuccess]);

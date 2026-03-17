@@ -41,7 +41,7 @@ const foodItems = [
     { img: PizzaImg, name: 'Pizza Margherita', desc: 'Sauce tomate, mozzarella fondante et basilic frais' },
     { img: foutouImg, name: 'Le Fufu', desc: 'Plat traditionnel togolais avec viande et légumes' },
     { img: FriesImg, name: 'Frites Maison', desc: 'Croustillantes à l\'extérieur, fondantes à l\'intérieur' },
-    { img: RiceImg, name: 'riz aux légumes', desc: 'Riz cuit avec une variété de légumes frais' },
+    { img: RiceImg, name: 'Riz aux légumes', desc: 'Riz cuit avec une variété de légumes frais' },
     { img: DrinkImg, name: 'Boissons Fraîches', desc: 'Sodas, jus de fruits et cocktails maison' },
     { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
 ];
@@ -51,7 +51,6 @@ const LandingPage = () => {
     const [currentFood, setCurrentFood] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const particlesRef = useRef(null);
 
     // Animation au scroll
     useEffect(() => {
@@ -86,22 +85,6 @@ const LandingPage = () => {
 
         return () => clearInterval(interval);
     }, []);
-
-    // Générer des particules
-    const generateParticles = () => {
-        const particles = [];
-        for (let i = 0; i < 15; i++) {
-            const style = {
-                '--x': `${Math.random() * 100}%`,
-                '--y': `${Math.random() * 100}%`,
-                '--delay': `${Math.random() * 2}s`,
-                '--size': `${Math.random() * 6 + 3}px`,
-                '--duration': `${Math.random() * 3 + 2}s`
-            };
-            particles.push(<div key={i} className="particle" style={style} />);
-        }
-        return particles;
-    };
 
     const features = [
         {
@@ -193,7 +176,6 @@ const LandingPage = () => {
                         </Link>
                     </div>
 
-                    {/* Mobile menu toggle */}
                     <button
                         className="mobile-menu-toggle"
                         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -204,89 +186,86 @@ const LandingPage = () => {
                 </div>
             </header>
 
-            {/* Hero Section */}
-            <section className="landing-hero">
-                <div className="landing-container">
-                    <div className="hero-content">
-                        <div className="hero-badge animate-on-scroll">
-                        
-                            <span>Application #1 de commande restaurant</span>
-                        </div>
-                        <h1 className="hero-title animate-on-scroll">
-                            <span className="hero-title-line">Commandez vos plats</span>
-                            <span className="hero-title-highlight">Le vrai goût</span>
-                        </h1>
-                        <p className="hero-subtitle animate-on-scroll">
-                            Au restaurant ou chez vous, commandez facilement vos plats préférés.
-                            Scannez, commandez, payez et savourez !
-                        </p>
-                        <div className="hero-actions animate-on-scroll">
-                            <a href="#download" className="btn-primary-lg">
-                                <RiDownloadLine />
-                                Télécharger l'app
-                            </a>
-                            <Link to="/auth/restaurant/register" className="btn-secondary-lg">
-                                <RiRestaurantLine />
-                                Je suis restaurateur
-                            </Link>
-                        </div>
-                        <div className="hero-stats animate-on-scroll">
-                            <div className="hero-stat">
-                                <span className="stat-number">500+</span>
-                                <span className="stat-label">Restaurants</span>
-                            </div>
-                            <div className="hero-stat-divider"></div>
-                            <div className="hero-stat">
-                                <span className="stat-number">50K+</span>
-                                <span className="stat-label">Téléchargements</span>
-                            </div>
-                            <div className="hero-stat-divider"></div>
-                            <div className="hero-stat">
-                                <span className="stat-number">4.9</span>
-                                <span className="stat-label">Note moyenne</span>
-                            </div>
-                        </div>
+            {/* Hero Section - VERSION MODERNE */}
+            <section className="landing-hero-modern">
+                {/* Carousel d'images en arrière-plan */}
+                <div className="hero-background-carousel">
+                    <div 
+                        className={`carousel-image ${isAnimating ? 'fade-out' : 'fade-in'}`}
+                        style={{
+                            backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url(${foodItems[currentFood].img})`
+                        }}
+                    />
+                    
+                    {/* Indicateurs en bas */}
+                    <div className="carousel-indicators-bottom">
+                        {foodItems.map((_, index) => (
+                            <button
+                                key={index}
+                                className={`carousel-dot ${index === currentFood ? 'active' : ''}`}
+                                onClick={() => {
+                                    setIsAnimating(true);
+                                    setTimeout(() => {
+                                        setCurrentFood(index);
+                                        setIsAnimating(false);
+                                    }, 300);
+                                }}
+                                aria-label={`Voir ${foodItems[index].name}`}
+                            />
+                        ))}
                     </div>
+                </div>
 
-                    {/* Hero Visual - Single Image Slider with Particles */}
-                    <div className="hero-visual animate-on-scroll">
-                        <div className="hero-slider">
-                            {/* Particules */}
-                            <div className="particles-container" ref={particlesRef}>
-                                {generateParticles()}
+                {/* Contenu centré par-dessus */}
+                <div className="hero-overlay-content">
+                    <div className="landing-container">
+                        <div className="hero-center-content">
+                            {/* <div className="hero-badge animate-on-scroll">
+                                <span>Application #1 de commande restaurant</span>
+                            </div>
+                             */}
+                            <h1 className="hero-title-large animate-on-scroll">
+                                <span className="hero-title-line">Commandez vos plats</span>
+                                <span className="hero-title-highlight">Le vrai goût</span>
+                            </h1>
+                            
+                            <p className="hero-subtitle-large animate-on-scroll">
+                                Au restaurant ou chez vous, commandez facilement vos plats préférés.<br />
+                                Scannez, commandez, payez et savourez !
+                            </p>
+                            
+                            <div className="hero-actions-large animate-on-scroll">
+                                <a href="#download" className="btn-primary-xl">
+                                    <RiDownloadLine />
+                                    Télécharger l'app
+                                </a>
+                                <Link to="/register" className="btn-secondary-xl">
+                                    <RiRestaurantLine />
+                                    Je suis restaurateur
+                                </Link>
+                            </div>
+                            
+                            <div className="hero-stats-large animate-on-scroll">
+                                <div className="hero-stat-item">
+                                    <span className="stat-number-large">500+</span>
+                                    <span className="stat-label-large">Restaurants</span>
+                                </div>
+                                <div className="stat-divider-large"></div>
+                                <div className="hero-stat-item">
+                                    <span className="stat-number-large">50K+</span>
+                                    <span className="stat-label-large">Téléchargements</span>
+                                </div>
+                                <div className="stat-divider-large"></div>
+                                <div className="hero-stat-item">
+                                    <span className="stat-number-large">4.9</span>
+                                    <span className="stat-label-large">Note moyenne</span>
+                                </div>
                             </div>
 
-                            {/* Image principale */}
-                            <div className={`hero-food-container ${isAnimating ? 'animating-out' : 'animating-in'}`}>
-                                <img
-                                    src={foodItems[currentFood].img}
-                                    alt={foodItems[currentFood].name}
-                                    className="hero-food-image"
-                                />
-                            </div>
-
-                            {/* Info sous l'image */}
-                            <div className={`hero-food-info ${isAnimating ? 'animating-out' : 'animating-in'}`}>
-                                <h3 className="hero-food-name">{foodItems[currentFood].name}</h3>
-                                <p className="hero-food-desc">{foodItems[currentFood].desc}</p>
-                            </div>
-
-                            {/* Indicateurs */}
-                            <div className="slider-indicators">
-                                {foodItems.map((_, index) => (
-                                    <button
-                                        key={index}
-                                        className={`slider-dot ${index === currentFood ? 'active' : ''}`}
-                                        onClick={() => {
-                                            setIsAnimating(true);
-                                            setTimeout(() => {
-                                                setCurrentFood(index);
-                                                setIsAnimating(false);
-                                            }, 300);
-                                        }}
-                                        aria-label={`Voir ${foodItems[index].name}`}
-                                    />
-                                ))}
+                            {/* Info du plat actuel */}
+                            <div className={`current-dish-info ${isAnimating ? 'fade-out' : 'fade-in'}`}>
+                                <h3>{foodItems[currentFood].name}</h3>
+                                <p>{foodItems[currentFood].desc}</p>
                             </div>
                         </div>
                     </div>
@@ -297,7 +276,6 @@ const LandingPage = () => {
             <section className="landing-features" id="features">
                 <div className="landing-container">
                     <div className="section-header animate-on-scroll">
-                        <span className="section-badge">Fonctionnalités</span>
                         <h2>Tout pour commander facilement</h2>
                         <p>Que vous soyez au restaurant ou chez vous, Zamora simplifie votre expérience culinaire</p>
                     </div>
@@ -323,8 +301,8 @@ const LandingPage = () => {
             <section className="landing-how-it-works" id="how-it-works">
                 <div className="landing-container">
                     <div className="section-header animate-on-scroll">
-                        <span className="section-badge">Comment ça marche</span>
-                        <h2>Simple comme bonjour</h2>
+                        <h2>Comment ça marche</h2>
+                        <p>Commandez en 3 étapes simples</p>
                     </div>
                     <div className="steps-container">
                         {howItWorks.map((step, index) => (
@@ -351,7 +329,6 @@ const LandingPage = () => {
                 <div className="landing-container">
                     <div className="download-content">
                         <div className="download-text animate-on-scroll">
-                            <span className="section-badge">Téléchargement</span>
                             <h2>Téléchargez l'app Zamora</h2>
                             <p>
                                 Commandez vos plats préférés où que vous soyez.
@@ -400,7 +377,6 @@ const LandingPage = () => {
                 <div className="landing-container">
                     <div className="benefits-content">
                         <div className="benefits-text animate-on-scroll">
-                            <span className="section-badge">Avantages</span>
                             <h2>Pourquoi choisir Zamora ?</h2>
                             <p>Une expérience de commande unique, pensée pour vous simplifier la vie</p>
                             <ul className="benefits-list">
@@ -435,7 +411,7 @@ const LandingPage = () => {
                 </div>
             </section>
 
-            {/* CTA Section - Pour les restaurateurs */}
+            {/* CTA Section */}
             <section className="landing-cta" id="contact">
                 <div className="landing-container">
                     <div className="cta-content animate-on-scroll">
@@ -445,11 +421,11 @@ const LandingPage = () => {
                             Gérez vos commandes, menus et paiements depuis un seul tableau de bord.
                         </p>
                         <div className="cta-actions">
-                            <Link to="/auth/restaurant/register" className="btn-cta-primary">
+                            <Link to="/register" className="btn-cta-primary">
                                 Créer mon restaurant
                                 <RiArrowRightLine />
                             </Link>
-                            <Link to="/auth/restaurant/login" className="btn-cta-secondary">
+                            <Link to="/login" className="btn-cta-secondary">
                                 J'ai déjà un compte
                             </Link>
                         </div>
@@ -480,8 +456,8 @@ const LandingPage = () => {
                             </div>
                             <div className="footer-column">
                                 <h4>Restaurateurs</h4>
-                                <Link to="/auth/restaurant/register">Créer un compte</Link>
-                                <Link to="/auth/restaurant/login">Connexion</Link>
+                                <Link to="/register">Créer un compte</Link>
+                                <Link to="/sslogin">Connexion</Link>
                                 <a href="#benefits">Avantages</a>
                             </div>
                             <div className="footer-column">
