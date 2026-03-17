@@ -9,7 +9,7 @@ const API_TIMEOUT = Number(env.API_TIMEOUT) || 10000;
 const client = axios.create({
   baseURL: API_URL,
   timeout: API_TIMEOUT,
-  withCredentials: true,
+  withCredentials: false,
   headers: { Accept: "application/json" },
 });
 
