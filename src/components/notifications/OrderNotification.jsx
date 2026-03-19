@@ -32,7 +32,7 @@ const getStatusIcon = (status) => {
     
     case 'ready':
     case 'prete':
-      return <RiCheckboxCircleLine className="notification-icon ready" />; // ✅ Corrigé
+      return <RiCheckboxCircleLine className="notification-icon ready" />; //  Corrigé
     
     case 'delivered':
     case 'livree':
@@ -75,7 +75,7 @@ const OrderNotification = ({ order, message, type = 'info', closeToast }) => {
               </span>
               {order.total && (
                 <span className="notification-total">
-                  {typeof order.total === 'number' ? order.total.toFixed(2) : order.total} €
+                  {typeof order.total === 'number' ? order.total.toFixed(2) : order.total} FCFA
                 </span>
               )}
             </div>
