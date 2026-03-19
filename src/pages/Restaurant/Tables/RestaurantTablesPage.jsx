@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RiAddLine,
   RiRefreshLine,
@@ -108,6 +109,8 @@ const toApiPayload = (formLike) => {
 };
 
 const RestaurantTablesPage = () => {
+  const { t } = useTranslation();
+  
   const {
     tables,
     stats,
@@ -174,10 +177,10 @@ const RestaurantTablesPage = () => {
 
     if (result?.success) {
       setShowCreateModal(false);
-      showToast("success", "Table créée avec succès !");
+      showToast("success", t('tables.messages.created'));
       fetchTables?.();
     } else {
-      showToast("error", result?.error || "Erreur");
+      showToast("error", result?.error || t('common.error'));
     }
 
     return result;
@@ -188,10 +191,10 @@ const RestaurantTablesPage = () => {
 
     if (result?.success) {
       setShowCreateModal(false);
-      showToast("success", `${count} tables créées avec succès !`);
+      showToast("success", t('tables.messages.createdMultiple', { count }));
       fetchTables?.();
     } else {
-      showToast("error", result?.error || "Erreur");
+      showToast("error", result?.error || t('common.error'));
     }
 
     return result;
@@ -199,7 +202,7 @@ const RestaurantTablesPage = () => {
 
   const handleEditTable = async (formPayload) => {
     const id = formPayload?._id ?? formPayload?.id;
-    if (!id) return { success: false, error: "ID table manquant" };
+    if (!id) return { success: false, error: t('tables.errors.numberRequired') };
 
     const apiData = toApiPayload(formPayload);
     const result = await updateTable(id, apiData);
@@ -207,10 +210,10 @@ const RestaurantTablesPage = () => {
     if (result?.success) {
       setShowEditModal(false);
       setSelectedTable(null);
-      showToast("success", "Table modifiée !");
+      showToast("success", t('tables.messages.updated'));
       fetchTables?.();
     } else {
-      showToast("error", result?.error || "Erreur");
+      showToast("error", result?.error || t('common.error'));
     }
 
     return result;
@@ -223,13 +226,13 @@ const RestaurantTablesPage = () => {
 
   const handleStatusChange = async (tableId, newStatus) => {
     const result = await updateStatus(tableId, newStatus);
-    if (!result?.success) showToast("error", result?.error || "Erreur");
+    if (!result?.success) showToast("error", result?.error || t('common.error'));
   };
 
   const handleAskDelete = (tableId) => {
-    const t = normalizedTables.find((x) => String(x._id) === String(tableId));
-    setTableToDelete(t || { _id: tableId, numero: "?" });
-    setShowDeleteModal(true);
+    const foundTable = normalizedTables.find((x) => String(x._id) === String(tableId));
+     setTableToDelete(foundTable || { _id: tableId, numero: "?" });
+   setShowDeleteModal(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -239,12 +242,12 @@ const RestaurantTablesPage = () => {
     const result = await deleteTable(id);
 
     if (result?.success) {
-      showToast("success", "Table supprimée");
+      showToast("success", t('tables.messages.deleted'));
       setShowDeleteModal(false);
       setTableToDelete(null);
       fetchTables?.();
     } else {
-      showToast("error", result?.error || "Erreur");
+      showToast("error", result?.error || t('common.error'));
     }
   };
 
@@ -261,10 +264,10 @@ const RestaurantTablesPage = () => {
       if (selectedTable && String(selectedTable._id) === String(tableId)) {
         setSelectedTable(next);
       }
-      showToast("success", "QR code régénéré !");
+      showToast("success", t('tables.messages.qrRegenerated'));
       fetchTables?.();
     } else {
-      showToast("error", result?.error || "Erreur");
+      showToast("error", result?.error || t('common.error'));
     }
 
     return result;
@@ -305,11 +308,11 @@ const RestaurantTablesPage = () => {
           ctx.fillStyle = "#000000";
           ctx.font = "bold 24px Arial";
           ctx.textAlign = "center";
-          ctx.fillText(`Table ${tableNumber}`, 150, 280);
+          ctx.fillText(`${t('tables.qr.tableTitle')} ${tableNumber}`, 150, 280);
 
           ctx.font = "14px Arial";
           ctx.fillStyle = "#666666";
-          ctx.fillText("Scannez pour commander", 150, 310);
+          ctx.fillText(t('tables.qr.scanToOrder'), 150, 310);
 
           const link = document.createElement("a");
           link.download = `table-${tableNumber}-qr.png`;
@@ -340,12 +343,14 @@ const RestaurantTablesPage = () => {
     if (!printWindow) return;
 
     const safeUrl = JSON.stringify(effectiveMenuUrl);
+    const titleText = `${t('tables.qr.tableTitle')} ${tableNumber}`;
+    const scanText = t('tables.qr.scanToOrder');
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Table ${tableNumber} - QR Code</title>
+          <title>${titleText} - ${t('tables.qr.title')}</title>
           <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
           <style>
             body{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;margin:0;font-family:Arial,sans-serif;}
@@ -358,8 +363,8 @@ const RestaurantTablesPage = () => {
         <body>
           <div class="container">
             <canvas id="qr"></canvas>
-            <h1>Table ${tableNumber}</h1>
-            <p>Scannez pour commander</p>
+            <h1>${titleText}</h1>
+            <p>${scanText}</p>
           </div>
           <script>
             QRCode.toCanvas(document.getElementById('qr'), ${safeUrl}, { width: 200 }, function(err) {
@@ -378,9 +383,9 @@ const RestaurantTablesPage = () => {
         <div className="tables-header-info">
           <h1>
             <RiTableLine />
-            Gestion des Tables
+            {t('tables.title')}
           </h1>
-          <p>Gérez vos tables et QR codes</p>
+          <p>{t('tables.subtitle')}</p>
         </div>
 
         <div className="tables-header-actions">
@@ -388,7 +393,7 @@ const RestaurantTablesPage = () => {
             className="tables-btn tables-btn-secondary"
             onClick={fetchTables}
             disabled={loading}
-            title="Rafraîchir"
+            title={t('tables.refresh')}
             type="button"
           >
             <RiRefreshLine className={loading ? "spin" : ""} />
@@ -400,7 +405,7 @@ const RestaurantTablesPage = () => {
             type="button"
           >
             <RiAddLine />
-            <span>Nouvelle Table</span>
+            <span>{t('tables.add')}</span>
           </button>
         </div>
       </div>
@@ -418,7 +423,7 @@ const RestaurantTablesPage = () => {
           </div>
           <div className="tables-stat-content">
             <span className="tables-stat-value">{stats?.total ?? 0}</span>
-            <span className="tables-stat-label">Total</span>
+            <span className="tables-stat-label">{t('tables.stats.total')}</span>
           </div>
         </div>
 
@@ -428,7 +433,7 @@ const RestaurantTablesPage = () => {
           </div>
           <div className="tables-stat-content">
             <span className="tables-stat-value">{stats?.libre ?? 0}</span>
-            <span className="tables-stat-label">Libres</span>
+            <span className="tables-stat-label">{t('tables.stats.libre')}</span>
           </div>
         </div>
 
@@ -438,7 +443,7 @@ const RestaurantTablesPage = () => {
           </div>
           <div className="tables-stat-content">
             <span className="tables-stat-value">{stats?.occupee ?? 0}</span>
-            <span className="tables-stat-label">Occupées</span>
+            <span className="tables-stat-label">{t('tables.stats.occupee')}</span>
           </div>
         </div>
 
@@ -448,7 +453,7 @@ const RestaurantTablesPage = () => {
           </div>
           <div className="tables-stat-content">
             <span className="tables-stat-value">{stats?.reservee ?? 0}</span>
-            <span className="tables-stat-label">Réservées</span>
+            <span className="tables-stat-label">{t('tables.stats.reservee')}</span>
           </div>
         </div>
       </div>
@@ -458,7 +463,7 @@ const RestaurantTablesPage = () => {
           <RiSearchLine />
           <input
             type="text"
-            placeholder="Rechercher..."
+            placeholder={t('tables.search')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -472,13 +477,7 @@ const RestaurantTablesPage = () => {
               onClick={() => setStatusFilter(st)}
               type="button"
             >
-              {st === "all"
-                ? "Toutes"
-                : st === "libre"
-                ? "Libres"
-                : st === "occupee"
-                ? "Occupées"
-                : "Réservées"}
+              {t(`tables.filters.${st}`)}
             </button>
           ))}
         </div>
@@ -505,13 +504,13 @@ const RestaurantTablesPage = () => {
         {loading ? (
           <div className="tables-loading">
             <RiLoader4Line className="spin" />
-            <span>Chargement...</span>
+            <span>{t('common.loading')}</span>
           </div>
         ) : error ? (
           <div className="tables-error">
             <p>{error}</p>
             <button className="tables-btn tables-btn-primary" onClick={fetchTables} type="button">
-              Réessayer
+              {t('common.retry')}
             </button>
           </div>
         ) : filteredTables.length === 0 ? (
@@ -519,11 +518,11 @@ const RestaurantTablesPage = () => {
             <div className="tables-empty-icon">
               <RiTableLine />
             </div>
-            <h3>Aucune table</h3>
+            <h3>{t('tables.empty.title')}</h3>
             <p>
               {normalizedTables.length === 0
-                ? "Créez vos tables pour générer des QR codes"
-                : "Aucun résultat"}
+                ? t('tables.empty.message')
+                : t('tables.empty.noResults')}
             </p>
             {normalizedTables.length === 0 && (
               <button
@@ -531,7 +530,7 @@ const RestaurantTablesPage = () => {
                 onClick={() => setShowCreateModal(true)}
                 type="button"
               >
-                <RiAddLine /> Créer des tables
+                <RiAddLine /> {t('tables.add')}
               </button>
             )}
           </div>
@@ -539,12 +538,12 @@ const RestaurantTablesPage = () => {
           <>
             {viewMode === "list" && (
               <div className="tables-list-header">
-                <div className="list-col">N°</div>
-                <div className="list-col">Nom</div>
-                <div className="list-col">Capacité</div>
-                <div className="list-col">Statut</div>
-                <div className="list-col">QR</div>
-                <div className="list-col">Actions</div>
+                <div className="list-col">{t('tables.table.number')}</div>
+                <div className="list-col">{t('tables.table.name')}</div>
+                <div className="list-col">{t('tables.table.capacity')}</div>
+                <div className="list-col">{t('tables.table.status')}</div>
+                <div className="list-col">{t('tables.table.qr')}</div>
+                <div className="list-col">{t('tables.table.actions')}</div>
               </div>
             )}
 
@@ -571,7 +570,7 @@ const RestaurantTablesPage = () => {
       <Modal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Créer des tables"
+        title={t('tables.form.createTitle')}
         size="small"
       >
         <TableForm
@@ -589,7 +588,7 @@ const RestaurantTablesPage = () => {
           setShowEditModal(false);
           setSelectedTable(null);
         }}
-        title="Modifier la table"
+        title={t('tables.form.editTitle')}
         size="small"
       >
         <TableForm
@@ -611,15 +610,15 @@ const RestaurantTablesPage = () => {
           setShowDeleteModal(false);
           setTableToDelete(null);
         }}
-        title="Supprimer la table"
+        title={t('tables.delete.title')}
         size="small"
       >
         <div className="delete-confirm">
           <p className="delete-confirm-text">
-            Voulez-vous supprimer{" "}
-            <strong>Table {tableToDelete?.numero ?? tableToDelete?.number ?? "?"}</strong> ?
+            {t('tables.delete.message')}{" "}
+            <strong>{t('tables.qr.tableTitle')} {tableToDelete?.numero ?? tableToDelete?.number ?? "?"}</strong> ?
             <br />
-            Cette action est irréversible.
+            {t('common.confirm')}.
           </p>
 
           <div className="delete-confirm-actions">
@@ -632,7 +631,7 @@ const RestaurantTablesPage = () => {
               }}
               disabled={saving}
             >
-              Annuler
+              {t('common.cancel')}
             </button>
 
             <button
@@ -641,7 +640,7 @@ const RestaurantTablesPage = () => {
               onClick={handleConfirmDelete}
               disabled={saving}
             >
-              Supprimer
+              {t('common.delete')}
             </button>
           </div>
         </div>

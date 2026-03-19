@@ -66,6 +66,10 @@
         "title": "Payments",
         "subtitle": "Track transactions"
       },
+      "tables": {
+        "title": "Tables",
+        "subtitle": "Manage tables and QR codes"
+      },
       "settings": {
         "title": "Settings",
         "subtitle": "Configure your preferences"
@@ -88,6 +92,7 @@
     "specialOffers": "Special Offers",
     "payments": "Payments",
     "messages": "Messages",
+    "tables": "Tables",
     "notifications": "Notifications",
     "settings": "Settings",
     "brandSubtitle": "Admin dashboard",
@@ -120,7 +125,7 @@
       "title": "Welcome to Zamora",
       "subtitle": "The delivery platform connecting restaurants and food lovers",
       "restaurant": {
-        "title": "I’m a Restaurant",
+        "title": "I'm a Restaurant",
         "description": "Manage your orders, menus and grow your business",
         "button": "Access",
         "features": {
@@ -130,7 +135,7 @@
         }
       },
       "client": {
-        "title": "I’m a Customer",
+        "title": "I'm a Customer",
         "description": "Discover the best restaurants and order in a few clicks",
         "button": "Order",
         "features": {
@@ -152,7 +157,7 @@
       "rememberMe": "Remember me",
       "forgotPassword": "Forgot password?",
       "button": "Sign in",
-      "noAccount": "Don’t have an account yet?",
+      "noAccount": "Don't have an account yet?",
       "register": "Sign up",
       "or": "or",
       "continueWith": "Continue with"
@@ -243,7 +248,7 @@
       "addressRequired": "Address is required",
       "invalidResponse": "Invalid server response",
       "invalidData": "Invalid data",
-      "accessDenied": "Access denied. .",
+      "accessDenied": "Access denied.",
       "userNotFound": "Admin account not found",
       "network": "Unable to reach the server",
       "tooManyAttempts": "Too many attempts. Try again later.",
@@ -282,6 +287,110 @@
       "message": "Test mode:"
     }
   },
+  "tables": {
+    "title": "Table Management",
+    "subtitle": "Manage your tables and QR codes",
+    "add": "New Table",
+    "addMultiple": "Create multiple tables",
+    "refresh": "Refresh",
+    "search": "Search a table...",
+    "viewGrid": "Grid view",
+    "viewList": "List view",
+    "stats": {
+      "total": "Total",
+      "libre": "Available",
+      "occupee": "Occupied",
+      "reservee": "Reserved"
+    },
+    "status": {
+      "libre": "Available",
+      "occupee": "Occupied",
+      "reservee": "Reserved"
+    },
+    "filters": {
+      "all": "All",
+      "libre": "Available",
+      "occupee": "Occupied",
+      "reservee": "Reserved"
+    },
+    "card": {
+      "table": "Table",
+      "capacity": "Capacity",
+      "persons": "pers.",
+      "name": "Name"
+    },
+    "form": {
+      "createTitle": "Create tables",
+      "editTitle": "Edit table",
+      "singleMode": "One table",
+      "multipleMode": "Multiple tables",
+      "number": "Table number",
+      "numberPlaceholder": "e.g. 1",
+      "numberSuggestion": "Suggestion: Table",
+      "name": "Name (optional)",
+      "namePlaceholder": "e.g. Terrace, VIP, Window...",
+      "capacity": "Capacity (persons)",
+      "status": "Status",
+      "count": "Number of tables to create",
+      "preview": "Preview",
+      "qrInfo": "A unique QR code will be automatically generated",
+      "qrInfoEdit": "The QR code will be regenerated if you change the number",
+      "regenerateQR": "Regenerate QR Code"
+    },
+    "qr": {
+      "title": "QR Code",
+      "tableTitle": "Table",
+      "scanToOrder": "Scan to order",
+      "download": "Download",
+      "print": "Print",
+      "regenerate": "Regenerate",
+      "copyLink": "Copy link",
+      "linkCopied": "Link copied!"
+    },
+    "actions": {
+      "view": "View QR",
+      "edit": "Edit",
+      "delete": "Delete",
+      "download": "Download QR",
+      "print": "Print QR"
+    },
+    "empty": {
+      "title": "No tables",
+      "message": "Create your tables to generate QR codes",
+      "noResults": "No results",
+      "noResultsMessage": "No tables match your filters"
+    },
+    "delete": {
+      "title": "Delete table",
+      "message": "Delete this table?",
+      "confirm": "Delete"
+    },
+    "table": {
+      "number": "#",
+      "name": "Name",
+      "capacity": "Capacity",
+      "status": "Status",
+      "qr": "QR",
+      "actions": "Actions"
+    },
+    "messages": {
+      "created": "Table created successfully!",
+      "createdMultiple": "{{count}} tables created successfully!",
+      "updated": "Table updated!",
+      "deleted": "Table deleted",
+      "qrRegenerated": "QR code regenerated!",
+      "statusChanged": "Status updated"
+    },
+    "errors": {
+      "loadFailed": "Error loading tables",
+      "createFailed": "Error creating",
+      "updateFailed": "Error updating",
+      "deleteFailed": "Error deleting",
+      "numberRequired": "Table number is required",
+      "numberExists": "This table number already exists",
+      "countInvalid": "Count must be between 1 and 50"
+    }
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Welcome to your space",
@@ -316,6 +425,7 @@
     "orderId": "Order ID",
     "customer": "Customer",
     "items": "Items",
+    "tableNumber": "Table",
     "total": "Total",
     "item": "item",
     "itemPlural": "items",
@@ -909,7 +1019,7 @@
     "benefits": {
       "badge": "Benefits",
       "title": "Why choose Zamora?",
-      "subtitle": "Increase revenue and improve your customers’ experience",
+      "subtitle": "Increase revenue and improve your customers' experience",
       "cta": "Join Zamora",
       "list": {
         "waitTime": "Reduced wait time",

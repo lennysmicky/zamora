@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   RiQrCodeLine,
@@ -12,12 +13,6 @@ import {
   RiEyeLine
 } from 'react-icons/ri';
 import './css/TableComponents.css';
-
-const STATUS_CONFIG = {
-  libre: { label: 'Libre', icon: RiCheckboxCircleLine, color: 'success' },
-  occupee: { label: 'Occupée', icon: RiTimeLine, color: 'warning' },
-  reservee: { label: 'Réservée', icon: RiCalendarCheckLine, color: 'info' }
-};
 
 const normalizeStatus = (value) => {
   const v = String(value ?? '').toLowerCase().trim();
@@ -40,7 +35,14 @@ const TableCard = ({
   getMenuUrl,
   viewMode = 'grid'
 }) => {
+  const { t } = useTranslation();
   const [showStatusMenu, setShowStatusMenu] = useState(false);
+
+  const STATUS_CONFIG = {
+    libre: { label: t('tables.status.libre'), icon: RiCheckboxCircleLine, color: 'success' },
+    occupee: { label: t('tables.status.occupee'), icon: RiTimeLine, color: 'warning' },
+    reservee: { label: t('tables.status.reservee'), icon: RiCalendarCheckLine, color: 'info' }
+  };
 
   const status = normalizeStatus(
     table?.statut ?? table?.status ?? table?.etat ?? table?.state
@@ -61,7 +63,7 @@ const TableCard = ({
     table?.nom_table ??
     table?.nom ??
     table?.name ??
-    `Table ${tableNumber}`;
+    `${t('tables.card.table')} ${tableNumber}`;
 
   const tableId = table?._id || table?.id;
 
@@ -102,7 +104,7 @@ const TableCard = ({
         </div>
 
         <div className="table-row-capacity">
-          {table?.capacite ? `${table.capacite} pers.` : '-'}
+          {table?.capacite ? `${table.capacite} ${t('tables.card.persons')}` : '-'}
         </div>
 
         <div className="table-row-status">
@@ -151,35 +153,35 @@ const TableCard = ({
           <button
             className="table-action-btn"
             onClick={() => onShowQR(table)}
-            title="Voir QR"
+            title={t('tables.actions.view')}
           >
             <RiEyeLine />
           </button>
           <button
             className="table-action-btn"
             onClick={handleDownload}
-            title="Télécharger"
+            title={t('tables.actions.download')}
           >
             <RiDownloadLine />
           </button>
           <button
             className="table-action-btn"
             onClick={handlePrint}
-            title="Imprimer"
+            title={t('tables.actions.print')}
           >
             <RiPrinterLine />
           </button>
           <button
             className="table-action-btn"
             onClick={() => onEdit(table)}
-            title="Modifier"
+            title={t('tables.actions.edit')}
           >
             <RiEditLine />
           </button>
           <button
             className="table-action-btn danger"
             onClick={() => onDelete(tableId)}
-            title="Supprimer"
+            title={t('tables.actions.delete')}
           >
             <RiDeleteBinLine />
           </button>
@@ -192,14 +194,14 @@ const TableCard = ({
     <div className={`table-card table-card-${config.color}`}>
       <div className="table-card-header">
         <div className="table-card-number">
-          <span className="table-number-label">Table</span>
+          <span className="table-number-label">{t('tables.card.table')}</span>
           <span className="table-number-value">{tableNumber}</span>
         </div>
 
         <button
           className="table-action-btn"
           onClick={() => onEdit(table)}
-          title="Modifier"
+          title={t('tables.actions.edit')}
         >
           <RiEditLine />
         </button>
@@ -236,14 +238,14 @@ const TableCard = ({
       </div>
 
       <div className="table-card-info">
-        <span className="table-info-label">Nom:</span>
+        <span className="table-info-label">{t('tables.card.name')}:</span>
         <span className="table-info-value">{tableName}</span>
       </div>
 
       {table?.capacite && (
         <div className="table-card-info">
-          <span className="table-info-label">Capacité:</span>
-          <span className="table-info-value">{table.capacite} pers.</span>
+          <span className="table-info-label">{t('tables.card.capacity')}:</span>
+          <span className="table-info-value">{table.capacite} {t('tables.card.persons')}</span>
         </div>
       )}
 
@@ -267,28 +269,28 @@ const TableCard = ({
         <button
           className="quick-action-btn"
           onClick={handleDownload}
-          title="Télécharger QR"
+          title={t('tables.actions.download')}
         >
           <RiDownloadLine />
         </button>
         <button
           className="quick-action-btn"
           onClick={handlePrint}
-          title="Imprimer QR"
+          title={t('tables.actions.print')}
         >
           <RiPrinterLine />
         </button>
         <button
           className="quick-action-btn"
           onClick={() => onShowQR(table)}
-          title="Voir QR"
+          title={t('tables.actions.view')}
         >
           <RiQrCodeLine />
         </button>
         <button
           className="quick-action-btn danger"
           onClick={() => onDelete(tableId)}
-          title="Supprimer"
+          title={t('tables.actions.delete')}
         >
           <RiDeleteBinLine />
         </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RiAddLine,
   RiSave3Line,
@@ -23,6 +24,7 @@ const TableForm = ({
   saving,
   existingNumbers = [],
 }) => {
+  const { t } = useTranslation();
   const isEditMode = !!table;
   const [mode, setMode] = useState("single");
 
@@ -58,7 +60,7 @@ const TableForm = ({
 
     const currentNum = Number.parseInt(String(form.numero ?? ""), 10);
     if (!Number.isFinite(currentNum) || currentNum < 1) {
-      setError("Le numéro de table est requis");
+      setError(t('tables.errors.numberRequired'));
       return;
     }
 
@@ -70,7 +72,7 @@ const TableForm = ({
     const isOwnNumber = isEditMode && Number.isFinite(prevNum) && prevNum === currentNum;
 
     if (!isOwnNumber && existing.includes(currentNum)) {
-      setError("Ce numéro de table existe déjà");
+      setError(t('tables.errors.numberExists'));
       return;
     }
 
@@ -86,11 +88,11 @@ const TableForm = ({
         ? { nom: rawName, name: rawName, nom_table: rawName }
         : isEditMode
         ? {}
-        : { nom: `Table ${currentNum}`, name: `Table ${currentNum}`, nom_table: `Table ${currentNum}` }),
+        : { nom: `${t('tables.card.table')} ${currentNum}`, name: `${t('tables.card.table')} ${currentNum}`, nom_table: `${t('tables.card.table')} ${currentNum}` }),
     };
 
     const result = await onSubmit(payload);
-    if (!result?.success) setError(result?.error || "Erreur");
+    if (!result?.success) setError(result?.error || t('common.error'));
   };
 
   const handleMultipleSubmit = async (e) => {
@@ -98,18 +100,18 @@ const TableForm = ({
     setError("");
 
     if (multipleCount < 1 || multipleCount > 50) {
-      setError("Le nombre doit être entre 1 et 50");
+      setError(t('tables.errors.countInvalid'));
       return;
     }
 
     const result = await onCreateMultiple(multipleCount);
-    if (!result?.success) setError(result?.error || "Erreur");
+    if (!result?.success) setError(result?.error || t('common.error'));
   };
 
   const handleRegenerateQR = async () => {
     if (!table || !onRegenerateQR) return;
     const result = await onRegenerateQR(table._id || table.id);
-    if (!result?.success) setError(result?.error || "Erreur");
+    if (!result?.success) setError(result?.error || t('common.error'));
   };
 
   const suggestedNumber =
@@ -127,7 +129,7 @@ const TableForm = ({
             onClick={() => setMode("single")}
           >
             <RiTableLine />
-            <span>Une table</span>
+            <span>{t('tables.form.singleMode')}</span>
           </button>
           <button
             type="button"
@@ -135,14 +137,14 @@ const TableForm = ({
             onClick={() => setMode("multiple")}
           >
             <RiGroupLine />
-            <span>Plusieurs</span>
+            <span>{t('tables.form.multipleMode')}</span>
           </button>
         </div>
       )}
 
       {isEditMode && (
         <div className="table-form-edit-header">
-          <h4>Modifier la Table {displayNum}</h4>
+          <h4>{t('tables.form.editTitle')} {displayNum}</h4>
         </div>
       )}
 
@@ -152,23 +154,23 @@ const TableForm = ({
         <form onSubmit={handleSubmit}>
           <div className="table-form-grid">
             <div className="table-form-field">
-              <label>Numéro de table *</label>
+              <label>{t('tables.form.number')} *</label>
               <input
                 type="number"
                 name="numero"
                 value={form.numero}
                 onChange={handleChange}
-                placeholder={isEditMode ? "" : `Ex: ${suggestedNumber}`}
+                placeholder={isEditMode ? "" : t('tables.form.numberPlaceholder', { number: suggestedNumber })}
                 min="1"
                 required
               />
               {!isEditMode && (
-                <span className="field-hint">Suggestion: Table {suggestedNumber}</span>
+                <span className="field-hint">{t('tables.form.numberSuggestion')} {suggestedNumber}</span>
               )}
             </div>
 
             <div className="table-form-field">
-              <label>Capacité (personnes)</label>
+              <label>{t('tables.form.capacity')}</label>
               <input
                 type="number"
                 name="capacite"
@@ -180,23 +182,23 @@ const TableForm = ({
             </div>
 
             <div className="table-form-field full">
-              <label>Nom (optionnel)</label>
+              <label>{t('tables.form.name')}</label>
               <input
                 type="text"
                 name="nom"
                 value={form.nom}
                 onChange={handleChange}
-                placeholder="Ex: Terrasse, VIP, Fenêtre..."
+                placeholder={t('tables.form.namePlaceholder')}
               />
             </div>
 
             {isEditMode && (
               <div className="table-form-field full">
-                <label>Statut</label>
+                <label>{t('tables.form.status')}</label>
                 <select name="status" value={form.status} onChange={handleChange}>
-                  <option value="libre">Libre</option>
-                  <option value="occupee">Occupée</option>
-                  <option value="reservee">Réservée</option>
+                  <option value="libre">{t('tables.status.libre')}</option>
+                  <option value="occupee">{t('tables.status.occupee')}</option>
+                  <option value="reservee">{t('tables.status.reservee')}</option>
                 </select>
               </div>
             )}
@@ -206,8 +208,8 @@ const TableForm = ({
             <RiQrCodeLine />
             <p>
               {isEditMode
-                ? "Le QR code sera régénéré automatiquement si vous changez le numéro"
-                : "Un QR code unique sera généré automatiquement"}
+                ? t('tables.form.qrInfoEdit')
+                : t('tables.form.qrInfo')}
             </p>
           </div>
 
@@ -219,24 +221,24 @@ const TableForm = ({
               disabled={saving}
             >
               <RiRefreshLine />
-              <span>Régénérer le QR Code</span>
+              <span>{t('tables.form.regenerateQR')}</span>
             </button>
           )}
 
           <div className="table-form-actions">
             <button type="button" className="table-form-btn cancel" onClick={onCancel} disabled={saving}>
-              Annuler
+              {t('common.cancel')}
             </button>
             <button type="submit" className="table-form-btn submit" disabled={saving}>
               {saving ? (
                 <>
                   <RiLoader4Line className="spin" />
-                  <span>{isEditMode ? "Enregistrement..." : "Création..."}</span>
+                  <span>{isEditMode ? t('common.saving') : t('tables.form.creating')}</span>
                 </>
               ) : (
                 <>
                   {isEditMode ? <RiSave3Line /> : <RiAddLine />}
-                  <span>{isEditMode ? "Enregistrer" : "Créer la table"}</span>
+                  <span>{isEditMode ? t('common.save') : t('tables.form.createTable')}</span>
                 </>
               )}
             </button>
@@ -248,7 +250,7 @@ const TableForm = ({
         <form onSubmit={handleMultipleSubmit}>
           <div className="table-form-multiple">
             <div className="table-form-field">
-              <label>Nombre de tables à créer</label>
+              <label>{t('tables.form.count')}</label>
               <input
                 type="number"
                 value={multipleCount}
@@ -257,12 +259,12 @@ const TableForm = ({
                 max="50"
               />
               <span className="field-hint">
-                Tables {suggestedNumber} à {suggestedNumber + multipleCount - 1}
+                {t('tables.card.table')} {suggestedNumber} - {suggestedNumber + multipleCount - 1}
               </span>
             </div>
 
             <div className="table-form-preview">
-              <p>Aperçu:</p>
+              <p>{t('tables.form.preview')}:</p>
               <div className="preview-numbers">
                 {Array.from({ length: Math.min(multipleCount, 8) }, (_, i) => (
                   <span key={i} className="preview-number">
@@ -276,23 +278,23 @@ const TableForm = ({
 
           <div className="table-form-info">
             <RiQrCodeLine />
-            <p>Un QR code unique sera généré pour chaque table</p>
+            <p>{t('tables.form.qrInfo')}</p>
           </div>
 
           <div className="table-form-actions">
             <button type="button" className="table-form-btn cancel" onClick={onCancel} disabled={saving}>
-              Annuler
+              {t('common.cancel')}
             </button>
             <button type="submit" className="table-form-btn submit" disabled={saving}>
               {saving ? (
                 <>
                   <RiLoader4Line className="spin" />
-                  <span>Création...</span>
+                  <span>{t('tables.form.creating')}</span>
                 </>
               ) : (
                 <>
                   <RiAddLine />
-                  <span>Créer {multipleCount} tables</span>
+                  <span>{t('tables.form.createMultipleTables', { count: multipleCount })}</span>
                 </>
               )}
             </button>

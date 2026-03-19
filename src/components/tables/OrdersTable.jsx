@@ -45,7 +45,7 @@ const OrdersTable = ({
 
     return [
       ...base,
-      { key: "table", label: t("orders.table.table", "Table"), sortable: true },
+      { key: "table", label: t("orders.table.tableNumber"), sortable: true }, // ✅ CORRIGÉ
       { key: "items_count", label: t("orders.table.items"), sortable: true },
       { key: "total_amount", label: t("orders.table.amount"), sortable: true },
       { key: "status", label: t("orders.table.orderStatus"), sortable: true },

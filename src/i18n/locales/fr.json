@@ -24,7 +24,8 @@
         "paymentsSubtitle": "Historique de vos paiements",
         "notificationsSubtitle": "Vos notifications",
         "messagesSubtitle": "Vos messages et communications",
-        "settingsSubtitle": "Paramètres de votre restaurant"
+        "settingsSubtitle": "Paramètres de votre restaurant",
+        "tablesSubtitle": "Gérez vos tables et QR codes"
       },
       "default": {
         "title": "Tableau de bord",
@@ -67,8 +68,8 @@
         "subtitle": "Suivez les transactions"
       },
       "tables": {
-        "title": " Mes tables",
-        "subtitle": "Gérez les  et QR codes"
+        "title": "Mes tables",
+        "subtitle": "Gérez les tables et QR codes"
       },
       "settings": {
         "title": "Paramètres",
@@ -248,7 +249,7 @@
       "addressRequired": "L'adresse est obligatoire",
       "invalidResponse": "Réponse invalide du serveur",
       "invalidData": "Données invalides",
-      "accessDenied": "Accès refusé. .",
+      "accessDenied": "Accès refusé.",
       "userNotFound": "Compte administrateur non trouvé",
       "network": "Impossible de contacter le serveur",
       "tooManyAttempts": "Trop de tentatives. Réessayez plus tard.",
@@ -287,12 +288,11 @@
       "message": "Mode test:"
     }
   },
-  "": {
-    "title": "Gestion des ",
-    "subtitle": "Gérez vos  et QR codes",
-    "Subtitle": "Gérez vos  et QR codes",
+  "tables": {
+    "title": "Gestion des Tables",
+    "subtitle": "Gérez vos tables et QR codes",
     "add": "Nouvelle Table",
-    "addMultiple": "Créer plusieurs",
+    "addMultiple": "Créer plusieurs tables",
     "refresh": "Actualiser",
     "search": "Rechercher une table...",
     "viewGrid": "Vue grille",
@@ -321,22 +321,26 @@
       "name": "Nom"
     },
     "form": {
-      "createTitle": "Créer des ",
+      "createTitle": "Créer des tables",
       "editTitle": "Modifier la table",
       "singleMode": "Une table",
-      "multipleMode": "Plusieurs ",
+      "multipleMode": "Plusieurs tables",
       "number": "Numéro de table",
-      "numberPlaceholder": "Ex: 1",
+      "numberPlaceholder": "Ex: {{number}}",
       "numberSuggestion": "Suggestion: Table",
       "name": "Nom (optionnel)",
       "namePlaceholder": "Ex: Terrasse, VIP, Fenêtre...",
       "capacity": "Capacité (personnes)",
       "status": "Statut",
-      "count": "Nombre de  à créer",
+      "count": "Nombre de tables à créer",
       "preview": "Aperçu",
       "qrInfo": "Un QR code unique sera généré automatiquement",
       "qrInfoEdit": "Le QR code sera régénéré si vous changez le numéro",
-      "regenerateQR": "Régénérer le QR Code"
+      "regenerateQR": "Régénérer le QR Code",
+      "creating": "Création...",
+      "saving": "Enregistrement...",
+      "createTable": "Créer la table",
+      "createMultipleTables": "Créer {{count}} tables"
     },
     "qr": {
       "title": "QR Code",
@@ -357,7 +361,7 @@
     },
     "empty": {
       "title": "Aucune table",
-      "message": "Créez vos  pour générer des QR codes",
+      "message": "Créez vos tables pour générer des QR codes",
       "noResults": "Aucun résultat",
       "noResultsMessage": "Aucune table ne correspond à vos filtres"
     },
@@ -366,16 +370,24 @@
       "message": "Supprimer cette table ?",
       "confirm": "Supprimer"
     },
+    "table": {
+      "number": "N°",
+      "name": "Nom",
+      "capacity": "Capacité",
+      "status": "Statut",
+      "qr": "QR",
+      "actions": "Actions"
+    },
     "messages": {
       "created": "Table créée avec succès !",
-      "createdMultiple": "{{count}}  créées avec succès !",
+      "createdMultiple": "{{count}} tables créées avec succès !",
       "updated": "Table modifiée !",
       "deleted": "Table supprimée",
       "qrRegenerated": "QR code régénéré !",
       "statusChanged": "Statut mis à jour"
     },
     "errors": {
-      "loadFailed": "Erreur lors du chargement des ",
+      "loadFailed": "Erreur lors du chargement des tables",
       "createFailed": "Erreur lors de la création",
       "updateFailed": "Erreur lors de la modification",
       "deleteFailed": "Erreur lors de la suppression",
@@ -459,6 +471,8 @@
       "orderId": "N° Commande",
       "customer": "Client",
       "restaurant": "Restaurant",
+      "tableNumber": "Table",
+      "items": "Articles",
       "amount": "Montant",
       "orderStatus": "Statut",
       "paymentStatus": "Paiement",
@@ -981,11 +995,11 @@
       },
       "analytics": {
         "title": "Statistiques & Rapports",
-        "description": "Analysez vos ventes, les plats populaires et les performances grâce à des saux de bord intuitifs."
+        "description": "Analysez vos ventes, les plats populaires et les performances grâce à des tableaux de bord intuitifs."
       },
-      "": {
-        "title": "Gestion des ",
-        "description": "Visualisez la disponibilité des  et gérez les réservations facilement."
+      "tables": {
+        "title": "Gestion des tables",
+        "description": "Visualisez la disponibilité des tables et gérez les réservations facilement."
       },
       "multiuser": {
         "title": "Multi-utilisateurs",

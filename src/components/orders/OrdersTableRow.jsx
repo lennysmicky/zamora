@@ -46,7 +46,7 @@ const OrdersTableRow = ({
   const createdAt = order?.createdAt || order?.created_at || order?.raw?.createdAt;
 
   const orderNumber =
-    order?.orderNumber || order?.order_number || (orderId ? `ORD-${orderId}` : "-");
+    order?.orderNumber || order?.order_number || (orderId ? `CMD-${orderId}` : "-");
 
   const customerName =
     order?.customer?.name || order?.customerName || order?.customer_name || "-";

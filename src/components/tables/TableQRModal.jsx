@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   RiCloseLine,
@@ -12,6 +13,7 @@ import {
 import './css/TableComponents.css';
 
 const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving }) => {
+  const { t } = useTranslation();
   const qrRef = useRef(null);
   const [copied, setCopied] = React.useState(false);
 
@@ -55,11 +57,11 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
       ctx.fillStyle = '#000000';
       ctx.font = 'bold 24px Arial';
       ctx.textAlign = 'center';
-      ctx.fillText(`Table ${tableNumber}`, 200, 400);
+      ctx.fillText(`${t('tables.qr.tableTitle')} ${tableNumber}`, 200, 400);
 
       ctx.font = '14px Arial';
       ctx.fillStyle = '#666666';
-      ctx.fillText('Scannez pour commander', 200, 430);
+      ctx.fillText(t('tables.qr.scanToOrder'), 200, 430);
 
       const link = document.createElement('a');
       link.download = `table-${tableNumber}-qr.png`;
@@ -77,12 +79,14 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
     if (!svg || !printWindow || !effectiveMenuUrl) return;
 
     const svgData = new XMLSerializer().serializeToString(svg);
+    const titleText = `${t('tables.qr.tableTitle')} ${tableNumber}`;
+    const scanText = t('tables.qr.scanToOrder');
 
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Table ${tableNumber} - QR Code</title>
+          <title>${titleText} - ${t('tables.qr.title')}</title>
           <style>
             body {
               display: flex;
@@ -118,8 +122,8 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
         <body>
           <div class="qr-container">
             ${svgData}
-            <h1>Table ${tableNumber}</h1>
-            <p>Scannez pour commander</p>
+            <h1>${titleText}</h1>
+            <p>${scanText}</p>
           </div>
           <script>
             window.onload = () => {
@@ -150,8 +154,8 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
     <div className="qr-modal-overlay" onClick={onClose}>
       <div className="qr-modal" onClick={e => e.stopPropagation()}>
         <div className="qr-modal-header">
-          <h3>QR Code - Table {tableNumber}</h3>
-          <button className="qr-modal-close" onClick={onClose}>
+          <h3>{t('tables.qr.title')} - {t('tables.qr.tableTitle')} {tableNumber}</h3>
+          <button className="qr-modal-close" onClick={onClose} aria-label={t('common.close')}>
             <RiCloseLine />
           </button>
         </div>
@@ -169,8 +173,8 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
           </div>
 
           <div className="qr-info">
-            <div className="qr-table-number">Table {tableNumber}</div>
-            <p className="qr-instruction">Scannez ce QR code pour accéder au menu et commander</p>
+            <div className="qr-table-number">{t('tables.qr.tableTitle')} {tableNumber}</div>
+            <p className="qr-instruction">{t('tables.qr.scanToOrder')}</p>
           </div>
 
           <div className="qr-url">
@@ -184,6 +188,7 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
               className={`qr-copy-btn ${copied ? 'copied' : ''}`}
               onClick={handleCopyLink}
               disabled={!effectiveMenuUrl}
+              title={copied ? t('tables.qr.linkCopied') : t('tables.qr.copyLink')}
             >
               {copied ? <RiCheckLine /> : <RiFileCopyLine />}
             </button>
@@ -197,7 +202,7 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
             disabled={saving}
           >
             {saving ? <RiLoader4Line className="spin" /> : <RiRefreshLine />}
-            <span>Régénérer</span>
+            <span>{t('tables.qr.regenerate')}</span>
           </button>
           <button
             className="qr-action-btn"
@@ -205,7 +210,7 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
             disabled={!effectiveMenuUrl}
           >
             <RiDownloadLine />
-            <span>Télécharger</span>
+            <span>{t('tables.qr.download')}</span>
           </button>
           <button
             className="qr-action-btn primary"
@@ -213,7 +218,7 @@ const TableQRModal = ({ isOpen, onClose, table, menuUrl, onRegenerate, saving })
             disabled={!effectiveMenuUrl}
           >
             <RiPrinterLine />
-            <span>Imprimer</span>
+            <span>{t('tables.qr.print')}</span>
           </button>
         </div>
       </div>
