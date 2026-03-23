@@ -56,10 +56,10 @@ const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('✅ Service Worker enregistré:', registration.scope);
+      console.log(' Service Worker enregistré:', registration.scope);
       return registration;
     } catch (error) {
-      console.error('❌ Erreur Service Worker:', error);
+      console.error(' Erreur Service Worker:', error);
     }
   }
   return null;
@@ -133,7 +133,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     if (!token || !restaurantId) {
-      console.log('⏳ En attente de connexion...', { hasToken: !!token, restaurantId });
+      console.log(' En attente de connexion...', { hasToken: !!token, restaurantId });
       setStatus('waiting_auth');
       return;
     }
@@ -143,7 +143,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       return;
     }
 
-    console.log('🚀 Configuration Pusher pour restaurant:', restaurantId);
+    console.log(' Configuration Pusher pour restaurant:', restaurantId);
     setStatus('connecting');
 
     // Initialiser Pusher
@@ -161,7 +161,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       subscribedRef.current = true;
       setStatus('connected');
 
-      console.log('📺 Configuration des channels...');
+      console.log(' Configuration des channels...');
 
       // Channels à écouter
       const channels = [
@@ -183,7 +183,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       channels.forEach(channelName => {
         events.forEach(eventName => {
           const unsub = pusherService.on(channelName, eventName, (data) => {
-            console.log(`🔔 [Pusher] ${channelName}/${eventName}:`, data);
+            console.log(`[Pusher] ${channelName}/${eventName}:`, data);
             
             // Vérifier si c'est pour notre restaurant
             const orderRestaurantId = data.restaurantId || data.restaurant_id || 
@@ -198,12 +198,12 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         });
       });
 
-      console.log('✅ Abonnements Pusher configurés');
+      console.log(' Abonnements Pusher configurés');
     };
 
     // Gestion des événements de commande et de notifications
     const handleOrderEvent = (eventName, data) => {
-      // 🚨 Si c'est l'événement envoyé par ton sendNotification.js backend
+      //  Si c'est l'événement envoyé par ton sendNotification.js backend
       if (eventName === 'new-notification' && data.type === 'commande') {
         handleNewOrderFromNotification(data);
         return;
@@ -221,7 +221,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
     // Handler pour les notifications génériques du backend (Option 1)
     const handleNewOrderFromNotification = (data) => {
-      console.log('🆕 Nouvelle commande reçue via Notification user:', data);
+      console.log(' Nouvelle commande reçue via Notification user:', data);
 
       // On extrait le numéro de commande du texte (ex: CMD-1234)
       const match = data.contenu?.match(/\(([^)]+)\)/);
@@ -239,7 +239,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       showOrderNotification.newOrder(orderData);
 
       // Notification OS
-      showSystemNotification('🍽️ ' + data.titre, {
+      showSystemNotification('' + data.titre, {
         body: data.contenu,
         tag: `order-${orderNumber}`,
         requireInteraction: true,
@@ -258,7 +258,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
     // Nouvelle commande (Handler standard)
     const handleNewOrder = (data) => {
-      console.log('🆕 Nouvelle commande Pusher standard:', data);
+      console.log(' Nouvelle commande Pusher standard:', data);
       
       const order = data.order || data;
       
@@ -272,7 +272,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
       showOrderNotification.newOrder(orderData);
 
-      showSystemNotification('🍽️ Nouvelle commande !', {
+      showSystemNotification('Nouvelle commande !', {
         body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
         tag: `order-${orderData.orderNumber}`,
         requireInteraction: true,
@@ -292,7 +292,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
     // Mise à jour de statut
     const handleStatusUpdate = (data) => {
-      console.log('📝 Mise à jour statut:', data);
+      console.log(' Mise à jour statut:', data);
       
       const order = data.order || data;
       const newStatus = data.newStatus || data.new_status || data.status || order.status;
@@ -332,12 +332,12 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
     // Écouter la connexion
     const unsubConnected = pusherService.onConnectionChange('connected', () => {
-      console.log('✅ Pusher connecté, setup abonnements...');
+      console.log(' Pusher connecté, setup abonnements...');
       setupSubscriptions();
     });
 
     const unsubDisconnected = pusherService.onConnectionChange('disconnected', () => {
-      console.log('🔌 Pusher déconnecté');
+      console.log(' Pusher déconnecté');
       setStatus('disconnected');
       subscribedRef.current = false;
     });
@@ -349,7 +349,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     return () => {
-      console.log('🧹 Cleanup Pusher...');
+      console.log(' Cleanup Pusher...');
       cleanupRef.current.forEach(fn => fn && fn());
       cleanupRef.current = [];
       subscribedRef.current = false;
@@ -436,7 +436,7 @@ const PollingNotificationManager = () => {
           const isNew = Date.now() - createdAt < 60000;
           
           if (isNew && lastOrderIdsRef.current.size > 0) {
-            console.log('📬 [Polling] Nouvelle commande:', orderId);
+            console.log(' [Polling] Nouvelle commande:', orderId);
             
             const orderData = {
               orderNumber: order.orderNumber || orderId,
@@ -448,7 +448,7 @@ const PollingNotificationManager = () => {
 
             showOrderNotification.newOrder(orderData);
             
-            showSystemNotification('🍽️ Nouvelle commande !', {
+            showSystemNotification(' Nouvelle commande !', {
               body: `Commande #${orderData.orderNumber}`,
               tag: `order-${orderData.orderNumber}`,
             });
@@ -485,7 +485,7 @@ const PollingNotificationManager = () => {
       return;
     }
 
-    console.log('📡 Démarrage polling (interval: 15s)');
+    console.log(' Démarrage polling (interval: 15s)');
     setIsPolling(true);
 
     checkNewOrders();
@@ -521,10 +521,10 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* 🔔 PUSHER - Notifications temps réel */}
+      {/* PUSHER - Notifications temps réel */}
       <PusherNotificationManager />
       
-      {/* 📡 POLLING - Backup toutes les 15s */}
+      {/* POLLING - Backup toutes les 15s */}
       <PollingNotificationManager />
 
       {/* Routes de l'application */}
