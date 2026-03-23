@@ -24,7 +24,7 @@ const NotificationProvider = ({ children }) => {
 
     // Handler pour nouvelle commande
     const handleNewOrder = (data) => {
-      console.log('🆕 Nouvelle commande reçue:', data);
+      console.log(' Nouvelle commande reçue:', data);
       
       const order = data.order || data;
       const orderData = {
@@ -48,7 +48,7 @@ const NotificationProvider = ({ children }) => {
 
     // Handler pour changement de statut
     const handleStatusUpdate = (data) => {
-      console.log('🔄 Statut commande mis à jour:', data);
+      console.log(' Statut commande mis à jour:', data);
       
       const { order, orderId, newStatus, restaurantName } = data;
       
@@ -91,7 +91,7 @@ const NotificationProvider = ({ children }) => {
 
     // Handler pour commande créée
     const handleOrderCreated = (data) => {
-      console.log('✅ Commande créée:', data);
+      console.log(' Commande créée:', data);
       showOrderNotification.success('Nouvelle commande créée avec succès');
       emitDashboardRefresh({ reason: 'order_created' });
     };
@@ -102,7 +102,7 @@ const NotificationProvider = ({ children }) => {
     const unsubStatusUpdate2 = wsService.on('status_update', handleStatusUpdate);
     const unsubOrderCreated = wsService.on('order_created', handleOrderCreated);
 
-    console.log('🔔 Notification listeners activés');
+    console.log('Notification listeners activés');
 
     return () => {
       unsubNewOrder();

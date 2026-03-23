@@ -1,3 +1,4 @@
+// src/pages/Orders/OrdersPage.jsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
@@ -5,9 +6,8 @@ import { useSearchParams } from "react-router-dom";
 import { ordersStore } from "../../stores/ordersStore";
 import { useSelectedOrders, useIsCreateModalOpen } from "../../hooks/useOrdersStore";
 import useAuthStore from "../../stores/authStore";
-import { emitDashboardRefresh } from "../../utils/dashboardEvents";
+import { emitDashboardRefresh, onDashboardRefresh } from "../../utils/dashboardEvents";
 import { useOrderNotifications } from "../../hooks/useOrderNotifications";
-import { useWebSocket } from "../../hooks/useWebSocket";
 
 import OrdersStats from "../../components/orders/OrdersStats";
 import OrdersFilters from "../../components/orders/OrderFilters";
@@ -80,7 +80,7 @@ const OrdersPage = ({
   const userType = useAuthStore((s) => s.userType);
   const storeRestaurantId = useAuthStore((s) => s.restaurantId);
 
-  //  Hook de notifications
+  // Hook de notifications (votre Toastify existant)
   const { notifyStatusChange, notifySuccess, notifyError, notifyNewOrder } = useOrderNotifications();
 
   const forcedMode =
@@ -110,6 +110,9 @@ const OrdersPage = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState("");
+  
+  // État pour indiquer qu'un rafraîchissement est en cours
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const {
     orders,
@@ -136,53 +139,64 @@ const OrdersPage = ({
     fetchOrdersRef.current = fetchOrders;
   }, [fetchOrders]);
 
-  //  Configuration WebSocket
-  const { isConnected, subscribe } = useWebSocket({
-    autoConnect: true,
-    onConnected: () => {
-      // console.log(' WebSocket connecté - Écoute des commandes en temps réel');
-    },
-    onDisconnected: () => {
-      // console.log('🔌 WebSocket déconnecté');
-    },
-    onMessage: (data) => {
-      // console.log('Message WebSocket reçu:', data);
-    },
-  });
-
-  //  Écouter les événements WebSocket
+  // ====================================================================
+  // 🔄 RAFRAÎCHISSEMENT AUTOMATIQUE VIA PUSHER/POLLING
+  // ====================================================================
   useEffect(() => {
-    // Nouvelle commande
-    const unsubNewOrder = subscribe('new_order', (data) => {
-      // console.log('Nouvelle commande WebSocket:', data);
-      fetchOrdersRef.current?.();
-    });
+    const unsubscribe = onDashboardRefresh((detail) => {
+      console.log('📊 [OrdersPage] Dashboard refresh reçu:', detail);
 
-    // Changement de statut
-    const unsubStatusUpdate = subscribe('order_status_updated', (data) => {
-      // console.log(' Mise à jour statut WebSocket:', data);
-      fetchOrdersRef.current?.();
-    });
+      // Liste des raisons qui déclenchent un rafraîchissement
+      const refreshReasons = [
+        'new_order',
+        'order_created',
+        'status_update',
+        'order_status_updated',
+        'order_deleted',
+        'payment_updated',
+        'payment_status_updated',
+        'orders_manual_refresh',
+      ];
 
-    // Commande supprimée
-    const unsubOrderDeleted = subscribe('order_deleted', (data) => {
-      // console.log(' Commande supprimée WebSocket:', data);
-      fetchOrdersRef.current?.();
-    });
+      if (!refreshReasons.includes(detail.reason)) {
+        return;
+      }
 
-    // Paiement mis à jour
-    const unsubPaymentUpdate = subscribe('payment_status_updated', (data) => {
-      // console.log('Paiement mis à jour WebSocket:', data);
-      fetchOrdersRef.current?.();
+      // En mode restaurant, vérifier si c'est pour notre restaurant
+      if (mode === 'restaurant' && restaurantIdForHook) {
+        // Si l'événement a un restaurantId et qu'il ne correspond pas, ignorer
+        if (detail.restaurantId && detail.restaurantId !== restaurantIdForHook) {
+          console.log('📊 [OrdersPage] Événement ignoré (autre restaurant)');
+          return;
+        }
+      }
+
+      console.log('🔄 [OrdersPage] Rafraîchissement automatique des commandes...');
+      
+      // Indiquer visuellement le rafraîchissement
+      setIsRefreshing(true);
+      
+      // Rafraîchir les commandes
+      fetchOrdersRef.current?.()
+        .then(() => {
+          console.log('✅ [OrdersPage] Commandes rafraîchies');
+        })
+        .catch((err) => {
+          console.error('❌ [OrdersPage] Erreur rafraîchissement:', err);
+        })
+        .finally(() => {
+          setIsRefreshing(false);
+        });
     });
 
     return () => {
-      unsubNewOrder();
-      unsubStatusUpdate();
-      unsubOrderDeleted();
-      unsubPaymentUpdate();
+      unsubscribe();
     };
-  }, [subscribe]);
+  }, [mode, restaurantIdForHook]);
+
+  // ====================================================================
+  // FIN RAFRAÎCHISSEMENT AUTOMATIQUE
+  // ====================================================================
 
   const setFiltersUI = useCallback(
     (updater) => {
@@ -293,18 +307,20 @@ const OrdersPage = ({
   }, [setFiltersUI]);
 
   const handleRefresh = useCallback(() => {
-    fetchOrdersRef.current?.();
+    setIsRefreshing(true);
+    fetchOrdersRef.current?.()
+      .finally(() => {
+        setIsRefreshing(false);
+      });
     emitDashboardRefresh({ reason: "orders_manual_refresh" });
   }, []);
 
   const handleExport = useCallback((format) => {
-    // console.log(`Exporting as ${format}`);
     notifySuccess(`Export ${format} en cours...`);
   }, [notifySuccess]);
 
   const handleBulkAction = useCallback((action) => {
     const ids = ordersStore.getState()?.selectedOrders ?? [];
-    // console.log(`Bulk action: ${action}`, ids);
     notifySuccess(`Action ${action} appliquée à ${ids.length} commandes`);
     ordersStore.clearSelection();
   }, [notifySuccess]);
@@ -362,7 +378,7 @@ const OrdersPage = ({
         await ordersApi.updateOrder(rid, id, { status: newStatus });
         await fetchOrdersRef.current?.();
 
-        //  Notifier le changement de statut
+        // Notifier le changement de statut avec votre Toastify
         const updatedOrder = {
           orderNumber: order?.orderNumber || id,
           restaurant: order?.restaurant?.name || order?.restaurantName,
@@ -428,7 +444,6 @@ const OrdersPage = ({
         await ordersApi.updateOrder(rid, id, { payment_status: newStatus });
         await fetchOrdersRef.current?.();
 
-        //  Notifier le succès
         notifySuccess(`Statut de paiement mis à jour : ${newStatus}`);
 
         emitDashboardRefresh({
@@ -496,7 +511,6 @@ const OrdersPage = ({
       try {
         await ordersApi.deleteOrder(rid, id);
 
-        //  Notifier la suppression
         notifySuccess(`Commande #${id} supprimée avec succès`);
 
         emitDashboardRefresh({
@@ -529,18 +543,17 @@ const OrdersPage = ({
   );
 
   const handlePrintOrder = useCallback((order) => {
-    // console.log("PRINT ORDER", order);
     notifySuccess("Impression en cours...");
     window.print();
   }, [notifySuccess]);
 
   return (
     <div className={`orders-page ${isRestaurantMode ? "restaurant-mode" : "admin-mode"}`}>
-      {/* Indicateur de connexion WebSocket */}
-      {isConnected && (
-        <div className="websocket-indicator">
-          <span className="ws-dot"></span>
-          <span>Temps réel activé</span>
+      {/* Indicateur de rafraîchissement en temps réel */}
+      {isRefreshing && (
+        <div className="realtime-refresh-indicator">
+          <span className="refresh-spinner"></span>
+          <span>Mise à jour...</span>
         </div>
       )}
 

@@ -12,16 +12,400 @@ import './i18n';
 // Router
 import AppRouter from './routes/AppRouter';
 
-// Notifications
+// Notifications & Services
 import { showOrderNotification } from './components/notifications/OrderNotification';
 import { emitDashboardRefresh } from './utils/dashboardEvents';
 import useAuthStore from './stores/authStore';
 import client from './api/client';
+import { pusherService } from './services/pusher';
 
 // ========================================
-// GESTIONNAIRE DE NOTIFICATIONS (POLLING)
+// UTILITAIRES
 // ========================================
-const OrderNotificationManager = () => {
+
+// Son de notification
+const playNotificationSound = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    
+    const ctx = new AudioContext();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+
+    oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+    oscillator.frequency.setValueAtTime(988, ctx.currentTime + 0.1);
+    oscillator.frequency.setValueAtTime(1047, ctx.currentTime + 0.2);
+    
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.15, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.4);
+  } catch (e) {
+    // Silencieux
+  }
+};
+
+// Enregistrer le Service Worker
+const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js');
+      console.log('✅ Service Worker enregistré:', registration.scope);
+      return registration;
+    } catch (error) {
+      console.error('❌ Erreur Service Worker:', error);
+    }
+  }
+  return null;
+};
+
+// Demander permission pour les notifications
+const requestNotificationPermission = async () => {
+  if (!('Notification' in window)) {
+    console.log('Notifications non supportées');
+    return false;
+  }
+
+  if (Notification.permission === 'granted') {
+    return true;
+  }
+
+  if (Notification.permission !== 'denied') {
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  return false;
+};
+
+// Afficher une notification système (même app en background)
+const showSystemNotification = (title, options = {}) => {
+  if (Notification.permission === 'granted') {
+    try {
+      const notification = new Notification(title, {
+        icon: '/logo192.jpg',
+        badge: '/logo192.jpg',
+        vibrate: [200, 100, 200],
+        requireInteraction: true,
+        ...options,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+
+      return notification;
+    } catch (e) {
+      // Sur mobile, utiliser le Service Worker
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.ready.then(registration => {
+          registration.showNotification(title, options);
+        });
+      }
+    }
+  }
+};
+
+// ========================================
+// GESTIONNAIRE PUSHER (Temps réel)
+// ========================================
+const PusherNotificationManager = ({ onNewOrder }) => {
+  const token = useAuthStore((s) => s.token);
+  const restaurantId = useAuthStore((s) => s.restaurantId);
+  const [status, setStatus] = useState('initializing');
+  const subscribedRef = useRef(false);
+  const cleanupRef = useRef([]);
+
+  useEffect(() => {
+    const pusherKey = import.meta.env.VITE_PUSHER_KEY;
+
+    if (!pusherKey) {
+      console.log('VITE_PUSHER_KEY non configuré');
+      setStatus('no_key');
+      return;
+    }
+
+    if (!token || !restaurantId) {
+      console.log('⏳ En attente de connexion...', { hasToken: !!token, restaurantId });
+      setStatus('waiting_auth');
+      return;
+    }
+
+    if (subscribedRef.current) {
+      console.log('Déjà abonné');
+      return;
+    }
+
+    console.log('🚀 Configuration Pusher pour restaurant:', restaurantId);
+    setStatus('connecting');
+
+    // Initialiser Pusher
+    const pusher = pusherService.init();
+    
+    if (!pusher) {
+      console.error('Échec init Pusher');
+      setStatus('init_failed');
+      return;
+    }
+
+    // Fonction de setup des abonnements
+    const setupSubscriptions = () => {
+      if (subscribedRef.current) return;
+      subscribedRef.current = true;
+      setStatus('connected');
+
+      console.log('📺 Configuration des channels...');
+
+      // Channels à écouter
+      const channels = [
+        `user-${restaurantId}`,               // ← Channel utilisé par sendNotification sur ton backend
+        `orders-restaurant-${restaurantId}`,  // Channel des commandes
+        'orders',                             // Channel global
+      ];
+
+      // Événements à écouter
+      const events = [
+        'new-notification',       // ← Événement envoyé par sendNotification.js du backend
+        'new-order',
+        'new_order', 
+        'order-created',
+        'order-status-updated',
+      ];
+
+      // S'abonner à tous les channels et événements
+      channels.forEach(channelName => {
+        events.forEach(eventName => {
+          const unsub = pusherService.on(channelName, eventName, (data) => {
+            console.log(`🔔 [Pusher] ${channelName}/${eventName}:`, data);
+            
+            // Vérifier si c'est pour notre restaurant
+            const orderRestaurantId = data.restaurantId || data.restaurant_id || 
+                                      data.order?.restaurantId || data.order?.restaurant_id ||
+                                      data.order?.restaurant?._id || data.user;
+            
+            if (!orderRestaurantId || orderRestaurantId === restaurantId) {
+              handleOrderEvent(eventName, data);
+            }
+          });
+          cleanupRef.current.push(unsub);
+        });
+      });
+
+      console.log('✅ Abonnements Pusher configurés');
+    };
+
+    // Gestion des événements de commande et de notifications
+    const handleOrderEvent = (eventName, data) => {
+      // 🚨 Si c'est l'événement envoyé par ton sendNotification.js backend
+      if (eventName === 'new-notification' && data.type === 'commande') {
+        handleNewOrderFromNotification(data);
+        return;
+      }
+
+      const isNewOrder = eventName.includes('new') || eventName.includes('created');
+      const isStatusUpdate = eventName.includes('status') || eventName.includes('updated');
+
+      if (isNewOrder) {
+        handleNewOrder(data);
+      } else if (isStatusUpdate) {
+        handleStatusUpdate(data);
+      }
+    };
+
+    // Handler pour les notifications génériques du backend (Option 1)
+    const handleNewOrderFromNotification = (data) => {
+      console.log('🆕 Nouvelle commande reçue via Notification user:', data);
+
+      // On extrait le numéro de commande du texte (ex: CMD-1234)
+      const match = data.contenu?.match(/\(([^)]+)\)/);
+      const orderNumber = match ? match[1] : 'N/A';
+
+      const orderData = {
+        orderNumber: orderNumber,
+        restaurant: 'Mon Restaurant',
+        items: [],
+        total: 0,
+        status: 'en_attente',
+      };
+
+      // Toast dans l'application
+      showOrderNotification.newOrder(orderData);
+
+      // Notification OS
+      showSystemNotification('🍽️ ' + data.titre, {
+        body: data.contenu,
+        tag: `order-${orderNumber}`,
+        requireInteraction: true,
+      });
+
+      // Rafraîchir l'écran
+      emitDashboardRefresh({
+        reason: 'new_order',
+        orderId: orderNumber,
+        source: 'pusher-notification',
+        timestamp: Date.now(),
+      });
+
+      playNotificationSound();
+    };
+
+    // Nouvelle commande (Handler standard)
+    const handleNewOrder = (data) => {
+      console.log('🆕 Nouvelle commande Pusher standard:', data);
+      
+      const order = data.order || data;
+      
+      const orderData = {
+        orderNumber: order.orderNumber || order.order_number || order._id || order.id,
+        restaurant: order.restaurantName || order.restaurant_name || order.restaurant?.name || 'Restaurant',
+        items: order.items || [],
+        total: order.total || order.totalAmount || order.total_amount || 0,
+        status: order.status || 'pending',
+      };
+
+      showOrderNotification.newOrder(orderData);
+
+      showSystemNotification('🍽️ Nouvelle commande !', {
+        body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
+        tag: `order-${orderData.orderNumber}`,
+        requireInteraction: true,
+      });
+
+      emitDashboardRefresh({
+        reason: 'new_order',
+        orderId: orderData.orderNumber,
+        source: 'pusher',
+        timestamp: Date.now(),
+      });
+
+      playNotificationSound();
+
+      if (onNewOrder) onNewOrder(orderData);
+    };
+
+    // Mise à jour de statut
+    const handleStatusUpdate = (data) => {
+      console.log('📝 Mise à jour statut:', data);
+      
+      const order = data.order || data;
+      const newStatus = data.newStatus || data.new_status || data.status || order.status;
+      
+      const orderData = {
+        orderNumber: data.orderId || data.order_id || order.orderNumber || order._id,
+        restaurant: data.restaurantName || order.restaurantName,
+        status: newStatus,
+      };
+
+      const statusNotifications = {
+        confirmed: showOrderNotification.confirmed,
+        confirmee: showOrderNotification.confirmed,
+        preparing: showOrderNotification.preparing,
+        en_preparation: showOrderNotification.preparing,
+        in_preparation: showOrderNotification.preparing,
+        ready: showOrderNotification.ready,
+        prete: showOrderNotification.ready,
+        delivered: showOrderNotification.delivered,
+        livree: showOrderNotification.delivered,
+        cancelled: showOrderNotification.cancelled,
+        annulee: showOrderNotification.cancelled,
+      };
+
+      const notifyFn = statusNotifications[newStatus?.toLowerCase()];
+      if (notifyFn) {
+        notifyFn(orderData);
+      }
+
+      emitDashboardRefresh({
+        reason: 'status_update',
+        orderId: orderData.orderNumber,
+        newStatus,
+        source: 'pusher',
+      });
+    };
+
+    // Écouter la connexion
+    const unsubConnected = pusherService.onConnectionChange('connected', () => {
+      console.log('✅ Pusher connecté, setup abonnements...');
+      setupSubscriptions();
+    });
+
+    const unsubDisconnected = pusherService.onConnectionChange('disconnected', () => {
+      console.log('🔌 Pusher déconnecté');
+      setStatus('disconnected');
+      subscribedRef.current = false;
+    });
+
+    cleanupRef.current.push(unsubConnected, unsubDisconnected);
+
+    if (pusherService.isConnected()) {
+      setupSubscriptions();
+    }
+
+    return () => {
+      console.log('🧹 Cleanup Pusher...');
+      cleanupRef.current.forEach(fn => fn && fn());
+      cleanupRef.current = [];
+      subscribedRef.current = false;
+    };
+  }, [token, restaurantId, onNewOrder]);
+
+  if (import.meta.env.DEV) {
+    const statusColors = {
+      initializing: '#f59e0b',
+      no_key: '#6b7280',
+      waiting_auth: '#f59e0b',
+      connecting: '#3b82f6',
+      connected: '#10b981',
+      disconnected: '#ef4444',
+      init_failed: '#ef4444',
+    };
+
+    const statusLabels = {
+      initializing: 'Init...',
+      no_key: 'Pas de clé',
+      waiting_auth: 'Auth...',
+      connecting: 'Connexion...',
+      connected: 'Pusher OK',
+      disconnected: '❌ Déconnecté',
+      init_failed: '❌ Échec',
+    };
+
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 50,
+          left: 10,
+          padding: '6px 12px',
+          borderRadius: 8,
+          fontSize: 11,
+          fontWeight: 600,
+          backgroundColor: statusColors[status] || '#6b7280',
+          color: 'white',
+          zIndex: 99999,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          fontFamily: 'system-ui',
+        }}
+      >
+        {statusLabels[status] || status}
+      </div>
+    );
+  }
+
+  return null;
+};
+
+// ========================================
+// GESTIONNAIRE POLLING (Backup)
+// ========================================
+const PollingNotificationManager = () => {
   const token = useAuthStore((s) => s.token);
   const restaurantId = useAuthStore((s) => s.restaurantId);
   const [isPolling, setIsPolling] = useState(false);
@@ -29,18 +413,14 @@ const OrderNotificationManager = () => {
   const lastCheckRef = useRef(Date.now());
   const pollingIntervalRef = useRef(null);
 
-  // Fonction pour récupérer les nouvelles commandes
   const checkNewOrders = useCallback(async () => {
     if (!token || !restaurantId) return;
 
     try {
-      // Récupérer les commandes récentes (dernières 2 minutes)
       const response = await client.get(`/order/${restaurantId}`, {
         params: {
           limit: 10,
           sort: '-createdAt',
-          // Filtrer les commandes créées après la dernière vérification
-          createdAfter: new Date(lastCheckRef.current - 120000).toISOString(),
         },
       });
 
@@ -48,18 +428,15 @@ const OrderNotificationManager = () => {
       
       if (!Array.isArray(orders)) return;
 
-      // Vérifier les nouvelles commandes
       orders.forEach((order) => {
         const orderId = order._id || order.id;
         const createdAt = new Date(order.createdAt).getTime();
         
-        // Si c'est une nouvelle commande qu'on n'a pas encore vue
-        if (!lastOrderIdsRef.current.has(orderId) && createdAt > lastCheckRef.current - 120000) {
-          // Vérifier si c'est vraiment une nouvelle commande (créée dans les dernières 30 secondes)
-          const isNew = Date.now() - createdAt < 30000;
+        if (!lastOrderIdsRef.current.has(orderId)) {
+          const isNew = Date.now() - createdAt < 60000;
           
-          if (isNew) {
-            console.log(' Nouvelle commande détectée:', orderId);
+          if (isNew && lastOrderIdsRef.current.size > 0) {
+            console.log('📬 [Polling] Nouvelle commande:', orderId);
             
             const orderData = {
               orderNumber: order.orderNumber || orderId,
@@ -69,63 +446,53 @@ const OrderNotificationManager = () => {
               status: order.status || 'pending',
             };
 
-            // Afficher la notification
             showOrderNotification.newOrder(orderData);
+            
+            showSystemNotification('🍽️ Nouvelle commande !', {
+              body: `Commande #${orderData.orderNumber}`,
+              tag: `order-${orderData.orderNumber}`,
+            });
 
-            // Rafraîchir le dashboard
             emitDashboardRefresh({
               reason: 'new_order',
               orderId: orderData.orderNumber,
-              restaurantId,
+              source: 'polling',
               timestamp: Date.now(),
             });
 
-            // Jouer un son
             playNotificationSound();
           }
           
-          // Marquer comme vue
           lastOrderIdsRef.current.add(orderId);
         }
       });
 
-      // Mettre à jour le timestamp de dernière vérification
       lastCheckRef.current = Date.now();
 
-      // Nettoyer les anciennes IDs (garder seulement les 100 dernières)
       if (lastOrderIdsRef.current.size > 100) {
-        const idsArray = Array.from(lastOrderIdsRef.current);
-        lastOrderIdsRef.current = new Set(idsArray.slice(-50));
+        const arr = Array.from(lastOrderIdsRef.current);
+        lastOrderIdsRef.current = new Set(arr.slice(-50));
       }
 
     } catch (error) {
-      // Ignorer les erreurs silencieusement (éviter le spam dans la console)
-      if (import.meta.env.DEV) {
-        console.log('Polling check:', error.message);
-      }
+      // Silencieux
     }
   }, [token, restaurantId]);
 
-  // Démarrer le polling
   useEffect(() => {
     if (!token || !restaurantId) {
       setIsPolling(false);
       return;
     }
 
-    console.log(' Démarrage du polling des commandes...');
+    console.log('📡 Démarrage polling (interval: 15s)');
     setIsPolling(true);
 
-    // Première vérification immédiate
     checkNewOrders();
 
-    // Polling toutes les 10 secondes
-    pollingIntervalRef.current = setInterval(() => {
-      checkNewOrders();
-    }, 10000);
+    pollingIntervalRef.current = setInterval(checkNewOrders, 15000);
 
     return () => {
-      console.log('Arrêt du polling');
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
@@ -133,194 +500,37 @@ const OrderNotificationManager = () => {
     };
   }, [token, restaurantId, checkNewOrders]);
 
-  // Indicateur de statut en mode dev
-  // if (import.meta.env.DEV) {
-  //   return (
-  //     <div
-  //       style={{
-  //         position: 'fixed',
-  //         bottom: 10,
-  //         right: 10,
-  //         padding: '6px 12px',
-  //         borderRadius: 6,
-  //         fontSize: 11,
-  //         fontWeight: 500,
-  //         backgroundColor: isPolling ? '#10b981' : '#6b7280',
-  //         color: 'white',
-  //         zIndex: 99999,
-  //         display: 'flex',
-  //         alignItems: 'center',
-  //         gap: 6,
-  //         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-  //       }}
-  //     >
-  //       {/* <span
-  //         style={{
-  //           width: 8,
-  //           height: 8,
-  //           borderRadius: '50%',
-  //           backgroundColor: isPolling ? '#34d399' : '#9ca3af',
-  //         }}
-  //       />
-  //       {isPolling ? ' Polling actif' : 'Polling inactif'} */}
-  //     </div>
-  //   );
-  // }
-
   return null;
-};
-
-// ========================================
-// GESTIONNAIRE WebSocket (si URL configurée)
-// ========================================
-const WebSocketNotificationManager = () => {
-  const wsUrl = import.meta.env.VITE_WS_URL;
-  
-  // Si pas d'URL WebSocket, ne rien faire
-  if (!wsUrl || wsUrl.trim() === '') {
-    return null;
-  }
-
-  // Import dynamique pour éviter les erreurs si WebSocket non configuré
-  const { useWebSocket, wsService } = require('./hooks/useWebSocket');
-  const token = useAuthStore((s) => s.token);
-  const restaurantId = useAuthStore((s) => s.restaurantId);
-
-  const { isConnected, connectionState } = useWebSocket({
-    url: wsUrl,
-    autoConnect: true,
-  });
-
-  useEffect(() => {
-    if (!token) return;
-
-    const handleNewOrder = (data) => {
-      console.log(' [WS] Nouvelle commande:', data);
-      
-      const order = data.order || data;
-      showOrderNotification.newOrder({
-        orderNumber: order.id || order._id || order.orderNumber,
-        restaurant: order.restaurantName || order.restaurant?.name,
-        items: order.items || [],
-        total: order.total || order.totalAmount,
-        status: order.status || 'pending',
-      });
-
-      emitDashboardRefresh({ reason: 'new_order', orderId: order.id });
-      playNotificationSound();
-    };
-
-    const handleStatusUpdate = (data) => {
-      console.log(' [WS] Statut mis à jour:', data);
-      
-      const { order, orderId, newStatus, restaurantName } = data;
-      const orderData = {
-        orderNumber: orderId || order?.id,
-        restaurant: restaurantName || order?.restaurantName,
-        status: newStatus,
-      };
-
-      const statusMap = {
-        'confirmed': showOrderNotification.confirmed,
-        'confirmee': showOrderNotification.confirmed,
-        'preparing': showOrderNotification.preparing,
-        'en_preparation': showOrderNotification.preparing,
-        'ready': showOrderNotification.ready,
-        'prete': showOrderNotification.ready,
-        'delivered': showOrderNotification.delivered,
-        'livree': showOrderNotification.delivered,
-        'cancelled': showOrderNotification.cancelled,
-        'annulee': showOrderNotification.cancelled,
-      };
-
-      const notify = statusMap[newStatus?.toLowerCase()];
-      if (notify) notify(orderData);
-
-      emitDashboardRefresh({ reason: 'status_update', orderId, newStatus });
-    };
-
-    const unsubs = [
-      wsService.on('new_order', handleNewOrder),
-      wsService.on('order_status_updated', handleStatusUpdate),
-    ];
-
-    return () => unsubs.forEach((u) => u?.());
-  }, [token, restaurantId]);
-
-  if (import.meta.env.DEV) {
-    return (
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 10,
-          right: 10,
-          padding: '6px 12px',
-          borderRadius: 6,
-          fontSize: 11,
-          backgroundColor: isConnected ? '#10b981' : '#ef4444',
-          color: 'white',
-          zIndex: 99999,
-        }}
-      >
-        WS: {connectionState}
-      </div>
-    );
-  }
-
-  return null;
-};
-
-// ========================================
-// FONCTION SON NOTIFICATION
-// ========================================
-const playNotificationSound = () => {
-  try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContext) return;
-    
-    const audioContext = new AudioContext();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Son de notification agréable
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // La note
-    oscillator.frequency.setValueAtTime(988, audioContext.currentTime + 0.1); // Si
-    oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.2); // Do
-    
-    oscillator.type = 'sine';
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  } catch (e) {
-    // Silencieux si non supporté
-  }
 };
 
 // ========================================
 // APP PRINCIPALE
 // ========================================
 function App() {
-  const wsUrl = import.meta.env.VITE_WS_URL;
-  const usePolling = !wsUrl || wsUrl.trim() === '';
+  const [swRegistered, setSwRegistered] = useState(false);
+
+  useEffect(() => {
+    const init = async () => {
+      await registerServiceWorker();
+      setSwRegistered(true);
+      await requestNotificationPermission();
+    };
+    
+    init();
+  }, []);
 
   return (
     <BrowserRouter>
-      {/* Choisir le mode de notification */}
-      {usePolling ? (
-        <OrderNotificationManager />
-      ) : (
-        <WebSocketNotificationManager />
-      )}
+      {/* 🔔 PUSHER - Notifications temps réel */}
+      <PusherNotificationManager />
+      
+      {/* 📡 POLLING - Backup toutes les 15s */}
+      <PollingNotificationManager />
 
-      {/* Routes */}
+      {/* Routes de l'application */}
       <AppRouter />
 
-      {/* Toast Container */}
+      {/* Container des toasts */}
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -328,7 +538,7 @@ function App() {
         newestOnTop={true}
         closeOnClick={true}
         rtl={false}
-        pauseOnFocusLoss={true}
+        pauseOnFocusLoss={false}
         draggable={true}
         pauseOnHover={true}
         theme="light"

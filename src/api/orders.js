@@ -556,7 +556,7 @@ export const ordersApi = {
     }
   },
 
-  // ====== 🆕 COMMANDES RÉCENTES (POUR POLLING) ======
+  // ======  COMMANDES RÉCENTES (POUR POLLING) ======
   getRecentOrders: async (restaurantId, options = {}) => {
     const {
       sinceTimestamp,
