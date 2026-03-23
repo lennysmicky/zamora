@@ -398,8 +398,10 @@ class WebSocketService {
     }
   }
 }
-
+export { wsService } from '../hooks/useWebSocket';
 // Export d'une instance singleton
 export const wsService = new WebSocketService();
 
 export default wsService;
+// src/services/websocket.js
+// Re-exporter depuis le hook pour éviter la duplication

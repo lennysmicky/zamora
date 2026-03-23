@@ -175,6 +175,7 @@ const normalizeSource = (s) => {
   if (["livraison", "delivery"].includes(v)) return "DELIVERY";
   if (["web", "application_web", "browser"].includes(v)) return "WEB";
   if (v === "qrcode" || v === "qr_code" || raw === "qrCode") return "QRCODE";
+  if (["mobile", "app", "application"].includes(v)) return "MOBILE";
   return "OTHER";
 };
 
@@ -185,9 +186,10 @@ const denormalizeSource = (s) => {
   if (v === "DELIVERY") return "livraison";
   if (v === "WEB") return "web";
   if (v === "QRCODE") return "qrCode";
+  if (v === "MOBILE") return "mobile";
 
   const low = String(s ?? "").toLowerCase();
-  if (["sur_place", "a_emporter", "livraison", "web"].includes(low)) return low;
+  if (["sur_place", "a_emporter", "livraison", "web", "mobile"].includes(low)) return low;
   if (low === "qrcode" || low === "qr_code") return "qrCode";
   if (low === "application_web") return "web";
   return undefined;
@@ -255,7 +257,7 @@ const normalizeOrder = (raw) => {
   const restaurantName =
     typeof resto === "object" && resto
       ? resto.name ?? resto.nom ?? o.restaurantName ?? "-"
-      : undefined;
+      : o.restaurantName ?? undefined;
 
   const items =
     (Array.isArray(o.items) && o.items) ||
@@ -272,6 +274,9 @@ const normalizeOrder = (raw) => {
 
   const createdAt =
     o.createdAt ?? o.created_at ?? o.date ?? o.dateCreation ?? o.created ?? null;
+
+  const updatedAt =
+    o.updatedAt ?? o.updated_at ?? o.dateModification ?? o.modified ?? null;
 
   const orderNumber =
     pick(o, [
@@ -353,6 +358,7 @@ const normalizeOrder = (raw) => {
     _id: id,
 
     restaurantId: restaurantId ? String(restaurantId) : null,
+    restaurantName,
 
     order_number: orderNumber,
     orderNumber,
@@ -371,6 +377,8 @@ const normalizeOrder = (raw) => {
 
     created_at: createdAt,
     createdAt,
+    updated_at: updatedAt,
+    updatedAt,
 
     items,
     itemsCount,
@@ -463,6 +471,7 @@ const urlCommandeDetail = (rid, id) => `/commande/${enc(rid)}/${enc(id)}`;
 const urlCommandeDelete = (id) => `/commande/${enc(id)}`;
 
 export const ordersApi = {
+  // ====== LISTE DES COMMANDES ======
   getOrders: async (params = {}, options = {}) => {
     const {
       restaurantId,
@@ -477,6 +486,7 @@ export const ordersApi = {
       period,
       from,
       to,
+      sort,
       ...rest
     } = params;
 
@@ -498,6 +508,7 @@ export const ordersApi = {
       period,
       from,
       to,
+      sort: sort ?? '-createdAt',
       status: status ? denormalizeOrderStatus(status) : undefined,
       payment_status: paymentStatus ? denormalizePaymentStatus(paymentStatus) : undefined,
       payment_method: paymentMethod ? denormalizePaymentMethod(paymentMethod) : undefined,
@@ -545,6 +556,48 @@ export const ordersApi = {
     }
   },
 
+  // ====== 🆕 COMMANDES RÉCENTES (POUR POLLING) ======
+  getRecentOrders: async (restaurantId, options = {}) => {
+    const {
+      sinceTimestamp,
+      limit = 20,
+      signal,
+    } = options;
+
+    if (!restaurantId) {
+      return { orders: [], lastCheck: Date.now() };
+    }
+
+    try {
+      const params = clean({
+        limit,
+        sort: '-createdAt',
+        // Si le backend supporte le filtre par date
+        createdAfter: sinceTimestamp ? new Date(sinceTimestamp).toISOString() : undefined,
+        from: sinceTimestamp ? new Date(sinceTimestamp).toISOString() : undefined,
+      });
+
+      const res = await client.get(urlListOrders(restaurantId), {
+        params,
+        timeout: 5000, // Timeout court pour le polling
+        signal,
+      });
+
+      const listData = unwrap(res?.data);
+      const orders = arr(listData).map(normalizeOrder);
+
+      return {
+        orders,
+        lastCheck: Date.now(),
+      };
+    } catch (e) {
+      // Ne pas throw pour le polling, juste retourner vide
+      console.warn('Polling orders failed:', e.message);
+      return { orders: [], lastCheck: Date.now() };
+    }
+  },
+
+  // ====== DÉTAIL D'UNE COMMANDE ======
   getOrderById: async (restaurentId, orderId, options = {}) => {
     if (!restaurentId) throw new Error("Missing restaurentId");
     if (!orderId) throw new Error("Missing orderId");
@@ -560,6 +613,7 @@ export const ordersApi = {
     }
   },
 
+  // ====== CRÉER UNE COMMANDE ======
   createOrder: async (payload, options = {}) => {
     const rid =
       payload?.restaurent ??
@@ -604,34 +658,34 @@ export const ordersApi = {
   createCommande: async (restaurentId, body, options = {}) =>
     ordersApi.createOrder({ ...body, restaurent: restaurentId }, options),
 
+  // ====== METTRE À JOUR UNE COMMANDE ======
   updateOrder: async (restaurentId, orderId, patch, options = {}) => {
-  if (!restaurentId) throw new Error("Missing restaurentId");
-  if (!orderId) throw new Error("Missing orderId");
+    if (!restaurentId) throw new Error("Missing restaurentId");
+    if (!orderId) throw new Error("Missing orderId");
 
-  const payload = clean({
-    ...patch,
-    status: patch?.status ? denormalizeOrderStatus(patch.status) : patch?.status,
-    payment_status: patch?.payment_status
-      ? denormalizePaymentStatus(patch.payment_status)
-      : patch?.payment_status,
-    payment_method: patch?.payment_method
-      ? denormalizePaymentMethod(patch.payment_method)
-      : patch?.payment_method,
-    source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
-  });
+    const payload = clean({
+      ...patch,
+      status: patch?.status ? denormalizeOrderStatus(patch.status) : patch?.status,
+      payment_status: patch?.payment_status
+        ? denormalizePaymentStatus(patch.payment_status)
+        : patch?.payment_status,
+      payment_method: patch?.payment_method
+        ? denormalizePaymentMethod(patch.payment_method)
+        : patch?.payment_method,
+      source: patch?.source ? denormalizeSource(patch.source) : patch?.source,
+    });
 
-  try {
-    const res = await client.put(
-      urlCommandeDetail(restaurentId, orderId),
-      payload,
-      axiosCfg(options)
-    );
-    return unwrap(res?.data);
-  } catch (e) {
-    throw new Error(toAxiosErrorMessage(e));
-  }
-},
-
+    try {
+      const res = await client.put(
+        urlCommandeDetail(restaurentId, orderId),
+        payload,
+        axiosCfg(options)
+      );
+      return unwrap(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
+  },
 
   updateStatus: async (orderId, status, options = {}) => {
     const rid = options?.restaurentId ?? options?.restaurantId ?? null;
@@ -639,26 +693,28 @@ export const ordersApi = {
     return ordersApi.updateOrder(rid, orderId, { status }, options);
   },
 
-updatePaymentStatus: async (orderId, payment_status, options = {}) => {
-  const rid = options?.restaurentId ?? options?.restaurantId ?? null;
-  if (!rid) throw new Error("Missing restaurentId for updatePaymentStatus()");
-  return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
-},
+  updatePaymentStatus: async (orderId, payment_status, options = {}) => {
+    const rid = options?.restaurentId ?? options?.restaurantId ?? null;
+    if (!rid) throw new Error("Missing restaurentId for updatePaymentStatus()");
+    return ordersApi.updateOrder(rid, orderId, { payment_status }, options);
+  },
 
-deleteOrder: async (restaurentId, orderId, options = {}) => {
-  if (!orderId) throw new Error("Missing orderId");
+  // ====== SUPPRIMER UNE COMMANDE ======
+  deleteOrder: async (restaurentId, orderId, options = {}) => {
+    if (!orderId) throw new Error("Missing orderId");
 
-  try {
-    const res = await client.delete(
-      urlCommandeDelete(orderId),
-      axiosCfg(options)
-    );
-    return unwrap(res?.data);
-  } catch (e) {
-    throw new Error(toAxiosErrorMessage(e));
-  }
-},
+    try {
+      const res = await client.delete(
+        urlCommandeDelete(orderId),
+        axiosCfg(options)
+      );
+      return unwrap(res?.data);
+    } catch (e) {
+      throw new Error(toAxiosErrorMessage(e));
+    }
+  },
 
+  // ====== TABLES ======
   getTables: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
 
@@ -676,6 +732,7 @@ deleteOrder: async (restaurentId, orderId, options = {}) => {
     }
   },
 
+  // ====== CATÉGORIES ======
   getCategories: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
     try {
@@ -686,6 +743,7 @@ deleteOrder: async (restaurentId, orderId, options = {}) => {
     }
   },
 
+  // ====== REPAS ======
   getRepas: async (restaurentId, options = {}) => {
     if (!restaurentId) return [];
     try {
@@ -695,6 +753,17 @@ deleteOrder: async (restaurentId, orderId, options = {}) => {
       throw new Error(toAxiosErrorMessage(e));
     }
   },
+};
+
+// Export des fonctions de normalisation pour usage externe
+export const orderUtils = {
+  normalizeOrder,
+  normalizeOrderStatus,
+  normalizePaymentStatus,
+  normalizeSource,
+  denormalizeOrderStatus,
+  denormalizePaymentStatus,
+  denormalizeSource,
 };
 
 export default ordersApi;
