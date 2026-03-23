@@ -140,11 +140,11 @@ const OrdersPage = ({
   }, [fetchOrders]);
 
   // ====================================================================
-  // 🔄 RAFRAÎCHISSEMENT AUTOMATIQUE VIA PUSHER/POLLING
+  //  RAFRAÎCHISSEMENT AUTOMATIQUE VIA PUSHER/POLLING
   // ====================================================================
   useEffect(() => {
     const unsubscribe = onDashboardRefresh((detail) => {
-      console.log('📊 [OrdersPage] Dashboard refresh reçu:', detail);
+      console.log('[OrdersPage] Dashboard refresh reçu:', detail);
 
       // Liste des raisons qui déclenchent un rafraîchissement
       const refreshReasons = [
@@ -166,12 +166,12 @@ const OrdersPage = ({
       if (mode === 'restaurant' && restaurantIdForHook) {
         // Si l'événement a un restaurantId et qu'il ne correspond pas, ignorer
         if (detail.restaurantId && detail.restaurantId !== restaurantIdForHook) {
-          console.log('📊 [OrdersPage] Événement ignoré (autre restaurant)');
+          console.log('[OrdersPage] Événement ignoré (autre restaurant)');
           return;
         }
       }
 
-      console.log('🔄 [OrdersPage] Rafraîchissement automatique des commandes...');
+      console.log('[OrdersPage] Rafraîchissement automatique des commandes...');
       
       // Indiquer visuellement le rafraîchissement
       setIsRefreshing(true);
@@ -179,7 +179,7 @@ const OrdersPage = ({
       // Rafraîchir les commandes
       fetchOrdersRef.current?.()
         .then(() => {
-          console.log('✅ [OrdersPage] Commandes rafraîchies');
+          console.log('[OrdersPage] Commandes rafraîchies');
         })
         .catch((err) => {
           console.error('❌ [OrdersPage] Erreur rafraîchissement:', err);

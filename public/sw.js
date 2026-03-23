@@ -4,7 +4,7 @@ self.addEventListener('push', function(event) {
   console.log('[SW] Push reçu:', event);
 
   let data = {
-    title: 'Nouvelle commande !',
+    title: 'Zamora Restaurant',
     body: 'Une nouvelle commande a été passée',
     icon: '/logo192.jpg',
     badge: '/logo192.jpg',

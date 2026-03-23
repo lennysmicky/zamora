@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { subscribeToWebPush } from './push'; 
 
 // Styles
 import 'react-toastify/dist/ReactToastify.css';
@@ -59,7 +60,7 @@ const registerServiceWorker = async () => {
       console.log(' Service Worker enregistré:', registration.scope);
       return registration;
     } catch (error) {
-      console.error(' Erreur Service Worker:', error);
+      console.error('Erreur Service Worker:', error);
     }
   }
   return null;
@@ -373,8 +374,8 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       waiting_auth: 'Auth...',
       connecting: 'Connexion...',
       connected: 'Pusher OK',
-      disconnected: '❌ Déconnecté',
-      init_failed: '❌ Échec',
+      disconnected: 'Déconnecté',
+      init_failed: 'Échec',
     };
 
     return (
@@ -485,7 +486,7 @@ const PollingNotificationManager = () => {
       return;
     }
 
-    console.log(' Démarrage polling (interval: 15s)');
+    console.log('  Démarrage polling (interval: 15s)');
     setIsPolling(true);
 
     checkNewOrders();
@@ -508,16 +509,24 @@ const PollingNotificationManager = () => {
 // ========================================
 function App() {
   const [swRegistered, setSwRegistered] = useState(false);
+  const token = useAuthStore((s) => s.token); // <-- Récupère le token de connexion
 
   useEffect(() => {
     const init = async () => {
-      await registerServiceWorker();
+      const registration = await registerServiceWorker();
       setSwRegistered(true);
-      await requestNotificationPermission();
+      
+      const permission = await requestNotificationPermission();
+
+      //  NOUVEAU : On l'abonne au Web Push si on a l'autorisation ET qu'il est connecté
+      if (permission && registration && token) {
+        console.log(" Lancement de l'abonnement Web Push...");
+        subscribeToWebPush();
+      }
     };
     
     init();
-  }, []);
+  }, [token]); // <-- Le useEffect se relance quand le token de connexion apparaît (connexion réussie)
 
   return (
     <BrowserRouter>

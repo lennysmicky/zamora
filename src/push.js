@@ -1,64 +1,53 @@
-const publicVapidKey = "BLZNXoE4kYyoZkNYOGDXDevjj8E4dQiRIACgbSsIS98zlrUecW4m4WDETGfoQ89_GDMN0Odl2JJfgmRaY6VIAw0"; // venant du backend
+// src/push.js
+import client from './api/client';
 
-// Convertir la clé (OBLIGATOIRE)
+// Fonction utilitaire pour convertir la clé VAPID publique
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/-/g, '+')
-    .replace(/_/g, '/');
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
   const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
 }
 
-
-// FONCTION PRINCIPALE
-export async function subscribeUser() {
-
-  if (!('serviceWorker' in navigator)) {
-    console.log("Service Worker non supporté");
-    return;
-  }
-
-  if (!('PushManager' in window)) {
-    console.log("Push non supporté");
+// Fonction pour abonner le restaurant au Web Push
+export const subscribeToWebPush = async () => {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    console.log("Ce navigateur ne supporte pas le Web Push");
     return;
   }
 
   try {
-    // 1. Enregistrer ton sw.js
-    const registration = await navigator.serviceWorker.register('/sw.js');
+    const registration = await navigator.serviceWorker.ready;
 
-    console.log("SW enregistré ");
-
-    // 2. Permission
-    const permission = await Notification.requestPermission();
-
-    if (permission !== 'granted') {
-      console.log("Permission refusée ");
+    // Récupérer la clé publique VAPID de ton fichier .env
+    const publicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!publicKey) {
+      console.error(" Clé VITE_VAPID_PUBLIC_KEY manquante dans le fichier .env");
       return;
     }
 
-    // 3. S’abonner (LE PLUS IMPORTANT)
+    const convertedKey = urlBase64ToUint8Array(publicKey);
+
+    // Demande l'abonnement au navigateur
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      applicationServerKey: convertedKey
     });
 
-    console.log("Subscription:", subscription);
+    console.log("Abonnement Web Push généré avec succès !");
 
-    // 4. Envoyer au backend
-    await fetch('https://resto-back-xazy.onrender.com/subscribe', {
-      method: 'POST',
-      body: JSON.stringify(subscription),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    // ENVOYER L'ABONNEMENT AU BACKEND POUR LE SAUVEGARDER
+    await client.post('/push/subscribe', { subscription });
+    console.log("Abonnement envoyé et sauvegardé sur le backend !");
 
-    console.log("Utilisateur abonné ");
-
+    return subscription;
   } catch (error) {
-    console.error("Erreur:", error);
+    console.error("Erreur lors de l'abonnement Web Push:", error);
   }
-}
+};
