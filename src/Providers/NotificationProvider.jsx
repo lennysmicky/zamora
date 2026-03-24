@@ -65,13 +65,13 @@ const NotificationProvider = ({ children }) => {
       // Afficher la notification toast
       showOrderNotification.newOrder(orderData);
 
-      // // Notification native si en arrière-plan
-      // if (document.hidden) {
-      //   showNativeNotification(' Nouvelle Commande!', {
-      //     body: `Commande #${orderData.orderNumber} - ${(orderData.total || 0).toLocaleString()} FCFA`,
-      //     tag: `order-${orderData.orderNumber}`,
-      //   });
-      // }
+      // Notification native si en arrière-plan
+      if (document.hidden) {
+        showNativeNotification(' Nouvelle Commande!', {
+          body: `Commande #${orderData.orderNumber} - ${(orderData.total || 0).toLocaleString()} FCFA`,
+          tag: `order-${orderData.orderNumber}`,
+        });
+      }
 
       // Rafraîchir le dashboard
       emitDashboardRefresh({

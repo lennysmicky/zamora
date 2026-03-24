@@ -4,6 +4,7 @@ import useAuthStore from "../stores/authStore";
 import { useDashboardFiltersStore } from "../stores/dashboardFiltersStore";
 import dashboardAPI from "../api/dashboard";
 import { onDashboardRefresh } from "../utils/dashboardEvents";
+import { useAutoRefresh } from "./useAutoRefresh";
 
 const toYmdUtc = (d) => {
   if (!(d instanceof Date) || Number.isNaN(d.getTime())) return null;
@@ -70,6 +71,8 @@ const useDashboardData = ({
   endDate = null,
   period = null,
   allowGlobalAdminDashboard = true,
+  enableAutoRefresh = false,
+  autoRefreshInterval = 30000,
 } = {}) => {
   const { t } = useTranslation();
 
@@ -258,6 +261,12 @@ const useDashboardData = ({
     allowGlobalAdminDashboard,
     t,
   ]);
+
+  // 🔄 Auto-refresh integration
+  useAutoRefresh(
+    fetchDashboard,
+    enableAutoRefresh ? autoRefreshInterval : null
+  );
 
   useEffect(() => {
     fetchDashboard();

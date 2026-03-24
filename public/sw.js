@@ -6,8 +6,8 @@ self.addEventListener('push', function(event) {
   let data = {
     title: 'Zamora Restaurant',
     body: 'Une nouvelle commande a été passée',
-    icon: '/logo192.jpg',
-    badge: '/logo192.jpg',
+    icon: '/logo.jpg',
+    badge: '/logo.jpg',
     tag: 'order-notification',
     data: {}
   };

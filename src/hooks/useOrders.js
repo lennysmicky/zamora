@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useAuthStore from "../stores/authStore";
 import { ordersApi } from "../api/orders";
 import { emitDashboardRefresh } from "../utils/dashboardEvents";
+import { useAutoRefresh } from "./useAutoRefresh";
 
 const EMPTY_STATS = { total: 0, pending: 0, delivered: 0, cancelled: 0 };
 
@@ -342,6 +343,12 @@ export const useOrders = (opts) => {
       if (!controller.signal.aborted) setLoading(false);
     }
   }, [mode, effectiveRestaurantId, apiFilters, pagination.currentPage, pagination.itemsPerPage]);
+
+  // Auto-refresh integration
+  useAutoRefresh(
+    fetchOrders,
+    options.enableAutoRefresh ? (options.autoRefreshInterval ?? 30000) : null
+  );
 
   useEffect(() => {
     fetchOrders();

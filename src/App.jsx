@@ -21,6 +21,35 @@ import client from './api/client';
 import { pusherService } from './services/pusher';
 
 // ========================================
+// BROADCAST CHANNEL (Sync entre onglets)
+// ========================================
+const NOTIFICATION_CHANNEL_NAME = 'zamora-notifications';
+let notificationChannel = null;
+
+const initBroadcastChannel = () => {
+  if (typeof BroadcastChannel !== 'undefined' && !notificationChannel) {
+    notificationChannel = new BroadcastChannel(NOTIFICATION_CHANNEL_NAME);
+    console.log('Broadcast Channel initialisé');
+  }
+  return notificationChannel;
+};
+
+const broadcastNotification = (data) => {
+  try {
+    if (notificationChannel) {
+      notificationChannel.postMessage({
+        type: 'NEW_ORDER',
+        timestamp: Date.now(),
+        ...data,
+      });
+      console.log(' Notification diffusée aux autres onglets');
+    }
+  } catch (e) {
+    console.error('Erreur broadcast:', e);
+  }
+};
+
+// ========================================
 // UTILITAIRES
 // ========================================
 
@@ -60,7 +89,7 @@ const registerServiceWorker = async () => {
       console.log(' Service Worker enregistré:', registration.scope);
       return registration;
     } catch (error) {
-      console.error('Erreur Service Worker:', error);
+      console.error(' Erreur Service Worker:', error);
     }
   }
   return null;
@@ -69,7 +98,7 @@ const registerServiceWorker = async () => {
 // Demander permission pour les notifications
 const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log('Notifications non supportées');
+    console.log(' Notifications non supportées');
     return false;
   }
 
@@ -124,6 +153,42 @@ const PusherNotificationManager = ({ onNewOrder }) => {
   const subscribedRef = useRef(false);
   const cleanupRef = useRef([]);
 
+  // Écouter les notifications des autres onglets
+  useEffect(() => {
+    const channel = initBroadcastChannel();
+    
+    if (channel) {
+      const handleBroadcast = (event) => {
+        if (event.data?.type === 'NEW_ORDER') {
+          console.log(' Notification reçue depuis un autre onglet:', event.data);
+          
+          const orderData = event.data.orderData;
+          if (orderData) {
+            // Afficher le toast
+            showOrderNotification.newOrder(orderData);
+            
+            // Rafraîchir le dashboard
+            emitDashboardRefresh({
+              reason: 'new_order',
+              orderId: orderData.orderNumber,
+              source: 'broadcast',
+              timestamp: event.data.timestamp,
+            });
+            
+            // Son (optionnel, peut être commenté pour éviter le son sur tous les onglets)
+            playNotificationSound();
+          }
+        }
+      };
+      
+      channel.addEventListener('message', handleBroadcast);
+      
+      return () => {
+        channel.removeEventListener('message', handleBroadcast);
+      };
+    }
+  }, []);
+
   useEffect(() => {
     const pusherKey = import.meta.env.VITE_PUSHER_KEY;
 
@@ -134,7 +199,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     if (!token || !restaurantId) {
-      console.log(' En attente de connexion...', { hasToken: !!token, restaurantId });
+      console.log('En attente de connexion...', { hasToken: !!token, restaurantId });
       setStatus('waiting_auth');
       return;
     }
@@ -162,18 +227,18 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       subscribedRef.current = true;
       setStatus('connected');
 
-      console.log(' Configuration des channels...');
+      console.log('Configuration des channels...');
 
       // Channels à écouter
       const channels = [
-        `user-${restaurantId}`,               // ← Channel utilisé par sendNotification sur ton backend
-        `orders-restaurant-${restaurantId}`,  // Channel des commandes
-        'orders',                             // Channel global
+        `user-${restaurantId}`,
+        `orders-restaurant-${restaurantId}`,
+        'orders',
       ];
 
       // Événements à écouter
       const events = [
-        'new-notification',       // ← Événement envoyé par sendNotification.js du backend
+        'new-notification',
         'new-order',
         'new_order', 
         'order-created',
@@ -199,12 +264,11 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         });
       });
 
-      console.log(' Abonnements Pusher configurés');
+      console.log('Abonnements Pusher configurés');
     };
 
     // Gestion des événements de commande et de notifications
     const handleOrderEvent = (eventName, data) => {
-      //  Si c'est l'événement envoyé par ton sendNotification.js backend
       if (eventName === 'new-notification' && data.type === 'commande') {
         handleNewOrderFromNotification(data);
         return;
@@ -220,11 +284,10 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       }
     };
 
-    // Handler pour les notifications génériques du backend (Option 1)
+    // Handler pour les notifications génériques du backend
     const handleNewOrderFromNotification = (data) => {
       console.log(' Nouvelle commande reçue via Notification user:', data);
 
-      // On extrait le numéro de commande du texte (ex: CMD-1234)
       const match = data.contenu?.match(/\(([^)]+)\)/);
       const orderNumber = match ? match[1] : 'N/A';
 
@@ -245,6 +308,9 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         tag: `order-${orderNumber}`,
         requireInteraction: true,
       });
+
+      // Diffuser aux autres onglets
+      broadcastNotification({ orderData });
 
       // Rafraîchir l'écran
       emitDashboardRefresh({
@@ -271,13 +337,18 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         status: order.status || 'pending',
       };
 
-      // showOrderNotification.newOrder(orderData);
+      // Toast dans l'application
+      showOrderNotification.newOrder(orderData);
 
-      // showSystemNotification('Nouvelle commande !', {
-      //   body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
-      //   tag: `order-${orderData.orderNumber}`,
-      //   requireInteraction: true,
-      // });
+      // Notification OS
+      showSystemNotification('Nouvelle commande !', {
+        body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
+        tag: `order-${orderData.orderNumber}`,
+        requireInteraction: true,
+      });
+
+      //  Diffuser aux autres onglets
+      broadcastNotification({ orderData });
 
       emitDashboardRefresh({
         reason: 'new_order',
@@ -293,7 +364,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
 
     // Mise à jour de statut
     const handleStatusUpdate = (data) => {
-      console.log(' Mise à jour statut:', data);
+      console.log('Mise à jour statut:', data);
       
       const order = data.order || data;
       const newStatus = data.newStatus || data.new_status || data.status || order.status;
@@ -350,7 +421,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     return () => {
-      console.log(' Cleanup Pusher...');
+      console.log('Cleanup Pusher...');
       cleanupRef.current.forEach(fn => fn && fn());
       cleanupRef.current = [];
       subscribedRef.current = false;
@@ -411,7 +482,6 @@ const PollingNotificationManager = () => {
   const restaurantId = useAuthStore((s) => s.restaurantId);
   const [isPolling, setIsPolling] = useState(false);
   const lastOrderIdsRef = useRef(new Set());
-  const lastCheckRef = useRef(Date.now());
   const pollingIntervalRef = useRef(null);
 
   const checkNewOrders = useCallback(async () => {
@@ -437,39 +507,29 @@ const PollingNotificationManager = () => {
           const isNew = Date.now() - createdAt < 60000;
           
           if (isNew && lastOrderIdsRef.current.size > 0) {
-            console.log(' [Polling] Nouvelle commande:', orderId);
+            console.log('[Polling] Nouvelle commande détectée:', orderId);
             
-            const orderData = {
-              orderNumber: order.orderNumber || orderId,
-              restaurant: order.restaurantName || order.restaurant?.name || 'Restaurant',
-              items: order.items || [],
-              total: order.total || order.totalAmount || 0,
-              status: order.status || 'pending',
-            };
+            // PAS DE TOAST - Seulement notification système silencieuse
+            showSystemNotification('Nouvelle commande', {
+              body: `Une nouvelle commande a été détectée`,
+              tag: `polling-${orderNumber}`,
+              requireInteraction: false,
+            });
 
-            // showOrderNotification.newOrder(orderData);
-            
-            // showSystemNotification(' Nouvelle commande !', {
-            //   body: `Commande #${orderData.orderNumber}`,
-            //   tag: `order-${orderData.orderNumber}`,
-            // });
-
+            // Rafraîchir le dashboard silencieusement
             emitDashboardRefresh({
               reason: 'new_order',
-              orderId: orderData.orderNumber,
+              orderId: orderId,
               source: 'polling',
               timestamp: Date.now(),
             });
-
-            playNotificationSound();
           }
           
           lastOrderIdsRef.current.add(orderId);
         }
       });
 
-      lastCheckRef.current = Date.now();
-
+      // Nettoyer la mémoire
       if (lastOrderIdsRef.current.size > 100) {
         const arr = Array.from(lastOrderIdsRef.current);
         lastOrderIdsRef.current = new Set(arr.slice(-50));
@@ -486,7 +546,7 @@ const PollingNotificationManager = () => {
       return;
     }
 
-    console.log('  Démarrage polling (interval: 15s)');
+    console.log('Démarrage polling (interval: 15s)');
     setIsPolling(true);
 
     checkNewOrders();
@@ -498,8 +558,33 @@ const PollingNotificationManager = () => {
         clearInterval(pollingIntervalRef.current);
       }
       setIsPolling(false);
+      console.log('Polling arrêté');
     };
   }, [token, restaurantId, checkNewOrders]);
+
+  // Indicateur en dev
+  if (import.meta.env.DEV && isPolling) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 10,
+          left: 10,
+          padding: '6px 12px',
+          borderRadius: 8,
+          fontSize: 11,
+          fontWeight: 600,
+          backgroundColor: '#8b5cf6',
+          color: 'white',
+          zIndex: 99999,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+          fontFamily: 'system-ui',
+        }}
+      >
+        Polling actif
+      </div>
+    );
+  }
 
   return null;
 };
@@ -509,7 +594,7 @@ const PollingNotificationManager = () => {
 // ========================================
 function App() {
   const [swRegistered, setSwRegistered] = useState(false);
-  const token = useAuthStore((s) => s.token); // <-- Récupère le token de connexion
+  const token = useAuthStore((s) => s.token);
 
   useEffect(() => {
     const init = async () => {
@@ -518,23 +603,25 @@ function App() {
       
       const permission = await requestNotificationPermission();
 
-      //  NOUVEAU : On l'abonne au Web Push si on a l'autorisation ET qu'il est connecté
       if (permission && registration && token) {
         console.log(" Lancement de l'abonnement Web Push...");
         subscribeToWebPush();
       }
+
+      // Initialiser le Broadcast Channel
+      initBroadcastChannel();
     };
     
     init();
-  }, [token]); // <-- Le useEffect se relance quand le token de connexion apparaît (connexion réussie)
+  }, [token]);
 
   return (
     <BrowserRouter>
       {/* PUSHER - Notifications temps réel */}
       <PusherNotificationManager />
       
-      {/* POLLING - Backup toutes les 15s */}
-      {/* <PollingNotificationManager /> */}
+      {/* POLLING - Backup toutes les 15s (sans toast) */}
+      <PollingNotificationManager />
 
       {/* Routes de l'application */}
       <AppRouter />
