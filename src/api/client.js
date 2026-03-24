@@ -4,7 +4,7 @@ import env from "../config/env";
 import useAuthStore from "../stores/authStore";
 
 const API_URL = String(env.API_URL || "").replace(/\/+$/, "");
-const API_TIMEOUT = Number(env.API_TIMEOUT) || 10000;
+const API_TIMEOUT = Number(env.API_TIMEOUT) || 60000;
 
 const client = axios.create({
   baseURL: API_URL,

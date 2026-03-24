@@ -534,7 +534,7 @@ function App() {
       <PusherNotificationManager />
       
       {/* POLLING - Backup toutes les 15s */}
-      <PollingNotificationManager />
+      {/* <PollingNotificationManager /> */}
 
       {/* Routes de l'application */}
       <AppRouter />

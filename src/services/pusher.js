@@ -1,5 +1,6 @@
 // src/services/pusher.js
 import Pusher from 'pusher-js';
+import env from '../config/env';
 
 class PusherService {
   constructor() {
@@ -8,28 +9,32 @@ class PusherService {
     this.eventHandlers = new Map();
     this.isInitialized = false;
     this.connectionListeners = [];
+    this._currentState = 'disconnected';
   }
 
   init(options = {}) {
     // Si déjà initialisé, retourner l'instance existante
     if (this.isInitialized && this.pusher) {
-     (' Pusher déjà initialisé, réutilisation...');
+      console.log(' Pusher déjà initialisé, réutilisation...');
       return this.pusher;
     }
 
-    const key = options.key || import.meta.env.VITE_PUSHER_KEY;
-    const cluster = options.cluster || import.meta.env.VITE_PUSHER_CLUSTER || 'mt1';
+    const key = options.key || env.PUSHER_KEY;
+    const cluster = options.cluster || env.PUSHER_CLUSTER || 'mt1';
 
     if (!key) {
-      console.warn(' VITE_PUSHER_KEY non configuré - Pusher désactivé');
+      console.warn(' PUSHER_KEY non configuré - Pusher désactivé');
       return null;
     }
 
     try {
-     (' Initialisation Pusher...', { cluster });
+      console.log(' Initialisation Pusher...', { 
+        key: key.substring(0, 8) + '...', 
+        cluster 
+      });
 
       // Activer les logs en développement
-      if (import.meta.env.DEV) {
+      if (env.IS_DEV || env.DEBUG) {
         Pusher.logToConsole = true;
       }
 
@@ -41,18 +46,21 @@ class PusherService {
 
       // Gestion des événements de connexion
       this.pusher.connection.bind('connected', () => {
-       (' Pusher CONNECTÉ - Socket ID:', this.pusher.connection.socket_id);
+        console.log(' Pusher CONNECTÉ - Socket ID:', this.pusher.connection.socket_id);
+        this._currentState = 'connected';
         this.isInitialized = true;
         this._notifyConnectionListeners('connected');
       });
 
       this.pusher.connection.bind('disconnected', () => {
-       (' Pusher DÉCONNECTÉ');
+        console.log(' Pusher DÉCONNECTÉ');
+        this._currentState = 'disconnected';
         this._notifyConnectionListeners('disconnected');
       });
 
       this.pusher.connection.bind('connecting', () => {
-       (' Pusher connexion en cours...');
+        console.log(' Pusher connexion en cours...');
+        this._currentState = 'connecting';
       });
 
       this.pusher.connection.bind('error', (err) => {
@@ -61,7 +69,8 @@ class PusherService {
       });
 
       this.pusher.connection.bind('state_change', (states) => {
-       (` Pusher: ${states.previous} → ${states.current}`);
+        console.log(` Pusher: ${states.previous} → ${states.current}`);
+        this._currentState = states.current;
       });
 
       return this.pusher;
@@ -73,13 +82,32 @@ class PusherService {
   }
 
   _notifyConnectionListeners(event, data = null) {
+    console.log(`Notification listeners: ${event} (${this.connectionListeners.length} listeners)`);
     this.connectionListeners.forEach(({ event: e, callback }) => {
-      if (e === event) callback(data);
+      if (e === event) {
+        try {
+          callback(data);
+        } catch (err) {
+          console.error('Erreur dans listener:', err);
+        }
+      }
     });
   }
 
   onConnectionChange(event, callback) {
     this.connectionListeners.push({ event, callback });
+    
+    // FIX : Si on demande 'connected' et qu'on EST DÉJÀ connecté,
+    // appeler le callback immédiatement
+    if (event === 'connected' && this.isConnected()) {
+      console.log(' Pusher déjà connecté, notification immédiate');
+      try {
+        callback();
+      } catch (err) {
+        console.error('Erreur callback immédiat:', err);
+      }
+    }
+    
     return () => {
       this.connectionListeners = this.connectionListeners.filter(
         l => !(l.event === event && l.callback === callback)
@@ -95,16 +123,16 @@ class PusherService {
 
     // Réutiliser le channel existant
     if (this.channels.has(channelName)) {
-     (`Channel "${channelName}" déjà abonné`);
+      console.log(` Channel "${channelName}" déjà abonné`);
       return this.channels.get(channelName);
     }
 
-   (`Abonnement au channel: ${channelName}`);
+    console.log(` Abonnement au channel: ${channelName}`);
     const channel = this.pusher.subscribe(channelName);
     this.channels.set(channelName, channel);
 
     channel.bind('pusher:subscription_succeeded', () => {
-     (`Abonné à "${channelName}"`);
+      console.log(` Abonné à "${channelName}"`);
     });
 
     channel.bind('pusher:subscription_error', (error) => {
@@ -117,7 +145,7 @@ class PusherService {
   unsubscribe(channelName) {
     if (!this.pusher || !this.channels.has(channelName)) return;
 
-   (` Désabonnement: ${channelName}`);
+    console.log(` Désabonnement: ${channelName}`);
     this.pusher.unsubscribe(channelName);
     this.channels.delete(channelName);
     this.eventHandlers.delete(channelName);
@@ -127,7 +155,7 @@ class PusherService {
     const channel = this.subscribe(channelName);
     if (!channel) return () => {};
 
-   (`Écoute "${eventName}" sur "${channelName}"`);
+    console.log(`Écoute "${eventName}" sur "${channelName}"`);
     
     // Stocker le handler pour le cleanup
     const key = `${channelName}:${eventName}`;
@@ -139,7 +167,7 @@ class PusherService {
     channel.bind(eventName, callback);
 
     return () => {
-     (` Arrêt écoute "${eventName}" sur "${channelName}"`);
+      console.log(` Arrêt écoute "${eventName}" sur "${channelName}"`);
       channel.unbind(eventName, callback);
       const handlers = this.eventHandlers.get(key) || [];
       const index = handlers.indexOf(callback);
@@ -156,13 +184,14 @@ class PusherService {
 
   disconnect() {
     if (this.pusher) {
-     ('Déconnexion Pusher...');
+      console.log('Déconnexion Pusher...');
       this.channels.forEach((_, name) => this.pusher.unsubscribe(name));
       this.channels.clear();
       this.eventHandlers.clear();
       this.pusher.disconnect();
       this.pusher = null;
       this.isInitialized = false;
+      this._currentState = 'disconnected';
     }
   }
 
@@ -171,7 +200,7 @@ class PusherService {
   }
 
   getState() {
-    return this.pusher?.connection?.state || 'disconnected';
+    return this.pusher?.connection?.state || this._currentState || 'disconnected';
   }
 
   getSocketId() {

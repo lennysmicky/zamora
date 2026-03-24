@@ -1,6 +1,7 @@
 // src/hooks/useOrderNotifications.js
-import { useCallback } from 'react';
-import { showOrderNotification } from '../components/notifications/OrderNotification';
+import { useEffect, useCallback, useState, useRef } from 'react';
+import { usePusher } from './usePusher';
+import useAuthStore from '../stores/authStore';
 
 /**
  * Jouer un son de notification
@@ -18,9 +19,9 @@ const playNotificationSound = () => {
     gainNode.connect(audioContext.destination);
 
     // Mélodie de notification
-    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // La
-    oscillator.frequency.setValueAtTime(988, audioContext.currentTime + 0.1); // Si
-    oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.2); // Do
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(988, audioContext.currentTime + 0.1);
+    oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.2);
 
     oscillator.type = 'sine';
     gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
@@ -29,7 +30,6 @@ const playNotificationSound = () => {
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.4);
   } catch (e) {
-    // Silencieux si non supporté
     console.log('Son non supporté');
   }
 };
@@ -39,7 +39,7 @@ const playNotificationSound = () => {
  */
 const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log('Notifications non supportées');
+    console.log(' Notifications non supportées par ce navigateur');
     return false;
   }
 
@@ -56,14 +56,14 @@ const requestNotificationPermission = async () => {
 };
 
 /**
- * Afficher une notification native (même si l'app est en arrière-plan)
+ * Afficher une notification native
  */
 const showNativeNotification = (title, options = {}) => {
   if (Notification.permission === 'granted') {
     try {
       const notification = new Notification(title, {
-        icon: '/logo192.png', // Votre logo
-        badge: '/logo192.png',
+        icon: '/logo192.jpg',
+        badge: '/logo192.jpg',
         vibrate: [200, 100, 200],
         requireInteraction: true,
         ...options,
@@ -74,9 +74,7 @@ const showNativeNotification = (title, options = {}) => {
         notification.close();
       };
 
-      // Auto-fermer après 10 secondes
-      setTimeout(() => notification.close(), 50000);
-
+      setTimeout(() => notification.close(), 10000);
       return notification;
     } catch (e) {
       console.error('Erreur notification native:', e);
@@ -86,104 +84,203 @@ const showNativeNotification = (title, options = {}) => {
 };
 
 /**
- * Hook personnalisé pour gérer les notifications de commandes
+ * Hook pour écouter les notifications de commandes via Pusher
  */
-export const useOrderNotifications = () => {
-  // Demander la permission au montage
-  useCallback(() => {
-    requestNotificationPermission();
-  }, []);
+export const useOrderNotifications = (options = {}) => {
+  const { 
+    onNewOrder,
+    onOrderStatusChanged,
+    autoSubscribe = true 
+  } = options;
 
-  // Notifier une nouvelle commande (Toast + Son + Native)
-  const notifyNewOrder = useCallback((order, options = {}) => {
-    const { playSound = true, showNative = true } = options;
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const { on, isConnected, restaurantId } = usePusher();
+  
+  const user = useAuthStore((s) => s.user);
+  const subscribedRef = useRef(false);
 
-    // 1. Afficher le Toast
-    showOrderNotification.newOrder(order);
-
-    // 2. Jouer le son
-    if (playSound) {
-      playNotificationSound();
-    }
-
-    // 3. Notification native (si l'app est en arrière-plan)
-    if (showNative && document.hidden) {
-      const orderNumber = order?.orderNumber || order?.id || 'N/A';
-      const total = order?.total || order?.totalAmount || 0;
-      
-      showNativeNotification(' Nouvelle Commande!', {
-        body: `Commande #${orderNumber} - ${total.toLocaleString()} FCFA`,
-        tag: `order-${orderNumber}`,
-        data: { orderId: order?.id, type: 'new_order' },
-      });
-    }
-  }, []);
-
-  // Notifier un changement de statut
-  const notifyStatusChange = useCallback((order, status, options = {}) => {
-    const { playSound = true, showNative = false } = options;
+  // Déterminer les channels à écouter selon le rôle
+  const getChannels = useCallback(() => {
+    const channels = [];
     
-    const statusLower = String(status || '').toLowerCase();
+    if (user?.role === 'admin') {
+      // Admin écoute toutes les commandes
+      channels.push('orders');
+    } else if (user?.role === 'restaurant' || restaurantId) {
+      // Restaurant écoute son channel spécifique
+      const restId = restaurantId || user?.restaurant_id;
+      if (restId) {
+        channels.push(`restaurant.${restId}`);
+        channels.push(`private-restaurant.${restId}`);
+      }
+    }
+    
+    // Channel global pour tous
+    channels.push('orders');
+    
+    return [...new Set(channels)]; // Enlever les doublons
+  }, [user, restaurantId]);
 
-    const notificationMap = {
-      'confirmed': showOrderNotification.confirmed,
-      'confirmee': showOrderNotification.confirmed,
-      'preparing': showOrderNotification.preparing,
-      'en_preparation': showOrderNotification.preparing,
-      'in_preparation': showOrderNotification.preparing,
-      'ready': showOrderNotification.ready,
-      'prete': showOrderNotification.ready,
-      'delivered': showOrderNotification.delivered,
-      'livree': showOrderNotification.delivered,
-      'livres': showOrderNotification.delivered,
-      'cancelled': showOrderNotification.cancelled,
-      'annulee': showOrderNotification.cancelled,
-      'annules': showOrderNotification.cancelled,
+  // Handler pour nouvelle commande
+  const handleNewOrder = useCallback((data) => {
+    console.log(' Nouvelle commande reçue via Pusher:', data);
+    
+    const order = data.order || data;
+    
+    // Créer la notification
+    const notification = {
+      id: Date.now(),
+      type: 'Zamora Restaurant',
+      title: ' Nouvelle Commande!',
+      message: `Commande #${order.id || order.orderNumber || 'N/A'} - ${(order.total || order.totalAmount || 0).toLocaleString()} FCFA`,
+      order,
+      read: false,
+      createdAt: new Date().toISOString(),
     };
 
-    const notifyFn = notificationMap[statusLower];
-    if (notifyFn) {
-      notifyFn(order);
-    } else {
-      showOrderNotification.info(`Statut mis à jour : ${status}`);
-    }
+    setNotifications(prev => [notification, ...prev.slice(0, 49)]); // Garder max 50
+    setUnreadCount(prev => prev + 1);
 
-    if (playSound) {
-      playNotificationSound();
-    }
+    // Jouer le son
+    playNotificationSound();
 
-    // Notification native pour les statuts importants
-    if (showNative && document.hidden) {
-      const orderNumber = order?.orderNumber || order?.id || 'N/A';
-      showNativeNotification(` Commande #${orderNumber}`, {
-        body: `Statut: ${status}`,
-        tag: `order-status-${orderNumber}`,
+    // Notification native si en arrière-plan
+    if (document.hidden) {
+      showNativeNotification(notification.title, {
+        body: notification.message,
+        tag: `order-${order.id}`,
       });
     }
-  }, []);
 
-  // Notifications simples
-  const notifySuccess = useCallback((message, options = {}) => {
-    showOrderNotification.success(message);
-    if (options.playSound) {
-      playNotificationSound();
+    // Callback personnalisé
+    if (onNewOrder) {
+      onNewOrder(order, notification);
     }
+  }, [onNewOrder]);
+
+  // Handler pour changement de statut
+  const handleStatusChanged = useCallback((data) => {
+    console.log(' Statut commande changé:', data);
+    
+    const order = data.order || data;
+    const status = data.status || order.status;
+    
+    const notification = {
+      id: Date.now(),
+      type: 'status_changed',
+      title: ' Statut mis à jour',
+      message: `Commande #${order.id || 'N/A'} → ${status}`,
+      order,
+      status,
+      read: false,
+      createdAt: new Date().toISOString(),
+    };
+
+    setNotifications(prev => [notification, ...prev.slice(0, 49)]);
+    setUnreadCount(prev => prev + 1);
+
+    if (onOrderStatusChanged) {
+      onOrderStatusChanged(order, status, notification);
+    }
+  }, [onOrderStatusChanged]);
+
+  // S'abonner aux channels
+  useEffect(() => {
+    if (!autoSubscribe || !isConnected || subscribedRef.current) {
+      return;
+    }
+
+    const channels = getChannels();
+    
+    if (channels.length === 0) {
+      console.log(' Aucun channel à écouter');
+      return;
+    }
+
+    console.log(' Abonnement aux channels:', channels);
+    subscribedRef.current = true;
+
+    const cleanupFns = [];
+
+    channels.forEach(channel => {
+      // Écouter différents formats d'événements (selon config backend)
+      const events = [
+        'new-order',
+        'NewOrder', 
+        'App\\Events\\NewOrder',
+        'order.created',
+      ];
+
+      events.forEach(eventName => {
+        const cleanup = on(channel, eventName, handleNewOrder);
+        cleanupFns.push(cleanup);
+      });
+
+      // Écouter les changements de statut
+      const statusEvents = [
+        'order-status-changed',
+        'OrderStatusChanged',
+        'App\\Events\\OrderStatusChanged',
+        'order.updated',
+      ];
+
+      statusEvents.forEach(eventName => {
+        const cleanup = on(channel, eventName, handleStatusChanged);
+        cleanupFns.push(cleanup);
+      });
+    });
+
+    // Demander permission notifications
+    requestNotificationPermission();
+
+    return () => {
+      cleanupFns.forEach(fn => fn && fn());
+      subscribedRef.current = false;
+    };
+  }, [isConnected, autoSubscribe, getChannels, on, handleNewOrder, handleStatusChanged]);
+
+  // Actions sur les notifications
+  const markAsRead = useCallback((notificationId) => {
+    setNotifications(prev =>
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   }, []);
 
-  const notifyError = useCallback((message) => {
-    showOrderNotification.error(message);
+  const markAllAsRead = useCallback(() => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setUnreadCount(0);
   }, []);
 
-  const notifyInfo = useCallback((message) => {
-    showOrderNotification.info(message);
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+    setUnreadCount(0);
+  }, []);
+
+  const removeNotification = useCallback((notificationId) => {
+    setNotifications(prev => {
+      const notification = prev.find(n => n.id === notificationId);
+      if (notification && !notification.read) {
+        setUnreadCount(c => Math.max(0, c - 1));
+      }
+      return prev.filter(n => n.id !== notificationId);
+    });
   }, []);
 
   return {
-    notifyNewOrder,
-    notifyStatusChange,
-    notifySuccess,
-    notifyError,
-    notifyInfo,
+    // État
+    notifications,
+    unreadCount,
+    isConnected,
+    
+    // Actions
+    markAsRead,
+    markAllAsRead,
+    clearNotifications,
+    removeNotification,
+    
+    // Utilitaires
     playNotificationSound,
     requestNotificationPermission,
   };
