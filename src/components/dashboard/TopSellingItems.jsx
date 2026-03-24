@@ -90,7 +90,7 @@ const TopSellingItems = ({ data = [], isLoading = false, linkFilters = {} }) => 
         it.category_name ??
         it.repas?.categorie?.nom ??
         it.repas?.categorie?.name ??
-        "-";
+        "";
 
       return {
         id,
