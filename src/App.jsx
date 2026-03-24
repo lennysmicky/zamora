@@ -29,7 +29,7 @@ let notificationChannel = null;
 const initBroadcastChannel = () => {
   if (typeof BroadcastChannel !== 'undefined' && !notificationChannel) {
     notificationChannel = new BroadcastChannel(NOTIFICATION_CHANNEL_NAME);
-    console.log('Broadcast Channel initialisé');
+    console.log(' Broadcast Channel initialisé');
   }
   return notificationChannel;
 };
@@ -119,8 +119,8 @@ const showSystemNotification = (title, options = {}) => {
   if (Notification.permission === 'granted') {
     try {
       const notification = new Notification(title, {
-        icon: '/logo.jpg',
-        badge: '/logo.jpg',
+        icon: '/logo192.png',
+        badge: '/logo192.jpg',
         vibrate: [200, 100, 200],
         requireInteraction: true,
         ...options,
@@ -153,7 +153,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
   const subscribedRef = useRef(false);
   const cleanupRef = useRef([]);
 
-  // Écouter les notifications des autres onglets
+  //  Écouter les notifications des autres onglets
   useEffect(() => {
     const channel = initBroadcastChannel();
     
@@ -164,8 +164,10 @@ const PusherNotificationManager = ({ onNewOrder }) => {
           
           const orderData = event.data.orderData;
           if (orderData) {
-            // Afficher le toast
-            showOrderNotification.newOrder(orderData);
+            //  Afficher le toast UNIQUEMENT si c'est le message personnalisé du backend
+            if (event.data.fromBackendNotification) {
+              showOrderNotification.newOrder(orderData);
+            }
             
             // Rafraîchir le dashboard
             emitDashboardRefresh({
@@ -175,8 +177,10 @@ const PusherNotificationManager = ({ onNewOrder }) => {
               timestamp: event.data.timestamp,
             });
             
-            // Son (optionnel, peut être commenté pour éviter le son sur tous les onglets)
-            playNotificationSound();
+            // Son seulement si c'est une vraie notification backend
+            if (event.data.fromBackendNotification) {
+              playNotificationSound();
+            }
           }
         }
       };
@@ -199,13 +203,13 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     if (!token || !restaurantId) {
-      console.log('En attente de connexion...', { hasToken: !!token, restaurantId });
+      console.log(' En attente de connexion...', { hasToken: !!token, restaurantId });
       setStatus('waiting_auth');
       return;
     }
 
     if (subscribedRef.current) {
-      console.log('Déjà abonné');
+      console.log(' Déjà abonné');
       return;
     }
 
@@ -216,7 +220,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     const pusher = pusherService.init();
     
     if (!pusher) {
-      console.error('Échec init Pusher');
+      console.error(' Échec init Pusher');
       setStatus('init_failed');
       return;
     }
@@ -227,7 +231,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       subscribedRef.current = true;
       setStatus('connected');
 
-      console.log('Configuration des channels...');
+      console.log(' Configuration des channels...');
 
       // Channels à écouter
       const channels = [
@@ -264,11 +268,12 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         });
       });
 
-      console.log('Abonnements Pusher configurés');
+      console.log(' Abonnements Pusher configurés');
     };
 
     // Gestion des événements de commande et de notifications
     const handleOrderEvent = (eventName, data) => {
+      //  SEUL CAS où on affiche toast + notif OS : événement backend 'new-notification'
       if (eventName === 'new-notification' && data.type === 'commande') {
         handleNewOrderFromNotification(data);
         return;
@@ -284,9 +289,9 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       }
     };
 
-    // Handler pour les notifications génériques du backend
+    //  Handler pour les notifications du backend (GARDE TOAST + NOTIF OS)
     const handleNewOrderFromNotification = (data) => {
-      console.log(' Nouvelle commande reçue via Notification user:', data);
+      console.log(' Nouvelle commande reçue via Notification backend:', data);
 
       const match = data.contenu?.match(/\(([^)]+)\)/);
       const orderNumber = match ? match[1] : 'N/A';
@@ -299,18 +304,21 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         status: 'en_attente',
       };
 
-      // Toast dans l'application
+      //  Toast dans l'application
       showOrderNotification.newOrder(orderData);
 
-      // Notification OS
-      showSystemNotification('' + data.titre, {
+      //  Notification OS
+      showSystemNotification(' ' + data.titre, {
         body: data.contenu,
         tag: `order-${orderNumber}`,
         requireInteraction: true,
       });
 
-      // Diffuser aux autres onglets
-      broadcastNotification({ orderData });
+      //  Diffuser aux autres onglets avec flag
+      broadcastNotification({ 
+        orderData,
+        fromBackendNotification: true // ← Important !
+      });
 
       // Rafraîchir l'écran
       emitDashboardRefresh({
@@ -323,9 +331,9 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       playNotificationSound();
     };
 
-    // Nouvelle commande (Handler standard)
+    //  Handler standard (CACHE TOAST + NOTIF OS)
     const handleNewOrder = (data) => {
-      console.log(' Nouvelle commande Pusher standard:', data);
+      console.log(' Nouvelle commande Pusher standard (silencieux):', data);
       
       const order = data.order || data;
       
@@ -337,19 +345,19 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         status: order.status || 'pending',
       };
 
-      // Toast dans l'application
-      showOrderNotification.newOrder(orderData);
+      //  PAS DE TOAST
+      // showOrderNotification.newOrder(orderData);
 
-      // Notification OS
-      showSystemNotification('Nouvelle commande !', {
-        body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
-        tag: `order-${orderData.orderNumber}`,
-        requireInteraction: true,
+      //  PAS DE NOTIFICATION OS
+      // showSystemNotification(' Nouvelle commande !', { ... });
+
+      //  Diffuser aux autres onglets SANS flag (pas de toast non plus là-bas)
+      broadcastNotification({ 
+        orderData,
+        fromBackendNotification: false
       });
 
-      //  Diffuser aux autres onglets
-      broadcastNotification({ orderData });
-
+      //  Rafraîchir le dashboard en arrière-plan
       emitDashboardRefresh({
         reason: 'new_order',
         orderId: orderData.orderNumber,
@@ -357,14 +365,15 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         timestamp: Date.now(),
       });
 
-      playNotificationSound();
+      //  PAS DE SON
+      // playNotificationSound();
 
       if (onNewOrder) onNewOrder(orderData);
     };
 
     // Mise à jour de statut
     const handleStatusUpdate = (data) => {
-      console.log('Mise à jour statut:', data);
+      console.log(' Mise à jour statut:', data);
       
       const order = data.order || data;
       const newStatus = data.newStatus || data.new_status || data.status || order.status;
@@ -421,7 +430,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     return () => {
-      console.log('Cleanup Pusher...');
+      console.log(' Cleanup Pusher...');
       cleanupRef.current.forEach(fn => fn && fn());
       cleanupRef.current = [];
       subscribedRef.current = false;
@@ -507,16 +516,12 @@ const PollingNotificationManager = () => {
           const isNew = Date.now() - createdAt < 60000;
           
           if (isNew && lastOrderIdsRef.current.size > 0) {
-            console.log('[Polling] Nouvelle commande détectée:', orderId);
+            console.log(' [Polling] Nouvelle commande détectée (silencieux):', orderId);
             
-            // PAS DE TOAST - Seulement notification système silencieuse
-            showSystemNotification('Nouvelle commande', {
-              body: `Une nouvelle commande a été détectée`,
-              tag: `polling-${orderNumber}`,
-              requireInteraction: false,
-            });
+            //  PAS DE NOTIFICATION OS
+            //  PAS DE TOAST
 
-            // Rafraîchir le dashboard silencieusement
+            //  Rafraîchir le dashboard silencieusement
             emitDashboardRefresh({
               reason: 'new_order',
               orderId: orderId,
@@ -546,7 +551,7 @@ const PollingNotificationManager = () => {
       return;
     }
 
-    console.log('Démarrage polling (interval: 15s)');
+    console.log(' Démarrage polling (interval: 15s)');
     setIsPolling(true);
 
     checkNewOrders();
@@ -558,7 +563,7 @@ const PollingNotificationManager = () => {
         clearInterval(pollingIntervalRef.current);
       }
       setIsPolling(false);
-      console.log('Polling arrêté');
+      console.log(' Polling arrêté');
     };
   }, [token, restaurantId, checkNewOrders]);
 
@@ -581,7 +586,7 @@ const PollingNotificationManager = () => {
           fontFamily: 'system-ui',
         }}
       >
-        Polling actif
+         Polling actif
       </div>
     );
   }
@@ -620,7 +625,7 @@ function App() {
       {/* PUSHER - Notifications temps réel */}
       <PusherNotificationManager />
       
-      {/* POLLING - Backup toutes les 15s (sans toast) */}
+      {/* POLLING - Backup toutes les 15s (complètement silencieux) */}
       <PollingNotificationManager />
 
       {/* Routes de l'application */}

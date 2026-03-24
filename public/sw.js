@@ -6,8 +6,8 @@ self.addEventListener('push', function(event) {
   let data = {
     title: 'Zamora Restaurant',
     body: 'Une nouvelle commande a été passée',
-    icon: '/logo.jpg',
-    badge: '/logo.jpg',
+    icon: '/logo192.png',
+    badge: '/logo192.png',
     tag: 'order-notification',
     data: {}
   };
@@ -72,7 +72,7 @@ self.addEventListener('notificationclick', function(event) {
         }
 
         if (clients.openWindow) {
-          return clients.openWindow('/restaurant/orders');
+          return clients.openWindow('https://zamora-app.netlify.app/restaurant/dashboard');
         }
       })
   );
