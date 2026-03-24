@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import NotificationProvider from './Providers/NotificationProvider';
 import './index.css';
+import './utils/console'; // Importer la configuration de console pour désactiver les logs en production
 import './i18n';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
