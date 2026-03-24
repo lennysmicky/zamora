@@ -132,30 +132,30 @@ const OrderNotification = ({ order, message, type = 'info', closeToast }) => {
 
 // Fonctions helper pour afficher les notifications
 export const showOrderNotification = {
-  // Nouvelle commande
-  newOrder: (order) => {
-    toast(
-      ({ closeToast }) => (
-        <OrderNotification
-          order={{ ...order, status: 'new' }}
-          message=" Nouvelle commande reçue !"
-          type="new"
-          closeToast={closeToast}
-        />
-      ),
-      {
-        position: 'top-right',
-        autoClose: 30000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        className: 'custom-toast custom-toast-new',
-        bodyClassName: 'custom-toast-body',
-        progressClassName: 'custom-toast-progress-new',
-      }
-    );
-  },
+  // // Nouvelle commande
+  // newOrder: (order) => {
+  //   toast(
+  //     ({ closeToast }) => (
+  //       <OrderNotification
+  //         order={{ ...order, status: 'new' }}
+  //         message=" Nouvelle commande reçue !"
+  //         type="new"
+  //         closeToast={closeToast}
+  //       />
+  //     ),
+  //     {
+  //       position: 'top-right',
+  //       autoClose: 30000,
+  //       hideProgressBar: false,
+  //       closeOnClick: true,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //       className: 'custom-toast custom-toast-new',
+  //       bodyClassName: 'custom-toast-body',
+  //       progressClassName: 'custom-toast-progress-new',
+  //     }
+  //   );
+  // },
 
   // Commande confirmée
   confirmed: (order) => {
