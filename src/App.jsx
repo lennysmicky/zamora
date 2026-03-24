@@ -271,13 +271,13 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         status: order.status || 'pending',
       };
 
-      showOrderNotification.newOrder(orderData);
+      // showOrderNotification.newOrder(orderData);
 
-      showSystemNotification('Nouvelle commande !', {
-        body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
-        tag: `order-${orderData.orderNumber}`,
-        requireInteraction: true,
-      });
+      // showSystemNotification('Nouvelle commande !', {
+      //   body: `Commande #${orderData.orderNumber}\n${orderData.total.toLocaleString('fr-FR')} FCFA`,
+      //   tag: `order-${orderData.orderNumber}`,
+      //   requireInteraction: true,
+      // });
 
       emitDashboardRefresh({
         reason: 'new_order',
