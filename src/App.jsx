@@ -29,7 +29,7 @@ let notificationChannel = null;
 const initBroadcastChannel = () => {
   if (typeof BroadcastChannel !== 'undefined' && !notificationChannel) {
     notificationChannel = new BroadcastChannel(NOTIFICATION_CHANNEL_NAME);
-    console.log(' Broadcast Channel initialisé');
+    console.log('📡 Broadcast Channel initialisé');
   }
   return notificationChannel;
 };
@@ -42,7 +42,7 @@ const broadcastNotification = (data) => {
         timestamp: Date.now(),
         ...data,
       });
-      console.log(' Notification diffusée aux autres onglets');
+      console.log('📤 Notification diffusée aux autres onglets');
     }
   } catch (e) {
     console.error('Erreur broadcast:', e);
@@ -89,7 +89,7 @@ const registerServiceWorker = async () => {
       console.log(' Service Worker enregistré:', registration.scope);
       return registration;
     } catch (error) {
-      console.error(' Erreur Service Worker:', error);
+      console.error('Erreur Service Worker:', error);
     }
   }
   return null;
@@ -98,7 +98,7 @@ const registerServiceWorker = async () => {
 // Demander permission pour les notifications
 const requestNotificationPermission = async () => {
   if (!('Notification' in window)) {
-    console.log(' Notifications non supportées');
+    console.log('Notifications non supportées');
     return false;
   }
 
@@ -120,7 +120,7 @@ const showSystemNotification = (title, options = {}) => {
     try {
       const notification = new Notification(title, {
         icon: '/logo192.png',
-        badge: '/logo192.jpg',
+        badge: '/logo192.png',
         vibrate: [200, 100, 200],
         requireInteraction: true,
         ...options,
@@ -153,7 +153,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
   const subscribedRef = useRef(false);
   const cleanupRef = useRef([]);
 
-  //  Écouter les notifications des autres onglets
+  // Écouter les notifications des autres onglets
   useEffect(() => {
     const channel = initBroadcastChannel();
     
@@ -209,11 +209,11 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     if (subscribedRef.current) {
-      console.log(' Déjà abonné');
+      console.log('Déjà abonné');
       return;
     }
 
-    console.log(' Configuration Pusher pour restaurant:', restaurantId);
+    console.log('Configuration Pusher pour restaurant: ', restaurantId);
     setStatus('connecting');
 
     // Initialiser Pusher
@@ -268,12 +268,12 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         });
       });
 
-      console.log(' Abonnements Pusher configurés');
+      console.log('Abonnements Pusher configurés');
     };
 
     // Gestion des événements de commande et de notifications
     const handleOrderEvent = (eventName, data) => {
-      //  SEUL CAS où on affiche toast + notif OS : événement backend 'new-notification'
+      // SEUL CAS où on affiche toast + notif OS : événement backend 'new-notification'
       if (eventName === 'new-notification' && data.type === 'commande') {
         handleNewOrderFromNotification(data);
         return;
@@ -289,7 +289,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       }
     };
 
-    //  Handler pour les notifications du backend (GARDE TOAST + NOTIF OS)
+    // andler pour les notifications du backend (GARDE TOAST + NOTIF OS)
     const handleNewOrderFromNotification = (data) => {
       console.log(' Nouvelle commande reçue via Notification backend:', data);
 
@@ -314,7 +314,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         requireInteraction: true,
       });
 
-      //  Diffuser aux autres onglets avec flag
+      // Diffuser aux autres onglets avec flag
       broadcastNotification({ 
         orderData,
         fromBackendNotification: true // ← Important !
@@ -331,7 +331,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
       playNotificationSound();
     };
 
-    //  Handler standard (CACHE TOAST + NOTIF OS)
+    // Handler standard (CACHE TOAST + NOTIF OS)
     const handleNewOrder = (data) => {
       console.log(' Nouvelle commande Pusher standard (silencieux):', data);
       
@@ -345,10 +345,10 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         status: order.status || 'pending',
       };
 
-      //  PAS DE TOAST
+      // PAS DE TOAST
       // showOrderNotification.newOrder(orderData);
 
-      //  PAS DE NOTIFICATION OS
+      // PAS DE NOTIFICATION OS
       // showSystemNotification(' Nouvelle commande !', { ... });
 
       //  Diffuser aux autres onglets SANS flag (pas de toast non plus là-bas)
@@ -365,7 +365,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
         timestamp: Date.now(),
       });
 
-      //  PAS DE SON
+      // PAS DE SON
       // playNotificationSound();
 
       if (onNewOrder) onNewOrder(orderData);
@@ -418,7 +418,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     });
 
     const unsubDisconnected = pusherService.onConnectionChange('disconnected', () => {
-      console.log(' Pusher déconnecté');
+      console.log('Pusher déconnecté');
       setStatus('disconnected');
       subscribedRef.current = false;
     });
@@ -430,7 +430,7 @@ const PusherNotificationManager = ({ onNewOrder }) => {
     }
 
     return () => {
-      console.log(' Cleanup Pusher...');
+      console.log('Cleanup Pusher...');
       cleanupRef.current.forEach(fn => fn && fn());
       cleanupRef.current = [];
       subscribedRef.current = false;
@@ -517,8 +517,8 @@ const PollingNotificationManager = () => {
           
           if (isNew && lastOrderIdsRef.current.size > 0) {
             console.log(' [Polling] Nouvelle commande détectée (silencieux):', orderId);
-            
-            //  PAS DE NOTIFICATION OS
+          
+            // PAS DE NOTIFICATION OS
             //  PAS DE TOAST
 
             //  Rafraîchir le dashboard silencieusement
