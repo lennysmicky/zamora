@@ -81,13 +81,11 @@ self.addEventListener('notificationclick', function(event) {
 
 // INSTALLATION
 self.addEventListener('install', function(event) {
-  console.log('[SW] Installation...');
   self.skipWaiting();
 });
 
 
 // ACTIVATION
 self.addEventListener('activate', function(event) {
-  console.log('[SW] Activation...');
   event.waitUntil(clients.claim());
 });
