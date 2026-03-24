@@ -276,8 +276,8 @@ const showNativeNotification = (title, options = {}) => {
   if (Notification.permission === 'granted') {
     try {
       const notification = new Notification(title, {
-        icon: '/logo192.jpg',
-        badge: '/logo192.jpg',
+        icon: '/logo.jpg',
+        badge: '/logo.jpg',
         vibrate: [200, 100, 200],
         ...options,
       });

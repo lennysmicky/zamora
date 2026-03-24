@@ -90,8 +90,8 @@ const showSystemNotification = (title, options = {}) => {
   if (Notification.permission === 'granted') {
     try {
       const notification = new Notification(title, {
-        icon: '/logo192.jpg',
-        badge: '/logo192.jpg',
+        icon: '/logo.jpg',
+        badge: '/logo.jpg',
         vibrate: [200, 100, 200],
         requireInteraction: true,
         ...options,
@@ -447,12 +447,12 @@ const PollingNotificationManager = () => {
               status: order.status || 'pending',
             };
 
-            showOrderNotification.newOrder(orderData);
+            // showOrderNotification.newOrder(orderData);
             
-            showSystemNotification(' Nouvelle commande !', {
-              body: `Commande #${orderData.orderNumber}`,
-              tag: `order-${orderData.orderNumber}`,
-            });
+            // showSystemNotification(' Nouvelle commande !', {
+            //   body: `Commande #${orderData.orderNumber}`,
+            //   tag: `order-${orderData.orderNumber}`,
+            // });
 
             emitDashboardRefresh({
               reason: 'new_order',

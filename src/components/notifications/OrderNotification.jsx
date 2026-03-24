@@ -145,7 +145,7 @@ export const showOrderNotification = {
       ),
       {
         position: 'top-right',
-        autoClose: 8000,
+        autoClose: 30000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
@@ -170,7 +170,7 @@ export const showOrderNotification = {
       ),
       {
         position: 'top-right',
-        autoClose: 5000,
+        autoClose: 30000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
