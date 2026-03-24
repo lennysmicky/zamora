@@ -26,7 +26,6 @@
     "react-hot-toast": "^2.6.0",
     "react-i18next": "^16.5.0",
     "react-icons": "^5.5.0",
-    "react-push-notification": "^1.5.4",
     "react-router-dom": "^7.10.1",
     "react-toastify": "^11.0.5",
     "recharts": "^3.6.0",
