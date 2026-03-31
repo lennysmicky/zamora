@@ -59,50 +59,50 @@ const foodItems = [
     { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
 ];
 
-// Équipe du projet
-const teamMembers = [
-    {
-        name: 'Kossi Michael ZODJEKPO ',
-        role: 'Project Lead & Développeur Fullstack',
-        roleIcon: RiCodeSSlashLine,
-        photo: Membre1, // Remplace par: require('../../assets/images/team/membre1.jpg')
-        bio: 'Architecture du projet, développement frontend React & backend API',
-        linkedin: 'https://www.linkedin.com/in/kossi-michael-zodjekpo/',
-        github: 'hhttps://github.com/lennysmicky/',
-        portfolio: '',
-        isLead: true
-    },
-    {
-        name: 'koffi kelly  SOWU',
-        role: 'Développeur Backend',
-        roleIcon: RiServerLine,
-        photo: Membre2,
-        bio: 'API REST, base de données et logique métier',
-        linkedin: 'https://www.linkedin.com/in/kelly-sowu-10084238b/',
-        github: 'https://github.com/Sowu20/',
-        portfolio: ''
-    },
-    {
-        name: 'kossi enouagnon HOUNGBEDJI',
-        role: 'Développeur Frontend',
-        roleIcon: RiLayoutLine,
-        photo: Membre3,
-        bio: 'Interfaces utilisateur, responsive design et expérience client',
-        linkedin: 'https://www.linkedin.com/in/kossi-enouagnon-houngbedji-475984288/',
-        github: 'https://github.com/',
-        portfolio: ''
-    },
-    {
-        name: 'Sergio DAKLU',
-        role: 'Développeur Backend',
-        roleIcon: RiServerLine,
-        photo: Membre4,
-        bio: 'Api , paiements et intégrations de Sdk mobile  ',
-        linkedin: 'https://www.linkedin.com/in/sergio-daklu-859a4734b/',
-        github: 'https://github.com/',
-        portfolio: ''
-    }
-];
+// // Équipe du projet
+// const teamMembers = [
+//     {
+//         name: 'Kossi Michael ZODJEKPO ',
+//         role: 'Project Lead & Développeur Fullstack',
+//         roleIcon: RiCodeSSlashLine,
+//         photo: Membre1, // Remplace par: require('../../assets/images/team/membre1.jpg')
+//         bio: 'Architecture du projet, développement frontend React & backend API',
+//         linkedin: 'https://www.linkedin.com/in/kossi-michael-zodjekpo/',
+//         github: 'hhttps://github.com/lennysmicky/',
+//         portfolio: '',
+//         isLead: true
+//     },
+//     {
+//         name: 'koffi kelly  SOWU',
+//         role: 'Développeur Backend',
+//         roleIcon: RiServerLine,
+//         photo: Membre2,
+//         bio: 'API REST, base de données et logique métier',
+//         linkedin: 'https://www.linkedin.com/in/kelly-sowu-10084238b/',
+//         github: 'https://github.com/Sowu20/',
+//         portfolio: ''
+//     },
+//     {
+//         name: 'kossi enouagnon HOUNGBEDJI',
+//         role: 'Développeur Frontend',
+//         roleIcon: RiLayoutLine,
+//         photo: Membre3,
+//         bio: 'Interfaces utilisateur, responsive design et expérience client',
+//         linkedin: 'https://www.linkedin.com/in/kossi-enouagnon-houngbedji-475984288/',
+//         github: 'https://github.com/',
+//         portfolio: ''
+//     },
+//     {
+//         name: 'Sergio DAKLU',
+//         role: 'Développeur Backend',
+//         roleIcon: RiServerLine,
+//         photo: Membre4,
+//         bio: 'Api , paiements et intégrations de Sdk mobile  ',
+//         linkedin: 'https://www.linkedin.com/in/sergio-daklu-859a4734b/',
+//         github: 'https://github.com/',
+//         portfolio: ''
+//     }
+// ];
 
 const LandingPage = () => {
     const { t } = useTranslation();
@@ -221,7 +221,7 @@ const LandingPage = () => {
                         <a href="#features" onClick={() => setMobileMenuOpen(false)}>Fonctionnalités</a>
                         <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Comment ça marche</a>
                         <a href="#download" onClick={() => setMobileMenuOpen(false)}>Télécharger</a>
-                        <a href="#team" onClick={() => setMobileMenuOpen(false)}>Équipe</a>
+                        <a href="/team" onClick={() => setMobileMenuOpen(false)}>Équipe</a>
                         <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
                     </nav>
 
@@ -462,7 +462,7 @@ const LandingPage = () => {
             </section>
 
             {/* Section Équipe / Crédits */}
-            <section className="landing-team" id="team">
+            {/* <section className="landing-team" id="team">
                 <div className="landing-container">
                     <div className="section-header animate-on-scroll">
                         <h2>Les personnes derrière Zamora</h2>
@@ -540,7 +540,7 @@ const LandingPage = () => {
 
 
                 </div>
-            </section>
+            </section> */}
 
             {/* CTA Section */}
             <section className="landing-cta" id="contact">
@@ -593,7 +593,7 @@ const LandingPage = () => {
                             </div>
                             <div className="footer-column">
                                 <h4>Informations</h4>
-                                <a href="#team">Crédits & Équipe</a>
+                                <a href="/team">Crédits & Équipe</a>
                                 <a href="#legal">CGU & Confidentialité</a>
                                 <a href="#contact">Contact</a>
                             </div>
@@ -604,7 +604,7 @@ const LandingPage = () => {
                         <div className="footer-bottom-links">
                             <a href="#legal">CGU & Politique de confidentialité</a>
                             <span className="footer-separator">•</span>
-                            <a href="#team">Crédits</a>
+                            <Link to="/team">Crédits</Link>
                         </div>
                     </div>
                 </div>

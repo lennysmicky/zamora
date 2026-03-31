@@ -28,6 +28,7 @@ const S = ({ children }) => <Suspense fallback={<PageLoader />}>{children}</Susp
 
 // Landing
 const LandingPage = lazy(() => import("../pages/Landing/LandingPage"));
+const TeamPage = lazy(() => import("../pages/Team/TeamPage"));
 
 // Auth
 const AdminLoginPage = lazy(() => import("../pages/Auth/Admin/AdminLoginPage"));
@@ -185,8 +186,9 @@ const AppRouter = () => {
         />
       </Route>
 
-      {/* ✅ /admin -> /dashboard (sans impacter /) */}
+      {/*  /admin -> /dashboard (sans impacter /) */}
       <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/team" element={<TeamPage />} />
 
       {/* ============ ADMIN ROUTES ============ */}
       <Route
