@@ -1,4 +1,3 @@
-
 <p align="center">
   <img src="src/assets/images/logo.png" alt="Zamora Logo" width="120" height="120" style="border-radius: 20px;" />
 </p>
@@ -151,7 +150,7 @@ La digitalisation de la restauration est devenue essentielle pour améliorer la 
 
 ---
 
-## 🏗️ Architecture du projet
+##  Architecture du projet
 
 ```
 ┌─────────────────────────────────────────────┐
@@ -197,7 +196,7 @@ Client (React) ──HTTP──▶ API (Laravel) ──▶ MySQL
 
 ---
 
-## 🛠️ Technologies utilisées
+##  Technologies utilisées
 
 ### Frontend
 
