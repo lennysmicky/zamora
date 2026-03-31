@@ -26,7 +26,8 @@ import {
     SiMongodb,
     SiNetlify,
     SiPusher,
-    SiCloudinary
+    SiCloudinary,
+    SiRender
 } from 'react-icons/si';
 import { FaGooglePlay, FaAppStore } from 'react-icons/fa';
 
@@ -212,6 +213,12 @@ const TeamPage = () => {
                                     <SiNetlify />
                                 </div>
                                 <span>Netlify</span>
+                            </div>
+                            <div className="tech-item">
+                                <div className="tech-icon render">
+                                    <SiRender />
+                                </div>
+                                <span>Render</span>
                             </div>
                         </div>
                     </div>
