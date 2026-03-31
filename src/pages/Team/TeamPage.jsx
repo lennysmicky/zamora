@@ -10,7 +10,9 @@ import {
     RiGlobalLine,
     RiArrowLeftLine,
     RiStarFill,
-    RiTeamFill
+    RiTeamFill,
+    RiNotification3Line,
+    RiMovie2Line
 } from 'react-icons/ri';
 import {
     FaReact,
@@ -26,18 +28,10 @@ import {
     SiPusher,
     SiCloudinary
 } from 'react-icons/si';
-import {
-    RiNotification3Line
-} from 'react-icons/ri';
 import { FaGooglePlay, FaAppStore } from 'react-icons/fa';
 
 // Images
 import Logo from '../../assets/images/logo.png';
-import Membre1 from '../../assets/team/Membre1.jpeg';
-import Membre2 from '../../assets/team/Membre2.png';
-import Membre3 from '../../assets/team/Membre3.jpg';
-import Membre4 from '../../assets/team/Membre4.jpeg';
-import DefaultAvatar from '../../assets/images/defaultavatar.png';
 
 import './TeamPage.css';
 
@@ -47,7 +41,6 @@ const teamMembers = [
         name: 'Kossi Michael ZODJEKPO',
         role: 'Project Lead & Développeur Fullstack',
         roleIcon: RiCodeSSlashLine,
-        photo: Membre1,
         bio: 'Architecture du projet, développement frontend React & backend API',
         linkedin: 'https://www.linkedin.com/in/kossi-michael-zodjekpo/',
         github: 'https://github.com/lennysmicky/',
@@ -58,7 +51,6 @@ const teamMembers = [
         name: 'Koffi Kelly SOWU',
         role: 'Développeur Backend',
         roleIcon: RiServerLine,
-        photo: Membre2,
         bio: 'API REST, base de données et logique métier',
         linkedin: 'https://www.linkedin.com/in/kelly-sowu-10084238b/',
         github: 'https://github.com/Sowu20/',
@@ -68,7 +60,6 @@ const teamMembers = [
         name: 'Kossi Enouagnon HOUNGBEDJI',
         role: 'Développeur Frontend',
         roleIcon: RiLayoutLine,
-        photo: Membre3,
         bio: 'Interfaces utilisateur, responsive design et expérience client',
         linkedin: 'https://www.linkedin.com/in/kossi-enouagnon-houngbedji-475984288/',
         github: 'https://github.com/',
@@ -78,7 +69,6 @@ const teamMembers = [
         name: 'Sergio DAKLU',
         role: 'Développeur Backend',
         roleIcon: RiServerLine,
-        photo: Membre4,
         bio: 'API, paiements et intégrations de SDK mobile',
         linkedin: 'https://www.linkedin.com/in/sergio-daklu-859a4734b/',
         github: 'https://github.com/',
@@ -125,79 +115,40 @@ const TeamPage = () => {
                 </div>
             </section>
 
-            {/* Team Grid Section */}
             <section className="team-members-section">
                 <div className="team-container">
-                    <div className="team-grid">
+                    <div className="team-list">
                         {teamMembers.map((member, index) => (
-                            <div
-                                key={index}
-                                className={`team-card ${member.isLead ? 'team-card-lead' : ''}`}
-                            >
-                                <div className="team-card-avatar">
-                                    <img
-                                        src={member.photo || DefaultAvatar}
-                                        alt={member.name}
-                                    />
-                                    {member.isLead && (
-                                        <div className="team-avatar-badge">
-                                            <RiStarFill />
-                                        </div>
-                                    )}
+                            <div key={index} className="team-member-item">
+                                <div className="team-member-header">
+                                    <div className="team-member-name">
+                                        {member.name}
+                                        {member.isLead && <span className="team-lead-badge">Lead</span>}
+                                    </div>
+                                    <div className="team-member-role">
+                                        <member.roleIcon />
+                                        <span>{member.role}</span>
+                                    </div>
                                 </div>
-
-                                <div className="team-card-info">
-                                    <div className="team-card-header">
-                                        <h3 className="team-card-name">
-                                            {member.name}
-                                            {member.isLead && (
-                                                <span className="team-lead-tag">Lead</span>
-                                            )}
-                                        </h3>
-
-                                        <div className="team-card-role">
-                                            <member.roleIcon />
-                                            <span>{member.role}</span>
-                                        </div>
-                                    </div>
-
-                                    <p className="team-card-bio">{member.bio}</p>
-
-                                    <div className="team-card-socials">
-                                        {member.linkedin && (
-                                            <a
-                                                href={member.linkedin}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="team-social-link linkedin"
-                                                aria-label={`LinkedIn de ${member.name}`}
-                                            >
-                                                <RiLinkedinBoxFill />
-                                            </a>
-                                        )}
-                                        {member.github && (
-                                            <a
-                                                href={member.github}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="team-social-link github"
-                                                aria-label={`GitHub de ${member.name}`}
-                                            >
-                                                <RiGithubFill />
-                                            </a>
-                                        )}
-                                        {member.portfolio && (
-                                            <a
-                                                href={member.portfolio}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="team-social-link portfolio"
-                                                aria-label={`Portfolio de ${member.name}`}
-                                            >
-                                                <RiGlobalLine />
-                                            </a>
-                                        )}
-                                    </div>
+                                <div className="team-member-bio">
+                                    <p>{member.bio}</p>
+                                </div>
+                                <div className="team-member-socials">
+                                    {member.linkedin && (
+                                        <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="social-link linkedin">
+                                            <RiLinkedinBoxFill />
+                                        </a>
+                                    )}
+                                    {member.github && (
+                                        <a href={member.github} target="_blank" rel="noopener noreferrer" className="social-link github">
+                                            <RiGithubFill />
+                                        </a>
+                                    )}
+                                    {member.portfolio && (
+                                        <a href={member.portfolio} target="_blank" rel="noopener noreferrer" className="social-link portfolio">
+                                            <RiGlobalLine />
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -232,12 +183,6 @@ const TeamPage = () => {
                                 </div>
                                 <span>Node.js</span>
                             </div>
-                            {/* <div className="tech-item">
-                                <div className="tech-icon laravel">
-                                    <SiLaravel />
-                                </div>
-                                <span>Laravel</span>
-                            </div> */}
                             <div className="tech-item">
                                 <div className="tech-icon mongodb">
                                     <SiMongodb />
@@ -294,28 +239,51 @@ const TeamPage = () => {
                 </div>
             </section>
 
-            {/* Footer */}
-            <footer className="team-footer">
-                <div className="team-container">
-                    <div className="team-footer-content">
-                        <div className="team-footer-brand">
-                            <Link to="/" className="team-footer-logo">
-                                <img src={Logo} alt="Zamora" />
-                                <span>Zamora</span>
-                            </Link>
-                            <p>Le vrai goût — Commandez vos plats préférés</p>
-                        </div>
-                        <div className="team-footer-links">
-                            <a href="http://zamora-app.netlify.app/">Demo</a>
-                            <a href="https://github.com/lennysmicky/zamora">GitHub</a>
-                            <a href="#team">Équipe</a>
-                        </div>
-                    </div>
-                    <div className="team-footer-bottom">
-                        <p>&copy; {new Date().getFullYear()} Zamora. Tous droits réservés.</p>
-                    </div>
+           {/* Footer */}
+<footer className="team-footer">
+    <div className="team-container">
+        <div className="footer-content">
+            <div className="footer-brand">
+                <Link to="/" className="footer-logo">
+                    <img src={Logo} alt="Zamora" />
+                    <span>Zamora</span>
+                </Link>
+                <p className="footer-tagline">
+                    Le vrai goût – Commandez vos plats préférés au restaurant ou chez vous,
+                    en toute simplicité.
+                </p>
+            </div>
+            <div className="footer-links">
+                <div className="footer-column">
+                    <h4>Application</h4>
+                    <a href="#download">Télécharger</a>
+                    <a href="#features">Fonctionnalités</a>
+                    <a href="#how-it-works">Comment ça marche</a>
                 </div>
-            </footer>
+                <div className="footer-column">
+                    <h4>Restaurateurs</h4>
+                    <Link to="/register">Créer un compte</Link>
+                    <Link to="/login">Connexion</Link>
+                    <a href="#benefits">Avantages</a>
+                </div>
+                <div className="footer-column">
+                    <h4>Informations</h4>
+                    <Link to="/team">Crédits & Équipe</Link>
+                    <a href="#legal">CGU & Confidentialité</a>
+                    <a href="#contact">Contact</a>
+                </div>
+            </div>
+        </div>
+        <div className="footer-bottom">
+            <p>&copy; {new Date().getFullYear()} Zamora. Tous droits réservés.</p>
+            <div className="footer-bottom-links">
+                <a href="#legal">CGU & Politique de confidentialité</a>
+                <span className="footer-separator">•</span>
+                <Link to="/team">Crédits</Link>
+            </div>
+        </div>
+    </div>
+</footer>
         </div>
     );
 };
