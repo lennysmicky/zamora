@@ -18,7 +18,14 @@ import {
     RiHome4Line,
     RiRestaurantLine,
     RiMenuLine,
-    RiCloseLine
+    RiCloseLine,
+    RiLinkedinBoxFill,
+    RiGithubFill,
+    RiGlobalLine,
+    RiCodeSSlashLine,
+    RiServerLine,
+    RiLayoutLine,
+    RiTeamFill
 } from 'react-icons/ri';
 import { FaGooglePlay, FaAppStore } from 'react-icons/fa';
 
@@ -32,6 +39,12 @@ import RiceImg from '../../assets/images/food/rice.jpg';
 import DrinkImg from '../../assets/images/food/drink.jpg';
 import IcecreamImg from '../../assets/images/food/icecream.jpg';
 import PhoneMockup from '../../assets/images/phoo-left.png';
+import DefaultAvatar from '../../assets/images/defaultavatar.png';
+import Membre1 from '../../assets/team/Membre1.jpeg';
+import Membre2 from '../../assets/team/Membre2.png';
+import Membre3 from '../../assets/team/Membre3.jpg';
+import Membre4 from '../../assets/team/Membre4.jpeg';
+
 
 import './LandingPage.css';
 
@@ -44,6 +57,51 @@ const foodItems = [
     { img: RiceImg, name: 'Riz aux légumes', desc: 'Riz cuit avec une variété de légumes frais' },
     { img: DrinkImg, name: 'Boissons Fraîches', desc: 'Sodas, jus de fruits et cocktails maison' },
     { img: IcecreamImg, name: 'Glace Artisanale', desc: 'Vanille de Madagascar, onctueuse et crémeuse' }
+];
+
+// Équipe du projet
+const teamMembers = [
+    {
+        name: 'Kossi Michael ZODJEKPO ',
+        role: 'Project Lead & Développeur Fullstack',
+        roleIcon: RiCodeSSlashLine,
+        photo: Membre1, // Remplace par: require('../../assets/images/team/membre1.jpg')
+        bio: 'Architecture du projet, développement frontend React & backend API',
+        linkedin: 'https://www.linkedin.com/in/kossi-michael-zodjekpo/',
+        github: 'hhttps://github.com/lennysmicky/',
+        portfolio: '',
+        isLead: true
+    },
+    {
+        name: 'koffi kelly  SOWU',
+        role: 'Développeur Backend',
+        roleIcon: RiServerLine,
+        photo: Membre2,
+        bio: 'API REST, base de données et logique métier',
+        linkedin: 'https://www.linkedin.com/in/kelly-sowu-10084238b/',
+        github: 'https://github.com/Sowu20/',
+        portfolio: ''
+    },
+    {
+        name: 'kossi enouagnon HOUNGBEDJI',
+        role: 'Développeur Frontend',
+        roleIcon: RiLayoutLine,
+        photo: Membre3,
+        bio: 'Interfaces utilisateur, responsive design et expérience client',
+        linkedin: 'https://www.linkedin.com/in/kossi-enouagnon-houngbedji-475984288/',
+        github: 'https://github.com/',
+        portfolio: ''
+    },
+    {
+        name: 'Sergio DAKLU',
+        role: 'Développeur Backend',
+        roleIcon: RiServerLine,
+        photo: Membre4,
+        bio: 'Api , paiements et intégrations de Sdk mobile  ',
+        linkedin: 'https://www.linkedin.com/in/sergio-daklu-859a4734b/',
+        github: 'https://github.com/',
+        portfolio: ''
+    }
 ];
 
 const LandingPage = () => {
@@ -163,6 +221,7 @@ const LandingPage = () => {
                         <a href="#features" onClick={() => setMobileMenuOpen(false)}>Fonctionnalités</a>
                         <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>Comment ça marche</a>
                         <a href="#download" onClick={() => setMobileMenuOpen(false)}>Télécharger</a>
+                        <a href="#team" onClick={() => setMobileMenuOpen(false)}>Équipe</a>
                         <a href="#contact" onClick={() => setMobileMenuOpen(false)}>Contact</a>
                     </nav>
 
@@ -186,18 +245,15 @@ const LandingPage = () => {
                 </div>
             </header>
 
-            {/* Hero Section - VERSION MODERNE */}
+            {/* Hero Section */}
             <section className="landing-hero-modern">
-                {/* Carousel d'images en arrière-plan */}
                 <div className="hero-background-carousel">
-                    <div 
+                    <div
                         className={`carousel-image ${isAnimating ? 'fade-out' : 'fade-in'}`}
                         style={{
                             backgroundImage: `linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.7)), url(${foodItems[currentFood].img})`
                         }}
                     />
-                    
-                    {/* Indicateurs en bas */}
                     <div className="carousel-indicators-bottom">
                         {foodItems.map((_, index) => (
                             <button
@@ -216,24 +272,19 @@ const LandingPage = () => {
                     </div>
                 </div>
 
-                {/* Contenu centré par-dessus */}
                 <div className="hero-overlay-content">
                     <div className="landing-container">
                         <div className="hero-center-content">
-                            {/* <div className="hero-badge animate-on-scroll">
-                                <span>Application #1 de commande restaurant</span>
-                            </div>
-                             */}
                             <h1 className="hero-title-large animate-on-scroll">
                                 <span className="hero-title-line">Commandez vos plats</span>
                                 <span className="hero-title-highlight">Le vrai goût</span>
                             </h1>
-                            
+
                             <p className="hero-subtitle-large animate-on-scroll">
                                 Au restaurant ou chez vous, commandez facilement vos plats préférés.<br />
                                 Scannez, commandez, payez et savourez !
                             </p>
-                            
+
                             <div className="hero-actions-large animate-on-scroll">
                                 <a href="#download" className="btn-primary-xl">
                                     <RiDownloadLine />
@@ -244,7 +295,7 @@ const LandingPage = () => {
                                     Je suis restaurateur
                                 </Link>
                             </div>
-                            
+
                             <div className="hero-stats-large animate-on-scroll">
                                 <div className="hero-stat-item">
                                     <span className="stat-number-large">500+</span>
@@ -262,7 +313,6 @@ const LandingPage = () => {
                                 </div>
                             </div>
 
-                            {/* Info du plat actuel */}
                             <div className={`current-dish-info ${isAnimating ? 'fade-out' : 'fade-in'}`}>
                                 <h3>{foodItems[currentFood].name}</h3>
                                 <p>{foodItems[currentFood].desc}</p>
@@ -335,8 +385,8 @@ const LandingPage = () => {
                                 L'application est disponible sur Google Play Store et App Store.
                             </p>
                             <div className="download-buttons">
-                                <a 
-                                    href="https://play.google.com/store" 
+                                <a
+                                    href="https://play.google.com/store"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="download-btn playstore"
@@ -347,8 +397,8 @@ const LandingPage = () => {
                                         <span className="download-btn-platform">Google Play</span>
                                     </div>
                                 </a>
-                                <a 
-                                    href="https://www.apple.com/app-store/" 
+                                <a
+                                    href="https://www.apple.com/app-store/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="download-btn appstore"
@@ -411,6 +461,87 @@ const LandingPage = () => {
                 </div>
             </section>
 
+            {/* Section Équipe / Crédits */}
+            <section className="landing-team" id="team">
+                <div className="landing-container">
+                    <div className="section-header animate-on-scroll">
+                        <h2>Les personnes derrière Zamora</h2>
+                        <p>Une équipe passionnée qui travaille chaque jour pour vous offrir la meilleure expérience</p>
+                    </div>
+
+                    <div className="team-grid">
+                        {teamMembers.map((member, index) => (
+                            <div
+                                key={index}
+                                className="team-card animate-on-scroll"
+                                style={{ animationDelay: `${index * 0.15}s` }}
+                            >
+                                <div className="team-card-avatar">
+                                    <img
+                                        src={member.photo || DefaultAvatar}
+                                        alt={member.name}
+                                    />
+                                </div>
+
+                                <div className="team-card-info">
+                                    <h3 className="team-card-name">
+                                        <span>{member.name}</span>
+                                        {member.isLead && (
+                                            <span className="team-lead-tag">Lead</span>
+                                        )}
+                                    </h3>
+
+                                    <div className="team-card-role">
+                                        <member.roleIcon />
+                                        <span>{member.role}</span>
+                                    </div>
+
+                                    <p className="team-card-bio">{member.bio}</p>
+
+                                    <div className="team-card-socials">
+                                        {member.linkedin && (
+                                            <a
+                                                href={member.linkedin}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="team-social-link linkedin"
+                                                aria-label={`LinkedIn de ${member.name}`}
+                                            >
+                                                <RiLinkedinBoxFill />
+                                            </a>
+                                        )}
+                                        {member.github && (
+                                            <a
+                                                href={member.github}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="team-social-link github"
+                                                aria-label={`GitHub de ${member.name}`}
+                                            >
+                                                <RiGithubFill />
+                                            </a>
+                                        )}
+                                        {member.portfolio && (
+                                            <a
+                                                href={member.portfolio}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="team-social-link portfolio"
+                                                aria-label={`Portfolio de ${member.name}`}
+                                            >
+                                                <RiGlobalLine />
+                                            </a>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+
+                </div>
+            </section>
+
             {/* CTA Section */}
             <section className="landing-cta" id="contact">
                 <div className="landing-container">
@@ -457,19 +588,24 @@ const LandingPage = () => {
                             <div className="footer-column">
                                 <h4>Restaurateurs</h4>
                                 <Link to="/register">Créer un compte</Link>
-                                <Link to="/sslogin">Connexion</Link>
+                                <Link to="/login">Connexion</Link>
                                 <a href="#benefits">Avantages</a>
                             </div>
                             <div className="footer-column">
-                                <h4>Légal</h4>
-                                <a href="#privacy">Confidentialité</a>
-                                <a href="#terms">CGU</a>
+                                <h4>Informations</h4>
+                                <a href="#team">Crédits & Équipe</a>
+                                <a href="#legal">CGU & Confidentialité</a>
                                 <a href="#contact">Contact</a>
                             </div>
                         </div>
                     </div>
                     <div className="footer-bottom">
                         <p>&copy; {new Date().getFullYear()} Zamora. Tous droits réservés.</p>
+                        <div className="footer-bottom-links">
+                            <a href="#legal">CGU & Politique de confidentialité</a>
+                            <span className="footer-separator">•</span>
+                            <a href="#team">Crédits</a>
+                        </div>
                     </div>
                 </div>
             </footer>
