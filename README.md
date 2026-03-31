@@ -549,34 +549,34 @@ Chaque `push` sur la branche `main` déclenche automatiquement un nouveau déplo
   <tr>
     <td align="center" width="220">
       <img src="src/assets/team/Membre1.jpeg" width="130" height="130" style="border-radius: 50%;" alt="Project Lead" /><br/>
-      <strong>Nom Prénom</strong><br/>
+      <strong>Kossi michael ZODJEKPO</strong><br/>
       <sub> Project Lead & Développeur Fullstack</sub><br/>
       <em>Architecture, Frontend React & Backend API</em><br/><br/>
       <a href="https://linkedin.com/in/">
         <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" />
       </a>
-      <a href="https://github.com/">
+      <a href="ttps://github.com/lennysmicky/">
         <img src="https://img.shields.io/badge/-GitHub-24292f?style=flat-square&logo=github&logoColor=white" />
       </a>
     </td>
     <td align="center" width="220">
       <img src="src/assets/team/Membre2.png" width="130" height="130" style="border-radius: 50%;" alt="Backend Dev" /><br/>
-      <strong>Nom Prénom</strong><br/>
+      <strong>Koffi Kelly SOWU</strong><br/>
       <sub> Développeur Backend</sub><br/>
       <em>API REST, base de données & logique métier</em><br/><br/>
       <a href="https://linkedin.com/in/">
         <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" />
       </a>
-      <a href="https://github.com/">
+      <a href="https://github.com/Sowu20">
         <img src="https://img.shields.io/badge/-GitHub-24292f?style=flat-square&logo=github&logoColor=white" />
       </a>
     </td>
     <td align="center" width="220">
       <img src="src/assets/team/Membre3.jpg" width="130" height="130" style="border-radius: 50%;" alt="Backend Dev" /><br/>
-      <strong>Nom Prénom</strong><br/>
-      <sub> Développeur Backend</sub><br/>
-      <em>Authentification, paiements & intégrations</em><br/><br/>
-      <a href="https://linkedin.com/in/">
+      <strong>kossi enouagnon HOUNGBEDJI</strong><br/>
+      <sub> Développeur Frontend</sub><br/>
+      <em>Interfaces UI, responsive & expérience client</em><br/><br/>
+      <a href="https://www.linkedin.com/in/kossi-enouagnon-houngbedji-475984288/">
         <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" />
       </a>
       <a href="https://github.com/">
@@ -585,10 +585,10 @@ Chaque `push` sur la branche `main` déclenche automatiquement un nouveau déplo
     </td>
     <td align="center" width="220">
       <img src="src/assets/team/Membre4.jpeg" width="130" height="130" style="border-radius: 50%;" alt="Frontend Dev" /><br/>
-      <strong>Nom Prénom</strong><br/>
-      <sub> Développeur Frontend</sub><br/>
-      <em>Interfaces UI, responsive & expérience client</em><br/><br/>
-      <a href="https://linkedin.com/in/">
+      <strong>Sergio DAKLU</strong><br/>
+      <sub> Développeur Backend</sub><br/>
+      <em>Authentification, paiements & intégrations</em><br/><br/>
+      <a href="https://www.linkedin.com/in/sergio-daklu-859a4734b/">
         <img src="https://img.shields.io/badge/-LinkedIn-0A66C2?style=flat-square&logo=linkedin&logoColor=white" />
       </a>
       <a href="https://github.com/">
