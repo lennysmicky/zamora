@@ -72,7 +72,7 @@ self.addEventListener('notificationclick', function(event) {
         }
 
         if (clients.openWindow) {
-          return clients.openWindow('https://zamora-app.netlify.app/restaurant/dashboard');
+          return clients.openWindow('https://zamora-app.netlify.app/restaurant/orders');
         }
       })
   );
